@@ -1,7 +1,10 @@
+import LogoutButton from "../components/LogoutButton";
+
 const UserDashboard: React.FC = () => {
     return (
         <div>
-            <h1>Hello World</h1>
+            <h1>Welcome, User!</h1>
+            <LogoutButton />
         </div>
     )
 };

@@ -1,17 +1,20 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
+import { useAuth } from '../services/AuthContext';
+import { Navigate, useLocation } from "react-router-dom";
 
 interface ProtectedRouteProps {
-  user: any; 
   children: React.ReactNode;
 }
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-// Protected routes to block people from accessing pages before logging in.
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ user, children }) => {
-  if (!user) {
-    return <Navigate to="/login" />;
+  if(loading){
+    return <h1>Loading...</h1>
   }
+  
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
   return <>{children}</>;
-};
-
-export default ProtectedRoute; 
+}

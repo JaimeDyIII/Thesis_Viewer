@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import "../styles/Login.css";
+import LoginButton from "../components/LoginButton";
 
 const Login: React.FC = () => {
   return (
@@ -35,23 +36,7 @@ const Login: React.FC = () => {
             </div>
 
             {/* Google Sign-In Button */}
-            <Button
-              variant="outlined"
-              size="large"
-              className="google-signin-button"
-              sx={{
-                textTransform: "none",
-                borderColor: "#E0E7FF",
-                color: "#1E1B4B",
-                "&:hover": {
-                  backgroundColor: "#EEF2FF",
-                  borderColor: "#E0E7FF",
-                },
-              }}
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
+           <LoginButton />
           </div>
         </Card>
       </motion.div>

@@ -4,13 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export function LogoutButton() {
-    const { signOut } = useAuth();
+    const { handleSignOut } = useAuth();
     const navigate = useNavigate();
 
-    const handleSignOut = async () =>{
-        await signOut();
-        navigate('/login');
-    }
 
     return (
         <Button

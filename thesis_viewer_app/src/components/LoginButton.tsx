@@ -3,15 +3,14 @@ import GoogleIcon from "@mui/icons-material/Google";
 import { useAuth } from '../services/AuthContext';
 
 const LoginButton = () => {
-    const { signInWithGoogle, loading } = useAuth();
-    
+    const { handleGoogleLogin } = useAuth();
+
     return (
         <Button
             variant="outlined"
             size="large"
             className="google-signin-button"
-            onClick={!loading ? signInWithGoogle : undefined}
-            disabled={loading}
+            onClick={handleGoogleLogin}
             sx={{
                 textTransform: "none",
                 borderColor: "#E0E7FF",
@@ -23,7 +22,7 @@ const LoginButton = () => {
             }}
             startIcon={<GoogleIcon />}
         >
-            {loading ? 'Signing in...' : 'Sign in with Google'}
+            Sign In
         </Button>
     );
 };

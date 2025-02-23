@@ -5,9 +5,7 @@ import { AuthProvider } from './services/AuthContext';
 
 function App() {
   return (
-    <AuthProvider>
       <AppRoutes />
-    </AuthProvider>
   );
 }
 

@@ -1,117 +1,125 @@
-import { supabase } from '../config';
-import { User } from '@supabase/supabase-js';
-import { checkUserExists, createUserInDatabase } from './userService';
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, ReactNode } from "react";
+import { supabase } from "../config";
+import { useNavigate } from "react-router-dom";
 
-interface AuthContextType {
-    user: User | null;
-    loading: boolean;
-    signInWithGoogle: () => Promise<void>;
-    signOut: () => Promise<void>;
-}
+type AuthContextType = {
+    handleGoogleLogin: () => Promise<void>;
+    handleSignOut: () => Promise<void>;
+    checkSession: () => Promise<void>;
+  };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+    const navigate = useNavigate();
 
-    const handleNewUser = async (user: User) => {
-        const ALLOWED_DOMAIN = "neu.edu.ph";
+    useEffect(() => {
+        checkSession();
+    }, []);
 
-        if (!user.email) {
-            console.error("User email is missing");
-            return;
-        }
-
-        const emailDomain = user.email.split("@")[1]; 
-
-        if (emailDomain !== ALLOWED_DOMAIN) {
-            console.error("Unauthorized email domain:", emailDomain);
-            await signOut();
-            return;
-        }
-
+    const checkSession = async () => {
         try {
-            const exists = await checkUserExists(user.email);
-            if (!exists) {
-                await createUserInDatabase(user.email);
-                console.log("User Created!");
+            const { data: { session } } = await supabase.auth.getSession();
+            console.log("Current session:", session);
+
+            if(session?.user){
+                await handleSession(session);
             }
-        } catch (error) {
-            console.error("Error handling new user:", error);
+        } catch(e) {
+            console.error(e);
         }
     }
 
+    const handleSession = async (session: any) => {
+        try {
+            console.log("Handling session for user:", session.user.id);
+
+            const { data: userData, error } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', session.user.id)
+                .single()
+
+            if(error){
+                console.error(error);
+                throw error;
+            }
+
+            console.log("User role:", userData.role);
+
+            if (userData.role === 'Admin') {
+                navigate('/admin', { replace: true });
+            } else if (userData.role === 'User'){
+                navigate('/user', { replace: true });
+            } else {
+                console.error("Invalid role!")
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    const handleGoogleLogin = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                    redirectTo: window.location.origin + '/login',
+                }
+            });
+
+            if(error) throw error;
+            console.log("Google auth initiated:", data);
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    const handleSignOut = async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            navigate('/login', { replace: true });
+        } catch (e){
+            console.error('Error signing out: ', e);
+        }
+    }
+    
     useEffect(() => {
-        const getSession = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-    
-            if (error) {
-                console.error('Error getting session:', error);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.id);
+
+            if (event === 'SIGNED_IN' && session) {
+            await handleSession(session);
             }
-    
-            if (session?.user) {
-                await handleNewUser(session.user);
-                setUser(session.user);
-            } else {
-                setUser(null);
-            }
-    
-            setLoading(false);
+        });
+
+        return () => {
+            subscription.unsubscribe();
         };
-    
-        getSession();
-    
-        const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
-            if (session?.user) {
-                setUser(session.user);
-            } else {
-                setUser(null);
-            }
-            setLoading(false);
-        });
-    
-        return () => subscription.subscription?.unsubscribe();
     }, []);
+    
 
-
-    const signInWithGoogle = async () => {
-        try {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}`,
-            },
-        });
-
-        if (error) throw error;
-
-        } catch (error) {
-            console.error('Auth error:', error);
-        }
+    const value = {
+        handleGoogleLogin,
+        handleSignOut,
+        checkSession
     };
-
-    const signOut = async () => {
-        try {
-            await supabase.auth.signOut();
-            setUser(null);
-        } catch (error) {
-            console.error('Sign out error:', error);
-        }
-    };
-
+    
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
-            {children}
-        </AuthContext.Provider>
+        <AuthContext.Provider value={value}>
+        {children}
+    </AuthContext.Provider>
     );
 }
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+export const useAuth = () => {
+      const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }  
+    return context;
+};

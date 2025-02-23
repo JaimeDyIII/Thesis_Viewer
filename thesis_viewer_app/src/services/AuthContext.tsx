@@ -1,18 +1,33 @@
-import { createContext, useContext, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, ReactNode, useState } from "react";
 import { supabase } from "../config";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation  } from "react-router-dom";
 
 type AuthContextType = {
     handleGoogleLogin: () => Promise<void>;
     handleSignOut: () => Promise<void>;
     checkSession: () => Promise<void>;
     handleSession: (session: any) => Promise<void>;
+    showError: boolean;
+    setShowError: (show: boolean) => void;
   };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [showError, setShowError] = useState(false);
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const hashParams = new URLSearchParams(location.hash.replace('#', '?'));
+        
+        if (searchParams.get('error') || hashParams.get('error')) {
+            console.error("Auth error from URL:", searchParams.get('error_description') || hashParams.get('error_description'));
+            setShowError(true);
+            navigate('/login', { replace: true });
+        }
+    }, [location]);
 
     useEffect(() => {
         checkSession();
@@ -109,14 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         handleGoogleLogin,
         handleSignOut,
         checkSession,
-        handleSession
+        handleSession,
+        showError,
+        setShowError,
     };
     
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export const useAuth = () => {
       const context = useContext(AuthContext);

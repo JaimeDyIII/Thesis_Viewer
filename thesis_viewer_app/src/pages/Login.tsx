@@ -2,10 +2,13 @@ import { Button, Card } from "@mui/material";
 import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import "../styles/Login.css";
-import LoginButton from "../components/LoginButton";
+import EmailErrorPopup from "../components/EmailErrorPopup"; // Import error popup
+import { useAuth } from "../services/AuthContext"; // Import Auth Context
+import "../styles/Login.css"; // Import styles
 
 const Login: React.FC = () => {
+  const { handleGoogleLogin, showError, setShowError } = useAuth(); // Use Auth Context
+
   return (
     <div className="login-container">
       {/* Background Elements */}
@@ -36,10 +39,30 @@ const Login: React.FC = () => {
             </div>
 
             {/* Google Sign-In Button */}
-           <LoginButton />
+            <Button
+              variant="outlined"
+              size="large"
+              className="google-signin-button"
+              onClick={handleGoogleLogin} // Call login function
+              sx={{
+                textTransform: "none",
+                borderColor: "#E0E7FF",
+                color: "#1E1B4B",
+                "&:hover": {
+                  backgroundColor: "#EEF2FF",
+                  borderColor: "#E0E7FF",
+                },
+              }}
+              startIcon={<GoogleIcon />}
+            >
+              Sign in with Google
+            </Button>
           </div>
         </Card>
       </motion.div>
+
+      {/* Alert Pop-up (Only shows when showError is true) */}
+      <EmailErrorPopup open={showError} onClose={() => setShowError(false)} />
     </div>
   );
 };

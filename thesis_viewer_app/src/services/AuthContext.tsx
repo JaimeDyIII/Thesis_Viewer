@@ -6,6 +6,7 @@ type AuthContextType = {
     handleGoogleLogin: () => Promise<void>;
     handleSignOut: () => Promise<void>;
     checkSession: () => Promise<void>;
+    handleSession: (session: any) => Promise<void>;
   };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -107,13 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const value = {
         handleGoogleLogin,
         handleSignOut,
-        checkSession
+        checkSession,
+        handleSession
     };
     
     return (
         <AuthContext.Provider value={value}>
-        {children}
-    </AuthContext.Provider>
+            {children}
+        </AuthContext.Provider>
     );
 }
 export const useAuth = () => {

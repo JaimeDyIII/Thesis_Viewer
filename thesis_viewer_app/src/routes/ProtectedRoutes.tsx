@@ -1,12 +1,14 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from 'react';
 import { supabase } from '../config';
+import { useAuth } from "../services/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { handleSession } = useAuth();
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const location = useLocation();
@@ -32,14 +34,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
         if (userData.role === 'User' || userData.role === 'Admin') {
           setAuthorized(true);
-          if (userData.role === 'User') {
-            <Navigate to="/user" state={{ from: location }} replace />
-            return;
-          }
-      
-          if (userData.role === 'Admin') {
-            <Navigate to="/admin" state={{ from: location }} replace />;
-          }
+          handleSession(session.user.id);
         } else {
           setAuthorized(false);
         }

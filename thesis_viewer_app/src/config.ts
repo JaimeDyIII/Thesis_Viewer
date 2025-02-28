@@ -5,11 +5,11 @@ import { HfInference } from "@huggingface/inference";
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: false,
-    }
-})
+if(!supabaseUrl && !supabaseAnonKey){
+    console.error("Config error");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Hugging face
 const huggingFaceApiKey = process.env.HUGGING_FACE_API_KEY!

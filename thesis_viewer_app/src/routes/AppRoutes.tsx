@@ -3,6 +3,7 @@ import Login from '../pages/Login';
 import UserDashboard from "../pages/UserDashboard";
 import { ProtectedRoute } from "./ProtectedRoutes";
 import AdminDashboard from "../pages/AdminDashboard";
+import Unauthorized from "../pages/Unauthorized";
 import { AuthProvider } from "../services/AuthContext";
 
 // Doesn't matter what page we throw in the / path, protected routes throw them back to their page based on their role.
@@ -10,10 +11,10 @@ const AppRoutes: React.FC = () => (
     <BrowserRouter>
         <AuthProvider>
             <Routes>
-                <Route path="/" element={ <ProtectedRoute><UserDashboard /></ProtectedRoute> } />
-                <Route path="/user" element={ <ProtectedRoute><UserDashboard /></ProtectedRoute> } />
+                <Route path="/user" element={ <ProtectedRoute allowedRoles={['User']}><UserDashboard /></ProtectedRoute> } />
+                <Route path="/admin" element={ <ProtectedRoute allowedRoles={['Admin']}><AdminDashboard /></ProtectedRoute> } />
                 <Route path="/login" element={ <Login /> } />
-                <Route path="/admin" element={ <ProtectedRoute><AdminDashboard /></ProtectedRoute> } />
+                <Route path="/*" element={ <Unauthorized /> } />
             </Routes>
         </AuthProvider>
     </BrowserRouter>

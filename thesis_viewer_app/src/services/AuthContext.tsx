@@ -1,13 +1,15 @@
 import { createContext, useContext, useEffect, ReactNode, useState } from "react";
 import { supabase } from "../config";
 import { useNavigate, useLocation  } from "react-router-dom";
+import { Session, User } from '@supabase/supabase-js'; 
 
 type AuthContextType = {
+    session: Session | null | undefined;
+    profile: any;
+    showError: boolean;
+    loading: boolean;
     handleGoogleLogin: () => Promise<void>;
     handleSignOut: () => Promise<void>;
-    checkSession: () => Promise<void>;
-    handleSession: (session: any) => Promise<void>;
-    showError: boolean;
     setShowError: (show: boolean) => void;
   };
 
@@ -17,6 +19,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [showError, setShowError] = useState(false);
+    const [session, setSession] = useState<Session | null>(null);
+    const [profile, setProfile] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -30,50 +35,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [location]);
 
     useEffect(() => {
-        checkSession();
+        const setData = async () => {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if(error) throw error;
+            setSession(session);
+            setLoading(false);
+        }
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            setSession(session);
+            setLoading(false);
+            console.log("Auth state changed:", event, session?.user?.id);
+        });
+
+        setData();
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
-    const checkSession = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            console.log("Current session:", session);
-
-            if(session?.user){
-                await handleSession(session);
-            }
-        } catch(e) {
-            console.error(e);
-        }
-    }
-
-    const handleSession = async (session: any) => {
-        try {
-            console.log("Handling session for user:", session.user.id);
-
-            const { data: userData, error } = await supabase
-                .from('users')
-                .select('role')
-                .eq('id', session.user.id)
-                .single()
-
-            if(error){
-                console.error(error);
-                throw error;
-            }
-
-            console.log("User role:", userData.role);
-
-            if (userData.role === 'Admin') {
-                navigate('/admin', { replace: true });
-            } else if (userData.role === 'User'){
-                navigate('/user', { replace: true });
+    useEffect(() => {
+        if (session && session.user) {
+          const fetchProfile = async () => {
+            const { data, error } = await supabase
+              .from("users")
+              .select("role")
+              .eq("id", session.user.id)
+              .single();
+            if (error) {
+              console.error("Error fetching profile:", error.message);
             } else {
-                console.error("Invalid role!")
+              setProfile(data);
             }
-        } catch(e) {
-            console.error(e);
+          };
+          fetchProfile();
+        } else {
+          setProfile(null);
         }
-    }
+    }, [session]);
+
+    useEffect(() => {
+        if (session && session.user && profile && location.pathname === "/login") {
+          const userRole = profile.role;
+          if (userRole === "Admin") {
+            navigate("/admin", { replace: true });
+          } else if (userRole === "User") {
+            navigate("/user", { replace: true });
+          } else {
+            console.error("Invalid role!");
+            navigate("/login", { replace: true });
+          }
+        }
+      }, [session, profile, location.pathname, navigate]);
 
     const handleGoogleLogin = async () => {
         try {
@@ -105,27 +119,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
     
-    useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.id);
-
-            if (event === 'SIGNED_IN' && session) {
-            await handleSession(session);
-            }
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []);
-    
 
     const value = {
+        session,
+        profile,
+        showError,
+        loading,
         handleGoogleLogin,
         handleSignOut,
-        checkSession,
-        handleSession,
-        showError,
         setShowError,
     };
     

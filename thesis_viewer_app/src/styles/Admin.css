@@ -1,0 +1,169 @@
+:root {
+    --background: hsl(260, 100%, 98%);
+    --foreground: hsl(240, 5%, 26%);
+    --primary: hsl(262, 83%, 58%);
+    --primary-hover: hsl(280, 75%, 60%);
+    --card-bg: hsl(268, 80%, 96%); 
+    --radius: 1rem;
+}
+
+/* Global Styles */
+body, html {
+    font-family: "Poppins", sans-serif !important;
+    font-weight: 300 !important;
+}
+
+/* Admin Dashboard */
+.admin-dashboard {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Background Layers */
+.admin-background-gradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #A78BFA 0%, #C084FC 50%, #F472B6 100%);
+    opacity: 0.3;
+    z-index: -3;
+}
+
+.admin-background-blur {
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(80px);
+    z-index: -2;
+}
+
+.admin-background-radial {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+    z-index: -1;
+}
+
+/* Card Styling */
+.card-hover {
+    background: var(--card-bg) !important;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius) !important;
+    cursor: pointer;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.card-title-text {
+    color: var(--primary);
+    font-size: 1.75rem;
+    font-weight: 600 !important;
+    transition: color 0.3s ease-in-out;
+}
+
+.card-hover:hover .card-title-text {
+    color: var(--primary-hover) !important;
+}
+
+/* Circular Icon Background */
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(153, 0, 255, 0.1);
+    border-radius: 50%;
+}
+
+/* Card Description */
+.card-description {
+    color: var(--foreground);
+}
+
+.MuiCardHeader-root {
+    padding-bottom: 1px !important;
+}
+
+/* Search Box */
+.search-box {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 50px;
+    padding: 10px 16px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    border: none;
+    position: relative;
+}
+
+.search-field {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding-right: 40px;
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+/* Filters */
+.filters-wrapper {
+    display: flex;
+    flex-direction: row !important;
+    gap: 0.5rem;
+}
+
+.filter-box {
+    background: white;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.filter-box .MuiOutlinedInput-notchedOutline {
+    border: none !important;
+}
+
+.filter-box select {
+    min-width: 150px;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    outline: none;
+}
+
+/* View PDF Button */
+.view-pdf-btn {
+    display: flex;
+    justify-content: center;
+    color:var(--primary) !important;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    width: 100%;
+    text-align: center;
+}

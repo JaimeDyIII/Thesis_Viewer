@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from '../pages/Login';
 import UserDashboard from "../pages/UserDashboard";
@@ -14,10 +15,9 @@ const AppRoutes: React.FC = () => (
             <Routes>
                 <Route path="/user" element={ <ProtectedRoute allowedRoles={['User']}><UserDashboard /></ProtectedRoute> } />
                 <Route path="/admin" element={ <ProtectedRoute allowedRoles={['Admin']}><AdminDashboard /></ProtectedRoute> } />
+                <Route path="/view-thesis" element={ <ProtectedRoute allowedRoles={['User', 'Admin']}><ViewThesis /></ProtectedRoute> } />
                 <Route path="/login" element={ <Login /> } />
                 <Route path="/*" element={ <Unauthorized /> } />
-                <Route path="/admin" element={ <ProtectedRoute><AdminDashboard /></ProtectedRoute> } />
-                <Route path="/view-thesis" element={ <ProtectedRoute><ViewThesis /></ProtectedRoute> } />
             </Routes>
         </AuthProvider>
     </BrowserRouter>

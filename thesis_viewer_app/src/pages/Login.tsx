@@ -2,21 +2,22 @@ import { Button, Card } from "@mui/material";
 import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import EmailErrorPopup from "../components/EmailErrorPopup"; // Import error popup
-import { useAuth } from "../services/AuthContext"; // Import Auth Context
-import "../styles/Login.css"; // Import styles
+import EmailErrorPopup from "../components/EmailErrorPopup";
+import { useAuth } from "../services/AuthContext";
+import "../styles/Login.css";
 
 const Login: React.FC = () => {
-  const { handleGoogleLogin, showError, setShowError } = useAuth(); // Use Auth Context
+  const { handleGoogleLogin, showError, setShowError } = useAuth();
 
   return (
     <div className="login-container">
-      {/* Background Elements */}
-      <div className="background-gradient"></div>
-      <div className="background-blur"></div>
-      <div className="background-radial"></div>
+      {/* Background Layers */}
+      <div className="login-background-gradient"></div>
+      <div className="login-background-blur"></div>
+      <div className="login-background-radial"></div>
 
-      {/* Centered Login Card */}
+
+      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -43,7 +44,7 @@ const Login: React.FC = () => {
               variant="outlined"
               size="large"
               className="google-signin-button"
-              onClick={handleGoogleLogin} // Call login function
+              onClick={handleGoogleLogin}
               sx={{
                 textTransform: "none",
                 borderColor: "#E0E7FF",
@@ -61,7 +62,7 @@ const Login: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Alert Pop-up (Only shows when showError is true) */}
+      {/* Alert Pop-up */}
       <EmailErrorPopup open={showError} onClose={() => setShowError(false)} />
     </div>
   );

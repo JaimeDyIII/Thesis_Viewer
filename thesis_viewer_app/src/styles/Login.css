@@ -10,31 +10,32 @@
   }
   
   /* Background Effects */
-  .background-gradient {
+  .login-background-gradient {
     position: absolute;
     inset: 0;
     background: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #EC4899 100%);
     opacity: 0.5;
   }
-  
-  .background-blur {
+
+  .login-background-blur {
     position: absolute;
     inset: 0;
     backdrop-filter: blur(120px);
   }
-  
-  .background-radial {
+
+  .login-background-radial {
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
   }
+
   
   /* Centered Login Box */
   .login-box {
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 315px;
+    max-width: 350px;
   }
   
   /* Glass Overlay */
@@ -72,9 +73,9 @@
   
   /* Title & Subtitle */
   .login-title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 600;
-    color: #1E1B4B;
+    color: #1E1B4B !important;
     margin-bottom: 0.5rem;
   }
   

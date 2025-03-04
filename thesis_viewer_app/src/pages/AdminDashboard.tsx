@@ -41,7 +41,7 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Manage Thesis Card */}
-            <Card className="card-hover">
+            <Card className="card-hover" onClick={() => navigate("/manage-thesis")}>
               <CardHeader
                 title={
                   <Box className="card-title">

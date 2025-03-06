@@ -1,100 +1,166 @@
- 
-  /* Admin Dashboard */
+/* Main container */
 .manage-thesis {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow-x: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  padding-left: 70px !important;
+  padding-right: 70px !important;
+  box-sizing: border-box;
 }
 
 /* Background Layers */
-.admin-background-gradient {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #A78BFA 0%, #C084FC 50%, #F472B6 100%);
-    opacity: 0.3;
-    z-index: -3;
+.manage-background-gradient {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #A78BFA 0%, #C084FC 50%, #F472B6 100%);
+  opacity: 0.3;
+  z-index: -3;
 }
 
-.admin-background-blur {
-    position: fixed;
-    inset: 0;
-    backdrop-filter: blur(80px);
-    z-index: -2;
+.manage-background-blur {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(80px);
+  z-index: -2;
 }
 
-.admin-background-radial {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-    z-index: -1;
+.manage-background-radial {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  z-index: -1;
 }
-  
-  .title {
-    font-size: 24px;
-    font-weight: 600 !important;
-    padding-left: 70px;
-    padding-top: 30px;
-    color: hsl(262, 83%, 58%);
-  }
-  
-  .content {
+
+/* Page title */
+.title {
+  font-size: 24px;
+  font-weight: 600 !important;
+  color: hsl(262, 83%, 58%);
+  margin-top: 30px;
+}
+
+/* Filters & Search */
+.filters-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+}
+
+/* Search Box */
+.search-box {
+  display: flex;
+  align-items: center;
+  width: 50%; /* Slightly longer */
+  position: relative;
+}
+
+.search-field {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  padding-right: 40px;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+/* Right-side filters (category + button aligned horizontally) */
+.filters-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Category Filter */
+.category-filter {
+  background: white;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5px 8px;
+    border-radius: 4px;
     display: flex;
-    justify-content: space-between;
-    padding: 70px;
-    gap: 50px;
-    padding-top: 30px;
-  }
-  
-  .add-thesis, .thesis-list {
-    background: hsl(268, 80%, 96%) !important;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-  }
-  
-  .input-field {
-    margin-bottom: 10px;
-  }
-  
-  .view-dashboard-buttons {
-    display: flex;
-    gap: 50px;
-    margin: 20px 0;
-  }
-  
-  .view-thesis {
-    background: white;
-    color: black;
-    border: 2px solid black;
-    font-weight: bold;
-  }
-  
-  .dashboard {
-    background: black;
-    color: white;
-  }
-  
-  .thesis-item {
-    background: #e0e0e0;
-    margin-top: 10px;
-    padding: 15px;
-    border-radius: 8px;
-  }
-  
-  .thesis-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  
-  .edit {
-    background: gray;
-    color: white;
-  }
-  
-  .delete {
-    background: red ;
-    color: white;
-  }
+    align-items: center;
+}
+
+.category-filter .MuiOutlinedInput-notchedOutline {
+    border: none !important;
+}
+
+/* Add Thesis Button */
+.add-thesis-btn {
+  height: 50px !important;
+  background: hsl(262, 83%, 58%) !important;
+  color: white !important;
+  font-size: 16px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px !important;
+}
+
+/* Table container */
+.content {
+  padding-top: 10px !important;
+  background: white;
+  border-radius: 8px;
+  padding: 20px !important;
+}
+
+.dialog-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #6a0dad; /* Purple Theme */
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-top: 10px;
+}
+
+.custom-input .MuiInputBase-root {
+  border-radius: 10px;
+  background: #f4f4f8;
+}
+
+.file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.upload-btn {
+  background-color: #6a0dad !important;
+  color: white !important;
+  border-radius: 20px;
+  text-transform: none;
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #f4f4f8;
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+
+.cancel-btn {
+  color: #6a0dad !important;
+  text-transform: none;
+}
+
+.submit-btn {
+  background-color: #6a0dad !important;
+  color: white !important;
+  text-transform: none;
+  border-radius: 20px;
+}

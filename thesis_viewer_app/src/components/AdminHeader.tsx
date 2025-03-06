@@ -1,16 +1,21 @@
-import { Avatar, Typography, Box } from "@mui/material";
+import { Avatar, Typography, Box, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { supabase } from "../config";
-import {LogoutButton} from "./LogoutButton";
+import { LogoutButton } from "./LogoutButton";
+import { Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import "../styles/Admin.css";
 
 export function AdminHeader() {
   const [googleProfilePic, setGoogleProfilePic] = useState(
     "https://lh3.googleusercontent.com/a/default-user"
   );
+  const [displayName, setDisplayName] = useState("");
+  const [role, setRole] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProfilePic = async () => {
+    const fetchUserData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
@@ -18,10 +23,23 @@ export function AdminHeader() {
         if (avatarUrl) {
           setGoogleProfilePic(avatarUrl);
         }
+
+        const name = session.user.user_metadata.full_name || session.user.email;
+        setDisplayName(name);
+
+        const { data: userData } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (userData) {
+          setRole(userData.role);
+        }
       }
     };
 
-    fetchProfilePic();
+    fetchUserData();
   }, []);
 
   return (
@@ -41,30 +59,17 @@ export function AdminHeader() {
       }}
     >
       <Box display="flex" alignItems="center" gap={2}>
-        {/* Google Profile Picture */}
-        <Avatar
-          src={googleProfilePic}
-          sx={{ width: 50, height: 50 }}
-        />
-        
+        <Avatar src={googleProfilePic} sx={{ width: 50, height: 50 }} />
         <Box>
-          {/* Admin Dashboard Title */}
           <Typography
             variant="h6"
-            component="a"
-            href="/admin"
             sx={{
               color: "var(--primary)",
               fontWeight: 600,
-              fontSize: 24,
-              textDecoration: "none",
-              cursor: "pointer",
-              "&:hover": {
-                color: "var(--primary-hover) !important",
-              },
+              fontSize: 20,
             }}
           >
-            Admin Dashboard
+            Hi! {displayName}, {role}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Thesis Management System
@@ -72,8 +77,12 @@ export function AdminHeader() {
         </Box>
       </Box>
 
-      {/* Logout Button */}
+      <Box display="flex" alignItems="center" gap={2}>
+        <IconButton onClick={() => navigate("/admin")}>
+          <Home size={24} />
+        </IconButton>
         <LogoutButton />
+      </Box>
     </Box>
   );
 }

@@ -1,60 +1,191 @@
 import React, { useState } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from "@mui/material";
+import { supabase } from "../config";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Snackbar,
+  Alert,
+  Typography,
+  Box,
+  IconButton,
+} from "@mui/material";
+import { Upload, X } from "lucide-react";
+import "../styles/ManageThesis.css";
 
-interface ThesisFormData {
+interface Thesis {
   title: string;
   description: string;
+  author: string;
   category: string;
-  pdfFile?: File | null;
-  isActive?: boolean;
+  pdf_url: string;
+  isActive: boolean;
 }
 
 interface AddThesisFormProps {
   open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onSubmit: (newThesis: ThesisFormData) => Promise<void>; // Ensure type matches ManageThesis
+  setOpen: (open: boolean) => void;
+  refreshTheses: () => void;
 }
 
-const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, onSubmit }) => {
-  const [formData, setFormData] = useState<ThesisFormData>({
+const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshTheses }) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState<Thesis>({
     title: "",
     description: "",
+    author: "",
     category: "",
-    pdfFile: null,
+    pdf_url: "",
     isActive: true,
   });
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
+
+  const uploadPDF = async (file: File) => {
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const { data, error } = await supabase.storage.from("thesis_pdfs").upload(fileName, file);
+
+      if (error) throw error;
+
+      const { publicUrl } = supabase.storage.from("thesis_pdfs").getPublicUrl(fileName).data;
+      return publicUrl;
+    } catch (error: any) {
+      console.error("Error uploading PDF:", error);
+      setSnackbar({ open: true, message: "Error uploading PDF", severity: "error" });
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      let pdfUrl = formData.pdf_url;
+      if (selectedFile) {
+        pdfUrl = await uploadPDF(selectedFile);
+      }
+
+      const { error } = await supabase.from("Thesis").insert([{ ...formData, pdf_url: pdfUrl }]);
+      if (error) throw error;
+
+      setSnackbar({ open: true, message: "Thesis created successfully", severity: "success" });
+
+      // Reset form and close modal
+      setFormData({ title: "", description: "", category: "", author: "", pdf_url: "", isActive: true });
+      setSelectedFile(null);
+      setOpen(false);
+
+      // Refresh thesis list
+      refreshTheses();
+    } catch (error: any) {
+      console.error("Error saving thesis:", error);
+      setSnackbar({ open: true, message: error.message || "Error saving thesis", severity: "error" });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        setSnackbar({ open: true, message: "Please upload a PDF file", severity: "error" });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFormData({ ...formData, pdfFile: e.target.files[0] });
-    }
-  };
-
-  const handleSubmit = async () => {
-    await onSubmit(formData);
-    setOpen(false);
-  };
-
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-      <DialogTitle>Add New Thesis</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth margin="dense" label="Title" name="title" value={formData.title} onChange={handleChange} />
-        <TextField fullWidth margin="dense" label="Description" name="description" value={formData.description} onChange={handleChange} />
-        <TextField fullWidth margin="dense" label="Category" name="category" value={formData.category} onChange={handleChange} />
-        <input type="file" accept="application/pdf" onChange={handleFileChange} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
-          Submit
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <>
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle className="dialog-title">Add New Thesis</DialogTitle>
+        <DialogContent>
+          <Box className="form-container">
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="custom-input"
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Description"
+              name="description"
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={handleChange}
+              className="custom-input"
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="custom-input"
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Author"
+              name="author"
+              value={formData.author}
+              onChange={handleChange}
+              className="custom-input"
+            />
+
+            {/* File Upload */}
+            <Box className="file-upload">
+              <input type="file" accept="application/pdf" id="upload-button" onChange={handleFileChange} hidden />
+              <label htmlFor="upload-button">
+                <Button variant="contained" component="span" className="upload-btn">
+                  <Upload size={18} />
+                  Upload PDF
+                </Button>
+              </label>
+              {selectedFile && (
+                <Box className="file-preview">
+                  <Typography>{selectedFile.name}</Typography>
+                  <IconButton onClick={() => setSelectedFile(null)}>
+                    <X size={18} />
+                  </IconButton>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} className="cancel-btn">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" className="submit-btn">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

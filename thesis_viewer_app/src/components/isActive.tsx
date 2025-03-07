@@ -18,14 +18,14 @@ const ToggleActiveButton: React.FC<Props> = ({ thesisId, isActive, onUpdate }) =
     if (error) {
       console.error("Error updating status:", error);
     } else {
-      onUpdate(); // Refresh the thesis list
+      onUpdate(); 
     }
   };
 
   return (
     <IconButton
       onClick={toggleStatus}
-      style={{ color: isActive ? "green" : "red" }} // Green for Active, Red for Inactive
+      style={{ color: isActive ? "green" : "red" }}
     >
       <Trash size={20} />
     </IconButton>

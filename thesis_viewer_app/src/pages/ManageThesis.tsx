@@ -16,6 +16,7 @@ import {
   IconButton,
 } from "@mui/material";
 import AddThesisForm from "../components/AddThesisForm";
+import EditThesisForm from "../components/EditThesisForm";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AdminHeader } from "../components/AdminHeader";
@@ -33,6 +34,9 @@ interface Thesis {
 
 const ManageThesis: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedThesis, setSelectedThesis] = useState<Thesis | null>(null);
+
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,6 +60,24 @@ const ManageThesis: React.FC = () => {
     else setTheses(data);
 
     setLoading(false);
+  };
+
+  const handleEditClick = (thesis: Thesis) => {
+    setSelectedThesis(thesis);
+    setEditOpen(true);
+  };
+
+  const toggleThesisStatus = async (thesisId: number, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from("Thesis")
+      .update({ isActive: !currentStatus }) // Toggle status
+      .eq("id", thesisId);
+
+    if (error) {
+      console.error("Error updating status:", error);
+    } else {
+      fetchTheses(); // Refresh the list after update
+    }
   };
 
   const filteredTheses = searchQuery
@@ -179,10 +201,10 @@ const ManageThesis: React.FC = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <IconButton color="primary">
+                      <IconButton color="primary" onClick={() => handleEditClick(thesis)}>
                         <Edit size={20} />
                       </IconButton>
-                      <IconButton color="error">
+                      <IconButton color="error" onClick={() => toggleThesisStatus(thesis.id, thesis.isActive)}>
                         <Trash2 size={20} />
                       </IconButton>
                     </TableCell>
@@ -194,6 +216,14 @@ const ManageThesis: React.FC = () => {
         </TableContainer>
 
         <AddThesisForm open={formOpen} setOpen={setFormOpen} refreshTheses={fetchTheses} />
+        {editOpen && selectedThesis && (
+          <EditThesisForm
+            open={editOpen}
+            handleClose={() => setEditOpen(false)}
+            thesis={selectedThesis}
+            onUpdate={fetchTheses} // Refresh the list after update
+          />
+        )}
       </div>
     </>
   );

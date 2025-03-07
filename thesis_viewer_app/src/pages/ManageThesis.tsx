@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import AddThesisForm from "../components/AddThesisForm";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
-import { supabase } from "../config";
+import { supabase } from "../lib/supabase";
 import { AdminHeader } from "../components/AdminHeader";
 import "../styles/ManageThesis.css";
 

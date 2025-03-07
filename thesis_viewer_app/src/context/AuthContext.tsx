@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, ReactNode, useState } from "react";
-import { supabase } from "../config";
+import { supabase } from "../lib/supabase";
 import { useNavigate, useLocation  } from "react-router-dom";
 import { Session, User } from '@supabase/supabase-js'; 
 
@@ -33,10 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             navigate('/login', { replace: true });
         }
     }, [location]);
-
+    
+    // Set data and listen to auth changes
     useEffect(() => {
         const setData = async () => {
             const { data: { session }, error } = await supabase.auth.getSession();
+
+            if (!session?.user?.email?.endsWith('@neu.edu.ph')) {
+              await supabase.auth.signOut();
+              navigate('/login')
+            }
+
             if(error) throw error;
             setSession(session);
             setLoading(false);
@@ -55,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
+    // Fetching Profile
     useEffect(() => {
         if (session && session.user) {
           const fetchProfile = async () => {
@@ -75,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [session]);
 
+    // Role based redirection
     useEffect(() => {
         if (session && session.user && profile && location.pathname === "/login") {
           const userRole = profile.role;
@@ -88,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       }, [session, profile, location.pathname, navigate]);
+
 
     const handleGoogleLogin = async () => {
         try {

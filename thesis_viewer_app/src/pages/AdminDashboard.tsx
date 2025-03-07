@@ -2,10 +2,13 @@ import { Card, CardContent, CardHeader, Typography, Box, Container } from "@mui/
 import { Eye, Settings } from "lucide-react";
 import { AdminHeader } from "../components/AdminHeader";
 import { useNavigate } from "react-router-dom";
+import { usePermissions } from "../context/PermissionsContext";
 import "../styles/Admin.css";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { thesisRepositoryPermissions } = usePermissions();
+
 
   return (
     <div className="admin-dashboard">
@@ -17,48 +20,35 @@ export default function AdminDashboard() {
       <AdminHeader />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <main className="admin-content">
-          {/* Main Action Cards */}
-          <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={4} mb={6}>
-            
-            {/* View Thesis Card */}
-            <Card className="card-hover" onClick={() => navigate("/view-thesis")}>
+        {/* Main Action Cards */}
+        <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={4} mb={6}>
+          {/* Thesis Repository*/}
+          {(thesisRepositoryPermissions?.add || 
+          thesisRepositoryPermissions?.view || 
+          thesisRepositoryPermissions?.edit || 
+          thesisRepositoryPermissions?.delete) ? 
+          (
+            <Card className="card-hover" onClick={() => navigate("/thesis-repository")}>
               <CardHeader
                 title={
                   <Box className="card-title">
                     <Box className="icon-circle">
                       <Eye size={28} />
                     </Box>
-                    View Thesis
+                    Thesis Repository
                   </Box>
                 }
                 titleTypographyProps={{ className: "card-title-text" }}
               />
               <CardContent>
                 <Typography className="card-description">
-                  Browse and view all the thesis in the system.
+                  Where the browsing and management of all thesis are done.
                 </Typography>
               </CardContent>
             </Card>
-
-            {/* Manage Thesis Card */}
-            <Card className="card-hover" onClick={() => navigate("/manage-thesis")}>
-              <CardHeader
-                title={
-                  <Box className="card-title">
-                    <Box className="icon-circle">
-                      <Settings size={28} />
-                    </Box>
-                    Manage Thesis
-                  </Box>
-                }
-                titleTypographyProps={{ className: "card-title-text" }}
-              />
-              <CardContent>
-                <Typography className="card-description">
-                  Add, Edit, Delete and control thesis visibility.
-                </Typography>
-              </CardContent>
-            </Card>
+          ) 
+          :
+          (null)}
           </Box>
         </main>
       </Container>

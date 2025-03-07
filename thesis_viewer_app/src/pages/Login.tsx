@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import EmailErrorPopup from "../components/EmailErrorPopup";
-import { useAuth } from "../services/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import "../styles/Login.css";
 
 const Login: React.FC = () => {

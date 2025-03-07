@@ -3,7 +3,7 @@ import { Container, TextField, Select, MenuItem, Box, Typography, Grid, Card, Ca
 import { AdminHeader } from "../components/AdminHeader";
 import { Search } from "lucide-react";
 import "../styles/Admin.css";
-import { supabase } from "../config";
+import { supabase } from "../lib/supabase";
 
 type Thesis = {
   id: string;

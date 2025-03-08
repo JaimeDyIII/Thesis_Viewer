@@ -60,6 +60,7 @@ const StyledMenuItem = styled(MenuItem)({
 const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thesis, onUpdate }) => {
   const [formData, setFormData] = useState({ ...thesis });
   const [file, setFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (thesis) {
@@ -73,7 +74,22 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      
+      // Check file size (limit to 5MB)
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        setUploadError("File is too large. Maximum size is 50MB.");
+        return;
+      }
+      
+      // Check file type
+      if (!selectedFile.type.includes('pdf')) {
+        setUploadError("Only PDF files are allowed.");
+        return;
+      }
+      
+      setFile(selectedFile);
+      setUploadError(null);
     }
   };
 
@@ -81,30 +97,67 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
     let pdfUrl = formData.pdf_url;
     
     if (file) {
-      const { data, error } = await supabase.storage.from("thesis_pdfs").upload(`theses/${thesis.id}.pdf`, file, { upsert: true });
-      if (error) {
-        console.error("Error uploading file:", error.message);
+      // Create a more unique file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${thesis.id}_${Date.now()}.${fileExt}`;
+      const filePath = `theses/${fileName}`;
+      
+      console.log("Uploading file:", filePath);
+      
+      try {
+        const { data, error } = await supabase.storage
+  .from("thesis_pdfs")
+  .upload(filePath, file, { 
+    upsert: true,
+    cacheControl: '3600'
+  });
+
+if (data) {
+  console.log("Upload successful:", data);
+}
+          
+        if (error) {
+          console.error("Upload error details:", error);
+          setUploadError(`Error uploading file: ${error.message}`);
+          return;
+        }
+        
+        // Get the public URL
+        const { data: urlData } = supabase.storage
+          .from("thesis_pdfs")
+          .getPublicUrl(filePath);
+          
+        pdfUrl = urlData?.publicUrl || null;
+        console.log("Generated PDF URL:", pdfUrl);
+      } catch (uploadErr) {
+        console.error("Unexpected upload error:", uploadErr);
+        setUploadError("An unexpected error occurred during upload");
         return;
       }
-      pdfUrl = data?.path ? supabase.storage.from("thesis_pdfs").getPublicUrl(data.path).data.publicUrl : null;
     }
     
-    const { error } = await supabase
-      .from("Thesis")
-      .update({
-        title: formData.title,
-        description: formData.description,
-        author: formData.author,
-        category: formData.category,
-        pdf_url: pdfUrl,
-      })
-      .eq("id", thesis.id);
+    try {
+      const { error } = await supabase
+        .from("Thesis")
+        .update({
+          title: formData.title,
+          description: formData.description,
+          author: formData.author,
+          category: formData.category,
+          pdf_url: pdfUrl,
+        })
+        .eq("id", thesis.id);
 
-    if (error) {
-      console.error("Error updating thesis:", error.message);
-    } else {
-      onUpdate();
-      handleClose();
+      if (error) {
+        console.error("Database update error:", error);
+        setUploadError(`Error updating thesis: ${error.message}`);
+      } else {
+        onUpdate();
+        handleClose();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setUploadError("An unexpected error occurred");
     }
   };
 
@@ -132,19 +185,33 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
         </TextField>
         <TextField label="Author" name="author" value={formData.author} onChange={handleChange} fullWidth margin="dense" />
         
-        <Box display="flex" alignItems="center" mt={2}>
-          <input type="file" id="upload-pdf" accept="application/pdf" hidden onChange={handleFileChange} />
-          <UploadButton htmlFor="upload-pdf">UPLOAD PDF</UploadButton>
-          {file && (
-            <Typography variant="body2" color="textSecondary" ml={2}>
-              {file.name}
+        <Box display="flex" flexDirection="column" mt={2}>
+          <Box display="flex" alignItems="center">
+            <input type="file" id="upload-pdf" accept="application/pdf" hidden onChange={handleFileChange} />
+            <UploadButton htmlFor="upload-pdf">UPLOAD PDF</UploadButton>
+            {file && (
+              <Typography variant="body2" color="textSecondary" ml={2}>
+                {file.name}
+              </Typography>
+            )}
+          </Box>
+          
+          {uploadError && (
+            <Typography variant="body2" color="error" mt={1}>
+              {uploadError}
+            </Typography>
+          )}
+          
+          {formData.pdf_url && !file && (
+            <Typography variant="body2" color="textSecondary" mt={1}>
+              Current PDF: {formData.pdf_url.split('/').pop()}
             </Typography>
           )}
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} sx={{ color: "#6a0dad" }}>CANCEL</Button>
-        <PdfButton onClick={handleSave} variant="contained">SUBMIT</PdfButton>
+        <PdfButton onClick={handleSave} variant="contained" disabled={!!uploadError}>SUBMIT</PdfButton>
       </DialogActions>
     </Dialog>
   );

@@ -18,7 +18,7 @@ import {
 import AddThesisForm from "../components/AddThesisForm";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { AdminHeader } from "../components/AdminHeader";
+import { Header } from "../components/Header";
 import "../styles/ManageThesis.css";
 
 interface Thesis {
@@ -69,7 +69,7 @@ const ManageThesis: React.FC = () => {
 
   return (
     <>
-      <AdminHeader />
+      <Header />
 
       <div className="manage-thesis">
         <div className="manage-background-gradient"></div>

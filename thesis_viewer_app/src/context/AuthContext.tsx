@@ -86,15 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Role based redirection
     useEffect(() => {
         if (session && session.user && profile && location.pathname === "/login") {
-          const userRole = profile.role;
-          if (userRole === "Admin") {
-            navigate("/admin", { replace: true });
-          } else if (userRole === "User") {
-            navigate("/user", { replace: true });
-          } else {
-            console.error("Invalid role!");
-            navigate("/login", { replace: true });
-          }
+            navigate("/dashboard", { replace: true });
         }
       }, [session, profile, location.pathname, navigate]);
 

@@ -1,14 +1,17 @@
 import { Card, CardContent, CardHeader, Typography, Box, Container } from "@mui/material";
-import { Eye, Settings } from "lucide-react";
-import { AdminHeader } from "../components/AdminHeader";
+import { Eye } from "lucide-react";
+import { Header } from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
 import "../styles/Admin.css";
+import { useAuth } from "../context/AuthContext";
 
-export default function AdminDashboard() {
+export default function Dashboard() {
   const navigate = useNavigate();
-  const { thesisRepositoryPermissions } = usePermissions();
+  const { profile } = useAuth();
+  const { permissions } = usePermissions();
 
+  const userRole = profile.role;
 
   return (
     <div className="admin-dashboard">
@@ -17,16 +20,16 @@ export default function AdminDashboard() {
       <div className="admin-background-blur"></div>
       <div className="admin-background-radial"></div>
 
-      <AdminHeader />
+      <Header />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <main className="admin-content">
         {/* Main Action Cards */}
         <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={4} mb={6}>
           {/* Thesis Repository*/}
-          {(thesisRepositoryPermissions?.add || 
-          thesisRepositoryPermissions?.view || 
-          thesisRepositoryPermissions?.edit || 
-          thesisRepositoryPermissions?.delete) ? 
+          {(permissions?.ThesisRepository_add || 
+            permissions?.ThesisRepository_view || 
+            permissions?.ThesisRepository_edit || 
+            permissions?.ThesisRepository_delete) ? 
           (
             <Card className="card-hover" onClick={() => navigate("/thesis-repository")}>
               <CardHeader
@@ -43,6 +46,35 @@ export default function AdminDashboard() {
               <CardContent>
                 <Typography className="card-description">
                   Where the browsing and management of all thesis are done.
+                </Typography>
+              </CardContent>
+            </Card>
+          ) 
+          :
+          (null)}
+
+          {/* User Management */}
+          {(userRole !== 'User'  &&
+            (permissions?.UserManagement_add || 
+            permissions?.UserManagement_view || 
+            permissions?.UserManagement_edit || 
+            permissions?.UserManagement_delete)) ? 
+          (
+            <Card className="card-hover" onClick={() => navigate("/user-management")}>
+              <CardHeader
+                title={
+                  <Box className="card-title">
+                    <Box className="icon-circle">
+                      <Eye size={28} />
+                    </Box>
+                    User Management
+                  </Box>
+                }
+                titleTypographyProps={{ className: "card-title-text" }}
+              />
+              <CardContent>
+                <Typography className="card-description">
+                  Where the browsing and management of all users are done.
                 </Typography>
               </CardContent>
             </Card>

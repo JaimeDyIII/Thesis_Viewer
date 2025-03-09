@@ -2,49 +2,57 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 
-interface ThesisRepositoryPermissions {
-    view: boolean;
-    add: boolean;
-    edit: boolean;
-    delete: boolean;
+type PermissionsType = {
+  [key: string]: boolean
 }
-  
-interface UserManagementPermissions {
-    view: boolean;
-    add: boolean;
-    edit: boolean;
-    delete: boolean;
+
+interface Permissions extends PermissionsType {
+    ThesisRepository_view: boolean;
+    ThesisRepository_add: boolean;
+    ThesisRepository_edit: boolean;
+    ThesisRepository_delete: boolean;
+    UserManagement_view: boolean;
+    UserManagement_add: boolean;
+    UserManagement_edit: boolean;
+    UserManagement_delete: boolean;
 }
-  
 
 interface PermissionsContextType {
-  thesisRepositoryPermissions: ThesisRepositoryPermissions | null;
+  permissions: Permissions | null;
 }
 
 const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined);
 
 export const PermissionsProvider = ({ children }: { children: React.ReactNode }) => {
-    const [ thesisRepositoryPermissions, setThesisRepositoryPermissions ] = useState<ThesisRepositoryPermissions | null>(null);
-    const [ userManagementPermissions, setUserManagementPermissions ] = useState<UserManagementPermissions | null>(null);
+    const [ permissions, setPermissions ] = useState<Permissions | null>(null);
     const { session } = useAuth();
 
     useEffect(() => {
-        const fetchThesisRepositoryPermissions = async () => {
+        const fetchPermissions = async () => {
         if(!session) return console.error("Session not found!");
 
         const user = session.user;
         console.log("Current user:", user?.id);
 
         if (!user?.id) {
-            setThesisRepositoryPermissions({ view: false, add: false, edit: false, delete: false });
-            return;
+            setPermissions({ 
+              ThesisRepository_view: false, 
+              ThesisRepository_add: false, 
+              ThesisRepository_edit: false, 
+              ThesisRepository_delete: false,
+              UserManagement_view: false,
+              UserManagement_add: false,
+              UserManagement_edit: false,
+              UserManagement_delete: false, 
+            });
+
+          return;
         }
 
         let { data, error } = await supabase
             .from('user_permissions')
-            .select("permission_type, permitted")
-            .eq('userid', user.id)
-            .eq('subsystem', 'ThesisRepository');
+            .select("subsystem, permission_type, permitted")
+            .eq('userid', user.id);
 
         if (error) {
             console.error("Error fetching permissions:", error);
@@ -53,28 +61,49 @@ export const PermissionsProvider = ({ children }: { children: React.ReactNode })
 
         if (!data || data.length === 0) {
             console.log("No matching permissions found in database");
-            setThesisRepositoryPermissions({ view: false, add: false, edit: false, delete: false });
+            setPermissions({ 
+              ThesisRepository_view: false, 
+              ThesisRepository_add: false, 
+              ThesisRepository_edit: false, 
+              ThesisRepository_delete: false,
+              UserManagement_view: false,
+              UserManagement_add: false,
+              UserManagement_edit: false,
+              UserManagement_delete: false, 
+            });
+
             return;
         }
 
-        const permissions: ThesisRepositoryPermissions = { view: false, add: false, edit: false, delete: false };
+        const newPermissions: Permissions = { 
+          ThesisRepository_view: false, 
+          ThesisRepository_add: false, 
+          ThesisRepository_edit: false, 
+          ThesisRepository_delete: false,
+          UserManagement_view: false,
+          UserManagement_add: false,
+          UserManagement_edit: false,
+          UserManagement_delete: false, 
+        }
 
-        if(!data) return "No Thesis Repository Permissions fetched!";
-
-        data.forEach(({ permission_type, permitted }) => {
-            if (permissions.hasOwnProperty(permission_type)) {
-                permissions[permission_type as keyof ThesisRepositoryPermissions] = Boolean(permitted);
-            }
+        data.forEach(({ subsystem, permission_type, permitted }) => {
+          const permissionKey = `${subsystem}_${permission_type}` as keyof Permissions;
+  
+          if (permissionKey in newPermissions) {
+            newPermissions[permissionKey] = Boolean(permitted);
+          }
         });
-    
-    setThesisRepositoryPermissions(permissions);
+      
+      setPermissions(newPermissions);
     };
 
-    fetchThesisRepositoryPermissions();
+    fetchPermissions();
   }, [session]);
 
+  
+
   return (
-    <PermissionsContext.Provider value={{ thesisRepositoryPermissions }}>
+    <PermissionsContext.Provider value={{ permissions }}>
       {children}
     </PermissionsContext.Provider>
   );

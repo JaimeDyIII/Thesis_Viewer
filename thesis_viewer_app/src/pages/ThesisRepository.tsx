@@ -1,14 +1,18 @@
 import { Card, CardContent, CardHeader, Typography, Box, Container } from "@mui/material";
 import { Eye, Settings } from "lucide-react";
-import { AdminHeader } from "../components/AdminHeader";
+import { Header } from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
+import { useAuth } from "../context/AuthContext";
 
 import "../styles/Admin.css";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { thesisRepositoryPermissions } = usePermissions();
+  const { permissions } = usePermissions();
+  const { profile } = useAuth();
+  
+  const userRole = profile.role;
 
   return (
     <div className="admin-dashboard">
@@ -17,14 +21,15 @@ export default function AdminDashboard() {
       <div className="admin-background-blur"></div>
       <div className="admin-background-radial"></div>
 
-      <AdminHeader />
+
+      <Header />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <main className="admin-content">
           {/* Main Action Cards */}
           <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={4} mb={6}>
             
             {/* View Thesis Card */}
-            {thesisRepositoryPermissions?.view ? (
+            {permissions?.ThesisRepository_view ? (
 
             <Card className="card-hover" onClick={() => navigate("/view-thesis")}>
               <CardHeader
@@ -47,9 +52,10 @@ export default function AdminDashboard() {
             ) : (null)}
 
             {/* Manage Thesis Card */}
-            {(thesisRepositoryPermissions?.add || 
-              thesisRepositoryPermissions?.edit || 
-              thesisRepositoryPermissions?.delete) ? 
+            {(userRole !== 'User' &&
+              (permissions?.ThesisRepository_add || 
+              permissions?.ThesisRepository_edit || 
+              permissions?.ThesisRepository_delete)) ? 
               (
               <Card className="card-hover" onClick={() => navigate("/manage-thesis")}>
                 <CardHeader

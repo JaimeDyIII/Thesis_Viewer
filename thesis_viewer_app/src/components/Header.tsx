@@ -6,7 +6,7 @@ import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Admin.css";
 
-export function AdminHeader() {
+export function Header() {
   const [googleProfilePic, setGoogleProfilePic] = useState(
     "https://lh3.googleusercontent.com/a/default-user"
   );
@@ -78,7 +78,7 @@ export function AdminHeader() {
       </Box>
 
       <Box display="flex" alignItems="center" gap={2}>
-        <IconButton onClick={() => navigate("/admin")}>
+        <IconButton onClick={() => navigate('/dashboard')}>
           <Home size={24} />
         </IconButton>
         <LogoutButton />

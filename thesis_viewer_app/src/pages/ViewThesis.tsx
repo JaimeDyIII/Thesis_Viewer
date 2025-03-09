@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Container, TextField, Select, MenuItem, Box, Typography, Grid, Card, CardContent, CardHeader, CircularProgress, Button } from "@mui/material";
-import { AdminHeader } from "../components/AdminHeader";
+import { Header } from "../components/Header";
 import { Search } from "lucide-react";
 import "../styles/Admin.css";
 import { supabase } from "../lib/supabase";
@@ -62,7 +62,7 @@ export default function ViewThesis() {
       <div className="admin-background-blur"></div>
       <div className="admin-background-radial"></div>
 
-      <AdminHeader />
+      <Header />
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Typography variant="h5" color="var(--primary)" fontWeight="bold" gutterBottom>

@@ -17,8 +17,8 @@ const AppRoutes: React.FC = () => (
         <AuthProvider>
             <PermissionsProvider>
                 <Routes>
-                <Route path="/" element={ <ProtectedRoute allowedRoles={['User', 'Faculty', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
-                <Route path="/dashboard" element={ <ProtectedRoute allowedRoles={['User', 'Faculty', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
+                <Route path="/" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
+                <Route path="/dashboard" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
                     <Route path="/thesis-repository" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} 
                                                                                requiredPermissions={['ThesisRepository_view', 
                                                                                                      'ThesisRepository_add',
@@ -29,7 +29,7 @@ const AppRoutes: React.FC = () => (
                                                                 </ProtectedRoute> }>
                     </Route>
 
-                    <Route path="/view-thesis" element={ <ProtectedRoute allowedRoles={['User', 'Admin']} requiredPermissions={['ThesisRepository_view']}><ViewThesis /></ProtectedRoute> } />
+                    <Route path="/view-thesis" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}><ViewThesis /></ProtectedRoute> } />
                     <Route path="/manage-thesis" element={ <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']} 
                                                                            requiredPermissions={['ThesisRepository_add',
                                                                                                  'ThesisRepository_edit', 

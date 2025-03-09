@@ -20,6 +20,7 @@ import EditThesisForm from "../components/EditThesisForm";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
+import { usePermissions } from "../context/PermissionsContext";
 import "../styles/ManageThesis.css";
 
 interface Thesis {
@@ -42,6 +43,8 @@ const ManageThesis: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
+  const { permissions } = usePermissions();
 
   useEffect(() => {
     fetchTheses();
@@ -138,15 +141,19 @@ const ManageThesis: React.FC = () => {
               <MenuItem value="Active">Active</MenuItem>
               <MenuItem value="Inactive">Inactive</MenuItem>
             </Select>
-
-            <Button
-              onClick={() => setFormOpen(true)}
-              className="add-thesis-btn"
-              variant="contained"
-            >
-              <Plus size={18} />
-              <span>Add Thesis</span>
-            </Button>
+            
+            {permissions?.ThesisRepository_add ? (
+              <Button
+                onClick={() => setFormOpen(true)}
+                className="add-thesis-btn"
+                variant="contained"
+              >
+                <Plus size={18} />
+                <span>Add Thesis</span>
+              </Button>
+            ):
+            (null)
+            }
           </div>
         </div>
 
@@ -200,14 +207,27 @@ const ManageThesis: React.FC = () => {
                         "No PDF"
                       )}
                     </TableCell>
+                    {(permissions?.ThesisRepository_edit || permissions?.ThesisRepository_delete) ? (
                     <TableCell>
-                      <IconButton color="primary" onClick={() => handleEditClick(thesis)}>
-                        <Edit size={20} />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => toggleThesisStatus(thesis.id, thesis.isActive)}>
-                        <Trash2 size={20} />
-                      </IconButton>
+                      {permissions?.ThesisRepository_edit ? (
+                        <IconButton color="primary" onClick={() => handleEditClick(thesis)}>
+                          <Edit size={20} />
+                        </IconButton>
+                      ) : (null)
+                      }
+                      
+                      {permissions?.ThesisRepository_delete ? (
+                        <IconButton color="error" onClick={() => toggleThesisStatus(thesis.id, thesis.isActive)}>
+                          <Trash2 size={20} />
+                        </IconButton>
+                      ) : (null)
+                      }
                     </TableCell>
+                    ) : 
+                    (
+                      <TableCell>No Actions Allowed!</TableCell>
+                    )
+                    }
                   </TableRow>
                 ))
               )}

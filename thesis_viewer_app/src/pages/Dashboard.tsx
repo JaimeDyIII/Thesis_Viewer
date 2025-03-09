@@ -54,7 +54,7 @@ export default function Dashboard() {
           (null)}
 
           {/* User Management */}
-          {((userRole !== 'User' || userRole !== 'Librarian') &&
+          {((userRole === 'Admin' || userRole === 'SuperAdmin') &&
             (permissions?.UserManagement_add || 
             permissions?.UserManagement_view || 
             permissions?.UserManagement_edit || 

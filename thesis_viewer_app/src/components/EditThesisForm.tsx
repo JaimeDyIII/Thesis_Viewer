@@ -77,13 +77,13 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       
-      // Check file size (limit to 50MB)
+      
       if (selectedFile.size > 50 * 1024 * 1024) {
         setUploadError("File is too large. Maximum size is 50MB.");
         return;
       }
       
-      // Check file type
+     
       if (!selectedFile.type.includes('pdf')) {
         setUploadError("Only PDF files are allowed.");
         return;
@@ -103,7 +103,7 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
     let pdfUrl = formData.pdf_url;
     
     if (file) {
-      // Create a more unique file path
+     
       const fileExt = file.name.split('.').pop();
       const fileName = `${thesis.id}_${Date.now()}.${fileExt}`;
       const filePath = `theses/${fileName}`;
@@ -128,7 +128,7 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
           return;
         }
         
-        // Get the public URL
+     
         const { data: urlData } = supabase.storage
           .from("thesis_pdfs")
           .getPublicUrl(filePath);

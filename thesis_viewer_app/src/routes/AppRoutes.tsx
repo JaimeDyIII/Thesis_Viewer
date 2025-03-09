@@ -38,10 +38,11 @@ const AppRoutes: React.FC = () => (
                                                             </ProtectedRoute> }>
                     </Route>
                                         
-                    <Route path="/user-management" element={ <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']} 
-                                    requiredPermissions={['ThesisRepository_add',
-                                                            'ThesisRepository_edit', 
-                                                            'ThesisRepository_delete']}>
+                    <Route path="/user-management" element={ <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']} 
+                                    requiredPermissions={['UserManagement_view',
+                                                          'UserManagement_add',
+                                                          'UserManagement_edit', 
+                                                          'UserManagement_delete']}>
                                                             <UserManagement />
                                                         </ProtectedRoute> }>
                     </Route>

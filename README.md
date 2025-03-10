@@ -6,14 +6,22 @@ This directory contains all of the source code.
 - ### `components/`
     - Reusable UI Elements
     - Example: buttons, forms, etc.
+    
+- ### `context/`
+    - Where the shared state are passed through the components using React Context
+    - Example: AuthContext, PermissionsContext, etc.
+      
+- ### `lib/`
+    - Api functions
+    - Examples: Supabase and Hugging face interactions.
 
 - ### `pages/`
     - Indivudual pages for the app.
     - Example: AdminDashboard, UserDashboard, Login, etc.
 
-- ### `services/`
-    - Api functions
-    - Examples: Supabase and Hugging face interactions.
+- ### `routes/`
+    - Routes for the app where pages are rendered
+    - Examples:  AppRoutes and ProtectedRoutes.
 
 - ### `styles/`
     - All CSS styling

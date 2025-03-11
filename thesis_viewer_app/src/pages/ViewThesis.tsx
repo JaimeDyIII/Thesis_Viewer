@@ -120,7 +120,24 @@ export default function ViewThesis() {
           {filteredThesis.map((thesis) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={thesis.id}>
               <Card className="card-hover" sx={{ height: 150 }}>
-                <CardHeader title={<Typography variant="h6" className="card-title-text">{thesis.title}</Typography>} />
+              <CardHeader
+                title={
+                  <Typography
+                    variant="h6"
+                    className="card-title-text"
+                    sx={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      width: "calc(100% - 16px)", // Adds a little space from the edges
+                      display: "block",
+                      paddingRight: "8px", // Extra padding from the right
+                    }}
+                  >
+                    {thesis.title}
+                  </Typography>
+                }
+              />
                 <CardContent>
                   <Typography className="card-description">{thesis.description || "No description available."}</Typography>
                   {thesis.pdf_url && (

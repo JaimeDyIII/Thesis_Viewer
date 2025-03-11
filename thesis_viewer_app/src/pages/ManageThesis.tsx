@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Button,
   Table,
@@ -14,6 +14,7 @@ import {
   MenuItem,
   Box,
   IconButton,
+  SelectChangeEvent,
 } from "@mui/material";
 import AddThesisForm from "../components/AddThesisForm";
 import EditThesisForm from "../components/EditThesisForm";
@@ -41,46 +42,42 @@ const ManageThesis: React.FC = () => {
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
 
   const { permissions } = usePermissions();
 
-  useEffect(() => {
-    fetchTheses();
-  }, [selectedCategory, selectedStatus]);
-
-  const fetchTheses = async () => {
+  // Use useCallback to memoize the fetchTheses function
+  const fetchTheses = useCallback(async () => {
     setLoading(true);
     let query = supabase.from("Thesis").select("*");
 
     if (selectedCategory) query = query.eq("category", selectedCategory);
-    if (selectedStatus !== null)
-      query = query.eq("isActive", selectedStatus === "Active");
+    if (selectedStatus === "Active") query = query.eq("isActive", true);
+    if (selectedStatus === "Inactive") query = query.eq("isActive", false);
 
     const { data, error } = await query;
     if (error) console.error("Error fetching theses:", error);
-    else setTheses(data);
+    else setTheses(data || []);
 
     setLoading(false);
-  };
+  }, [selectedCategory, selectedStatus]);
+
+  useEffect(() => {
+    fetchTheses();
+  }, [fetchTheses]); // Now fetchTheses is properly included in the dependency array
 
   const handleEditClick = (thesis: Thesis) => {
     setSelectedThesis(thesis);
     setEditOpen(true);
   };
 
-  const toggleThesisStatus = async (thesisId: number, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("Thesis")
-      .update({ isActive: !currentStatus }) // Toggle status
-      .eq("id", thesisId);
+  const handleCategoryChange = (event: SelectChangeEvent<string>) => {
+    setSelectedCategory(event.target.value);
+  };
 
-    if (error) {
-      console.error("Error updating status:", error);
-    } else {
-      fetchTheses(); // Refresh the list after update
-    }
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
+    setSelectedStatus(event.target.value);
   };
 
   const filteredTheses = searchQuery
@@ -122,20 +119,21 @@ const ManageThesis: React.FC = () => {
           <div className="filters-right">
             <Select
               className="category-filter"
-              value={selectedCategory || ""}
+              value={selectedCategory}
               displayEmpty
-              onChange={(e) => setSelectedCategory(e.target.value || null)}
+              onChange={handleCategoryChange}
             >
               <MenuItem value="">All Categories</MenuItem>
               <MenuItem value="Science">Science</MenuItem>
               <MenuItem value="Technology">Technology</MenuItem>
+              <MenuItem value="Mathematics">Mathematics</MenuItem>
             </Select>
 
             <Select
               className="status-filter"
-              value={selectedStatus || ""}
+              value={selectedStatus}
               displayEmpty
-              onChange={(e) => setSelectedStatus(e.target.value || null)}
+              onChange={handleStatusChange}
             >
               <MenuItem value="">All Status</MenuItem>
               <MenuItem value="Active">Active</MenuItem>
@@ -151,9 +149,7 @@ const ManageThesis: React.FC = () => {
                 <Plus size={18} />
                 <span>Add Thesis</span>
               </Button>
-            ):
-            (null)
-            }
+            ) : null}
           </div>
         </div>
 
@@ -213,21 +209,17 @@ const ManageThesis: React.FC = () => {
                         <IconButton color="primary" onClick={() => handleEditClick(thesis)}>
                           <Edit size={20} />
                         </IconButton>
-                      ) : (null)
-                      }
+                      ) : null}
                       
                       {permissions?.ThesisRepository_delete ? (
-                        <IconButton color="error" onClick={() => toggleThesisStatus(thesis.id, thesis.isActive)}>
+                        <IconButton color="error" onClick={() => { }}>
                           <Trash2 size={20} />
                         </IconButton>
-                      ) : (null)
-                      }
+                      ) : null}
                     </TableCell>
-                    ) : 
-                    (
+                    ) : (
                       <TableCell>No Actions Allowed!</TableCell>
-                    )
-                    }
+                    )}
                   </TableRow>
                 ))
               )}

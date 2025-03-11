@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, Typography, Box, MenuItem } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, Typography, Box, MenuItem, Switch, FormControlLabel } from "@mui/material";
 import { styled } from "@mui/system";
 import { supabase } from "../lib/supabase";
 
@@ -10,6 +10,7 @@ interface Thesis {
   author: string;
   category: string;
   pdf_url?: string | null;
+  isActive: boolean;
 }
 
 interface EditThesisFormProps {
@@ -76,13 +77,13 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       
-      // Check file size (limit to 5MB)
+      
       if (selectedFile.size > 50 * 1024 * 1024) {
         setUploadError("File is too large. Maximum size is 50MB.");
         return;
       }
       
-      // Check file type
+     
       if (!selectedFile.type.includes('pdf')) {
         setUploadError("Only PDF files are allowed.");
         return;
@@ -93,11 +94,16 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
     }
   };
 
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, isActive: e.target.checked });
+  };
+
   const handleSave = async () => {
     let pdfUrl = formData.pdf_url;
     
     if (file) {
-      // Create a more unique file path
+     
       const fileExt = file.name.split('.').pop();
       const fileName = `${thesis.id}_${Date.now()}.${fileExt}`;
       const filePath = `theses/${fileName}`;
@@ -106,15 +112,15 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({ open, handleClose, thes
       
       try {
         const { data, error } = await supabase.storage
-  .from("thesis_pdfs")
-  .upload(filePath, file, { 
-    upsert: true,
-    cacheControl: '3600'
-  });
+          .from("thesis_pdfs")
+          .upload(filePath, file, { 
+            upsert: true,
+            cacheControl: '3600'
+          });
 
-if (data) {
-  console.log("Upload successful:", data);
-}
+        if (data) {
+          console.log("Upload successful:", data);
+        }
           
         if (error) {
           console.error("Upload error details:", error);
@@ -122,7 +128,7 @@ if (data) {
           return;
         }
         
-        // Get the public URL
+     
         const { data: urlData } = supabase.storage
           .from("thesis_pdfs")
           .getPublicUrl(filePath);
@@ -145,6 +151,7 @@ if (data) {
           author: formData.author,
           category: formData.category,
           pdf_url: pdfUrl,
+          isActive: formData.isActive
         })
         .eq("id", thesis.id);
 
@@ -207,6 +214,31 @@ if (data) {
               Current PDF: {formData.pdf_url.split('/').pop()}
             </Typography>
           )}
+        </Box>
+
+        <Box display="flex" alignItems="center" mt={2}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.isActive}
+                onChange={handleStatusChange}
+                color="primary"
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#6a0dad',
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#6a0dad',
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography variant="body2" color={formData.isActive ? "success.main" : "error.main"}>
+                {formData.isActive ? "Active" : "Inactive"}
+              </Typography>
+            }
+          />
         </Box>
       </DialogContent>
       <DialogActions>

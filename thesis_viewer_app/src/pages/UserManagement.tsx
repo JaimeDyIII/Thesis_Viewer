@@ -19,7 +19,7 @@ import {
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
-import "../styles/ManageThesis.css";
+import "../styles/Manage.css";
 
 interface User {
   id: string;
@@ -94,11 +94,10 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => 
+    (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+    (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );  
 
   return (
     <>
@@ -149,7 +148,7 @@ const UserManagement: React.FC = () => {
                 filteredUsers.map((user) => (
                   <React.Fragment key={user.id}>
                     <TableRow onClick={() => handleRowClick(user.id)} style={{ cursor: "pointer" }}>
-                      <TableCell>{user.name}</TableCell>
+                      <TableCell>{user.name? user.name : "No name found!"}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.role}</TableCell>
                       <TableCell align="center">

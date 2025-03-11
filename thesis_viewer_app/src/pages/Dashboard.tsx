@@ -3,7 +3,7 @@ import { Eye } from "lucide-react";
 import { Header } from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
-import "../styles/Admin.css";
+import "../styles/View.css";
 import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {

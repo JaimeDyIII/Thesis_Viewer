@@ -22,7 +22,7 @@ import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
 import { usePermissions } from "../context/PermissionsContext";
-import "../styles/ManageThesis.css";
+import "../styles/Manage.css";
 
 interface Thesis {
   id: number;

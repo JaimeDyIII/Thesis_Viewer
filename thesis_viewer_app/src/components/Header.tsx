@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { LogoutButton } from "./LogoutButton";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Admin.css";
+import "../styles/View.css";
 
 export function Header() {
   const [googleProfilePic, setGoogleProfilePic] = useState(

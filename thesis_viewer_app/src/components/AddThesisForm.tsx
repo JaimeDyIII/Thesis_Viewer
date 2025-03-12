@@ -14,7 +14,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Upload, X } from "lucide-react";
-import "../styles/ManageThesis.css";
+import "../styles/Manage.css";
 
 interface Thesis {
   title: string;

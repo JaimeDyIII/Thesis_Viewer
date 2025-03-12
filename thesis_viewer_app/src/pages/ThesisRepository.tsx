@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 
-import "../styles/Admin.css";
+import "../styles/View.css";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();

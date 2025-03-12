@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { usePermissions } from "../context/PermissionsContext";
+import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -10,10 +11,10 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ allowedRoles, requiredPermissions = [], children }: ProtectedRouteProps) {
   const { session, profile, loading } = useAuth();
-  const { permissions } = usePermissions();
-    const location = useLocation();
+  const { permissions, permissionLoading } = usePermissions();
+  const location = useLocation();
 
-  if (loading) {
+  if (loading || permissionLoading) {
     return <div>Loading...</div>;
   }
 

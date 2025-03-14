@@ -15,6 +15,8 @@ import {
 } from "@mui/material";
 import { Upload, X } from "lucide-react";
 import "../styles/Manage.css";
+import { addLogEntry, Subsystem, ActionType } from '../components/CheckLogs';
+import { useAuth } from "../context/AuthContext";
 
 interface Thesis {
   title: string;
@@ -52,7 +54,7 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const { data, error } = await supabase.storage.from("thesis_pdfs").upload(fileName, file);
+      const { error } = await supabase.storage.from("thesis_pdfs").upload(fileName, file);
 
       if (error) throw error;
 
@@ -65,31 +67,67 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      let pdfUrl = formData.pdf_url;
-      if (selectedFile) {
-        pdfUrl = await uploadPDF(selectedFile);
-      }
+  const { session } = useAuth();
+const user_id = session?.user?.id;
 
-      const { error } = await supabase.from("Thesis").insert([{ ...formData, pdf_url: pdfUrl }]);
-      if (error) throw error;
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-      setSnackbar({ open: true, message: "Thesis created successfully", severity: "success" });
+  if (!user_id) {
+    console.error("User is not authenticated, cannot log action.");
+    setSnackbar({ open: true, message: "User not authenticated", severity: "error" });
+    return;
+  }
 
-      // Reset form and close modal
-      setFormData({ title: "", description: "", category: "", author: "", pdf_url: "", isActive: true });
-      setSelectedFile(null);
-      setOpen(false);
+  try {
+    let pdfUrl = formData.pdf_url;
 
-      // Refresh thesis list
-      refreshTheses();
-    } catch (error: any) {
-      console.error("Error saving thesis:", error);
-      setSnackbar({ open: true, message: error.message || "Error saving thesis", severity: "error" });
+    if (selectedFile) {
+      pdfUrl = await uploadPDF(selectedFile);
     }
-  };
+
+    // Insert the thesis into the database
+    const { data, error } = await supabase
+      .from("Thesis")
+      .insert([{ ...formData, pdf_url: pdfUrl }])
+      .select();
+
+    if (error) throw error;
+
+    const newThesis = data?.[0];
+
+    if (!newThesis) {
+      throw new Error("Failed to retrieve newly inserted thesis.");
+    }
+
+    const thesisId = newThesis.id;
+
+    // Log the action
+    await addLogEntry(
+      Subsystem.THESIS_REPOSITORY,
+      ActionType.ADD_THESIS,
+      user_id,
+      thesisId,
+      null,
+      {
+        author: formData.author,
+        category: formData.category
+      }
+    );
+
+    setSnackbar({ open: true, message: "Thesis created successfully", severity: "success" });
+
+    setFormData({ title: "", description: "", category: "", author: "", pdf_url: "", isActive: true });
+    setSelectedFile(null);
+    setOpen(false);
+
+    refreshTheses();
+
+  } catch (error: any) {
+    console.error("Error saving thesis:", error);
+    setSnackbar({ open: true, message: error.message || "Error saving thesis", severity: "error" });
+  }
+};
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

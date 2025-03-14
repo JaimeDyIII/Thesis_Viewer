@@ -15,13 +15,19 @@ import {
   Box,
   IconButton,
   SelectChangeEvent,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import AddThesisForm from "../components/AddThesisForm";
 import EditThesisForm from "../components/EditThesisForm";
+import DeletionAlert from "../components/DeletionAlert";
+import CheckLogs from "../components/CheckLogs";
+import { DeleteThesis } from "../components/DeleteThesis";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
 import { usePermissions } from "../context/PermissionsContext";
+import { useAuth } from "../context/AuthContext";
 import "../styles/Manage.css";
 
 interface Thesis {
@@ -34,42 +40,117 @@ interface Thesis {
   isActive: boolean;
 }
 
+interface UserProfile {
+  role: string;
+}
+
 const ManageThesis: React.FC = () => {
+  const [logsOpen, setLogsOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedThesis, setSelectedThesis] = useState<Thesis | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [thesisToDelete, setThesisToDelete] = useState<Thesis | null>(null);
 
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
-
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
+  const { deleteThesis } = DeleteThesis();
   const { permissions } = usePermissions();
+  const { session } = useAuth();
+
+  // Fetch user profile to determine role
+  useEffect(() => {
+    if (session && session.user) {
+      const fetchProfile = async () => {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        if (error) {
+          console.error("Error fetching profile:", error.message);
+        } else {
+          setProfile(data);
+        }
+      };
+      fetchProfile();
+    } else {
+      setProfile(null);
+    }
+  }, [session]);
+
+  const isAdmin = profile?.role === "Admin";
+  const isLibrarian = profile?.role === "Librarian";
 
   // Use useCallback to memoize the fetchTheses function
   const fetchTheses = useCallback(async () => {
     setLoading(true);
     let query = supabase.from("Thesis").select("*");
 
+    // For librarians, only show active theses
+    if (isLibrarian) {
+      query = query.eq("isActive", true);
+    } else {
+      // For admin, apply status filter if selected
+      if (selectedStatus === "Active") query = query.eq("isActive", true);
+      if (selectedStatus === "Inactive") query = query.eq("isActive", false);
+    }
+
+    // Apply category filter for all roles
     if (selectedCategory) query = query.eq("category", selectedCategory);
-    if (selectedStatus === "Active") query = query.eq("isActive", true);
-    if (selectedStatus === "Inactive") query = query.eq("isActive", false);
 
     const { data, error } = await query;
     if (error) console.error("Error fetching theses:", error);
     else setTheses(data || []);
 
     setLoading(false);
-  }, [selectedCategory, selectedStatus]);
+  }, [selectedCategory, selectedStatus, isLibrarian, isAdmin]);
 
   useEffect(() => {
     fetchTheses();
-  }, [fetchTheses]); // Now fetchTheses is properly included in the dependency array
+  }, [fetchTheses, profile]); // Added profile to dependencies
 
   const handleEditClick = (thesis: Thesis) => {
     setSelectedThesis(thesis);
     setEditOpen(true);
+  };
+
+  const handleDeleteClick = (thesis: Thesis) => {
+    setThesisToDelete(thesis);
+    setDeleteDialogOpen(true);
+  };
+
+    const handleDeleteConfirm = async () => {
+      if (!thesisToDelete || !session?.user?.id) return;
+
+      const result = await deleteThesis(
+        thesisToDelete,
+        isAdmin,
+        session.user.id
+      );
+
+      setSnackbar({
+        open: true,
+        message: result.message,
+        severity: result.success ? "success" : "error",
+      });
+
+      if (result.success) {
+        // Refresh theses list
+        fetchTheses();
+      }
+      
+      setDeleteDialogOpen(false);
+      setThesisToDelete(null);
   };
 
   const handleCategoryChange = (event: SelectChangeEvent<string>) => {
@@ -78,6 +159,10 @@ const ManageThesis: React.FC = () => {
 
   const handleStatusChange = (event: SelectChangeEvent<string>) => {
     setSelectedStatus(event.target.value);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const filteredTheses = searchQuery
@@ -99,6 +184,20 @@ const ManageThesis: React.FC = () => {
         <div className="manage-background-radial"></div>
 
         <h1 className="title">Manage Theses</h1>
+
+        {!isLibrarian && (
+          <Box display="flex" justifyContent="flex-end" width="100%">
+            <Button
+              onClick={() => setLogsOpen(true)}
+              className="add-thesis-btn"
+              variant="contained"
+            >
+              View Logs
+            </Button>
+          </Box>
+        )}
+
+        <CheckLogs open={logsOpen} onClose={() => setLogsOpen(false)} context="thesis" />
 
         {/* Filters & Search */}
         <div className="filters-wrapper">
@@ -129,16 +228,18 @@ const ManageThesis: React.FC = () => {
               <MenuItem value="Mathematics">Mathematics</MenuItem>
             </Select>
 
-            <Select
-              className="status-filter"
-              value={selectedStatus}
-              displayEmpty
-              onChange={handleStatusChange}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="Active">Active</MenuItem>
-              <MenuItem value="Inactive">Inactive</MenuItem>
-            </Select>
+            {!isLibrarian && (
+              <Select
+                className="status-filter"
+                value={selectedStatus}
+                displayEmpty
+                onChange={handleStatusChange}
+              >
+                <MenuItem value="">All Status</MenuItem>
+                <MenuItem value="Active">Active</MenuItem>
+                <MenuItem value="Inactive">Inactive</MenuItem>
+              </Select>
+            )}
             
             {permissions?.ThesisRepository_add ? (
               <Button
@@ -162,7 +263,7 @@ const ManageThesis: React.FC = () => {
                 <TableCell>Description</TableCell>
                 <TableCell>Author</TableCell>
                 <TableCell>Category</TableCell>
-                <TableCell>Status</TableCell>
+                {!isLibrarian && <TableCell>Status</TableCell>}
                 <TableCell>PDF</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -170,13 +271,13 @@ const ManageThesis: React.FC = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={isLibrarian ? 6 : 7} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : filteredTheses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={isLibrarian ? 6 : 7} align="center">
                     No theses found.
                   </TableCell>
                 </TableRow>
@@ -187,13 +288,15 @@ const ManageThesis: React.FC = () => {
                     <TableCell>{thesis.description}</TableCell>
                     <TableCell>{thesis.author}</TableCell>
                     <TableCell>{thesis.category}</TableCell>
-                    <TableCell>
-                      {thesis.isActive ? (
-                        <span style={{ color: "green", fontWeight: "bold" }}>Active</span>
-                      ) : (
-                        <span style={{ color: "gray", fontWeight: "bold" }}>Inactive</span>
-                      )}
-                    </TableCell>
+                    {!isLibrarian && (
+                      <TableCell>
+                        {thesis.isActive ? (
+                          <span style={{ color: "green", fontWeight: "bold" }}>Active</span>
+                        ) : (
+                          <span style={{ color: "gray", fontWeight: "bold" }}>Inactive</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       {thesis.pdf_url ? (
                         <a href={thesis.pdf_url} target="_blank" rel="noopener noreferrer">
@@ -212,7 +315,7 @@ const ManageThesis: React.FC = () => {
                       ) : null}
                       
                       {permissions?.ThesisRepository_delete ? (
-                        <IconButton color="error" onClick={() => { }}>
+                        <IconButton color="error" onClick={() => handleDeleteClick(thesis)}>
                           <Trash2 size={20} />
                         </IconButton>
                       ) : null}
@@ -233,9 +336,35 @@ const ManageThesis: React.FC = () => {
             open={editOpen}
             handleClose={() => setEditOpen(false)}
             thesis={selectedThesis}
-            onUpdate={fetchTheses} // Refresh the list after update
+            onUpdate={fetchTheses}
+            isLibrarian={isLibrarian} // Pass role to disable status toggle for librarians
           />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <DeletionAlert
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Thesis"
+          message={
+            isAdmin
+              ? "Are you sure you want to permanently delete this thesis? This action cannot be undone."
+              : "Are you sure you want to delete this thesis? It will no longer be visible to users."
+          }
+        />
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </div>
     </>
   );

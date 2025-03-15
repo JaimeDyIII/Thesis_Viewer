@@ -318,6 +318,22 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
     return Object.values(ActionType);
   };
 
+  // Function to determine if an action is related to roles or permissions
+  const determineActionType = (detailsObject: any) => {
+    if (!detailsObject) return ActionType.CHANGE_USER_PERMISSION;
+    
+    // Check if details contain role changes
+    if (
+      (detailsObject.role && typeof detailsObject.role === 'object') ||
+      Object.keys(detailsObject).some(key => key.toLowerCase().includes('role'))
+    ) {
+      return ActionType.CHANGE_USER_ROLE;
+    }
+    
+    // Default to permission change
+    return ActionType.CHANGE_USER_PERMISSION;
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>
@@ -328,12 +344,13 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
       <DialogContent>
         {/* Filters Section */}
         <Box sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Action Type</InputLabel>
             <Select
               value={actionFilter}
               label="Action Type"
               onChange={(e) => setActionFilter(e.target.value)}
+              className="action-type-select"
             >
               <MenuItem value="">All Actions</MenuItem>
               {getContextActions().map((action) => (
@@ -393,19 +410,26 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredLogs.map((log) => (
-                  <TableRow key={log.id} hover>
-                    <TableCell>{log.id}</TableCell>
-                    <TableCell>
-                      <Chip label={log.action} size="small" color={getActionColor(log.action) as any} variant="outlined" />
-                    </TableCell>
-                    <TableCell>{log.user_id}</TableCell>
-                    {context === 'thesis' && <TableCell>{log.thesis_id}</TableCell>}
-                    {context === 'user' && <TableCell>{log.affected_user_id}</TableCell>}
-                    <TableCell>{formatDetails(log.details)}</TableCell>
-                    <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
+                {filteredLogs.map((log) => {
+                  // Determine the correct action type based on details
+                  const displayAction = context === 'user' && log.action === ActionType.CHANGE_USER_PERMISSION
+                    ? determineActionType(log.details)
+                    : log.action;
+                    
+                  return (
+                    <TableRow key={log.id} hover>
+                      <TableCell>{log.id}</TableCell>
+                      <TableCell>
+                        <Chip label={displayAction} size="small" color={getActionColor(displayAction) as any} variant="outlined" />
+                      </TableCell>
+                      <TableCell>{log.user_id}</TableCell>
+                      {context === 'thesis' && <TableCell>{log.thesis_id}</TableCell>}
+                      {context === 'user' && <TableCell>{log.affected_user_id}</TableCell>}
+                      <TableCell>{formatDetails(log.details)}</TableCell>
+                      <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>

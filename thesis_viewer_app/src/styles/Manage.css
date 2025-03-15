@@ -198,3 +198,53 @@
 .MuiMenu-paper {
   width: 140px !important;
 }
+
+/* Fix for dropdown menus - applies to both role and action type dropdowns */
+.MuiMenu-paper {
+  min-width: 160px !important;
+  width: auto !important;
+  max-width: 250px !important;
+}
+
+/* Specific style for the action type dropdown in logs dialog */
+.action-type-select {
+  min-width: 160px !important;
+}
+
+/* Ensure text doesn't overflow in select components */
+.MuiSelect-select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Make dropdown menus appear in front of other elements */
+.MuiMenu-paper {
+  min-width: 160px !important;
+  width: auto !important;
+  max-width: 250px !important;
+  z-index: 9999 !important; /* Very high z-index to ensure it's on top */
+}
+
+/* Ensure dropdown panel stays above everything */
+.MuiPopover-root {
+  z-index: 1400 !important; /* Higher than any other components */
+}
+
+/* Specific style for the action type dropdown in logs dialog */
+.action-type-select {
+  min-width: 160px !important;
+}
+
+/* Fix for the dropdown label and control */
+.MuiFormControl-root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure text doesn't overflow in select components */
+.MuiSelect-select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

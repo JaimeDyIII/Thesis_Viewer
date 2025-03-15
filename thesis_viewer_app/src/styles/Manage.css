@@ -164,3 +164,37 @@
   text-transform: none;
   border-radius: 20px;
 }
+
+.role-dropdown {
+  min-width: 100px !important;
+  width: 100px !important;
+}
+
+.role-dropdown .MuiOutlinedInput-root {
+  min-width: 100px;
+  width: 100%;
+}
+
+.role-dropdown .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(106, 13, 173, 0.3);
+}
+
+.role-dropdown:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(106, 13, 173, 0.6);
+}
+
+.view-logs-btn {
+  background: hsl(262, 83%, 58%) !important;
+  color: white !important;
+  border-radius: 4px;
+  text-transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.role-dropdown .MuiSelect-select {
+  padding: 6px 24px 6px 8px !important;
+  font-size: 0.85rem;
+}
+.MuiMenu-paper {
+  width: 140px !important;
+}

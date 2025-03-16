@@ -164,3 +164,87 @@
   text-transform: none;
   border-radius: 20px;
 }
+
+.role-dropdown {
+  min-width: 100px !important;
+  width: 100px !important;
+}
+
+.role-dropdown .MuiOutlinedInput-root {
+  min-width: 100px;
+  width: 100%;
+}
+
+.role-dropdown .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(106, 13, 173, 0.3);
+}
+
+.role-dropdown:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(106, 13, 173, 0.6);
+}
+
+.view-logs-btn {
+  background: hsl(262, 83%, 58%) !important;
+  color: white !important;
+  border-radius: 4px;
+  text-transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.role-dropdown .MuiSelect-select {
+  padding: 6px 24px 6px 8px !important;
+  font-size: 0.85rem;
+}
+.MuiMenu-paper {
+  width: 140px !important;
+}
+
+/* Fix for dropdown menus - applies to both role and action type dropdowns */
+.MuiMenu-paper {
+  min-width: 160px !important;
+  width: auto !important;
+  max-width: 250px !important;
+}
+
+/* Specific style for the action type dropdown in logs dialog */
+.action-type-select {
+  min-width: 160px !important;
+}
+
+/* Ensure text doesn't overflow in select components */
+.MuiSelect-select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Make dropdown menus appear in front of other elements */
+.MuiMenu-paper {
+  min-width: 160px !important;
+  width: auto !important;
+  max-width: 250px !important;
+  z-index: 9999 !important; /* Very high z-index to ensure it's on top */
+}
+
+/* Ensure dropdown panel stays above everything */
+.MuiPopover-root {
+  z-index: 1400 !important; /* Higher than any other components */
+}
+
+/* Specific style for the action type dropdown in logs dialog */
+.action-type-select {
+  min-width: 160px !important;
+}
+
+/* Fix for the dropdown label and control */
+.MuiFormControl-root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure text doesn't overflow in select components */
+.MuiSelect-select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

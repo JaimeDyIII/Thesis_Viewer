@@ -272,7 +272,7 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
                           variant="caption" 
                           sx={{ ml: 1, fontStyle: 'italic', color: 'text.secondary' }}
                         >
-                          (pending)
+                          (unsaved changes)
                         </Typography>
                       )}
                     </Box>

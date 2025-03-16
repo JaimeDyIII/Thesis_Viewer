@@ -25,6 +25,7 @@ import { Header } from "../components/Header";
 import CheckLogs from "../components/CheckLogs";
 import UserPermissions from "../components/UserPermissions";
 import { useAuth } from "../context/AuthContext";
+import { addLogEntry, Subsystem, ActionType } from "../components/CheckLogs";
 import "../styles/Manage.css";
 
 interface User {
@@ -90,6 +91,101 @@ const UserManagement: React.FC = () => {
     setSnackbarOpen(true);
   };
 
+  const handleRoleChange = async (userId: string, userName: string, newRole: string) => {
+    try {
+      // Find old role for logging purposes
+      const oldRole = users.find(u => u.id === userId)?.role || "none";
+      
+      // Update the role in the database
+      const { error } = await supabase
+        .from("users")
+        .update({ role: newRole })
+        .eq("id", userId);
+
+      if (error) {
+        console.error("Error updating role:", error);
+        handlePermissionUpdate(`Failed to update user role: ${error.message}. Please try again.`);
+        return;
+      }
+
+      // Define default permissions for each role
+      const defaultPermissions = {
+        "Admin": {
+          "ThesisRepository": ["view", "add", "edit", "delete"],
+          "UserManagement": ["view", "add", "edit", "delete"]
+        },
+        "Librarian": {
+          "ThesisRepository": ["view", "add", "delete"],
+          "UserManagement": ["view"]
+        },
+        "User": {
+          "ThesisRepository": ["view"],
+          "UserManagement": []
+        }
+      };
+
+      // Get the default permissions for the new role
+      const permissions = defaultPermissions[newRole as keyof typeof defaultPermissions];
+      
+      // Update permissions in the user_permissions table
+      for (const [subsystem, actions] of Object.entries(permissions)) {
+        // First, delete existing permissions for this user and subsystem
+        await supabase
+          .from("user_permissions")
+          .delete()
+          .eq("user_id", userId)
+          .eq("subsystem", subsystem);
+        
+        // Then insert new permissions
+        for (const action of actions) {
+          await supabase
+            .from("user_permissions")
+            .insert({
+              user_id: userId,
+              subsystem: subsystem,
+              action: action,
+              created_by: session?.user?.id
+            });
+        }
+      }
+
+      // Log the role change
+      await addLogEntry(
+        Subsystem.USER_MANAGEMENT,
+        ActionType.CHANGE_USER_ROLE,
+        session?.user?.id as string,
+        null,
+        userId,
+        { 
+          role: {
+            old: oldRole,
+            new: newRole
+          }
+        }
+      );
+
+      // Update local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+
+      // Show success message
+      handlePermissionUpdate(`Role updated successfully for ${userName} to ${newRole} ✅`);
+
+      // If the currently expanded user is the one being modified, refresh the permissions view
+      if (expandedUser === userId) {
+        setExpandedUser(null);
+        setTimeout(() => setExpandedUser(userId), 100);
+      }
+
+    } catch (error) {
+      console.error("Error in handleRoleChange:", error);
+      handlePermissionUpdate("Failed to update user role. Please try again.");
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       (user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -137,9 +233,9 @@ const UserManagement: React.FC = () => {
               label="Filter by Role"
             >
               <MenuItem value="">All Roles</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
-              <MenuItem value="librarian">Librarian</MenuItem>
-              <MenuItem value="student">Student</MenuItem>
+              <MenuItem value="Admin">Admin</MenuItem>
+              <MenuItem value="Librarian">Librarian</MenuItem>
+              <MenuItem value="User">User</MenuItem>
             </Select>
           </FormControl>
         </div>
@@ -171,7 +267,36 @@ const UserManagement: React.FC = () => {
                     <TableRow onClick={() => handleRowClick(user.id)} style={{ cursor: "pointer" }}>
                       <TableCell>{user.name || "No name found!"}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.role}</TableCell>
+                      
+                      <TableCell>
+                        {session?.user?.id !== user.id ? (
+                          <FormControl 
+                            variant="outlined" 
+                            size="small" 
+                            fullWidth 
+                            onClick={(e) => e.stopPropagation()}
+                            className="role-dropdown"
+                          >
+                            <Select
+                              value={(user.role || 'User')}
+                              onChange={(e) => handleRoleChange(user.id, user.name || "Unknown User", e.target.value)}
+                              MenuProps={{
+                                PaperProps: {
+                                  style: {
+                                    width: 140,
+                                  },
+                                },
+                              }}
+                            >
+                              <MenuItem value="Admin">Admin</MenuItem>
+                              <MenuItem value="Librarian">Librarian</MenuItem>
+                              <MenuItem value="User">User</MenuItem>
+                            </Select>
+                          </FormControl>
+                        ) : (
+                          user.role
+                        )}
+                      </TableCell>
                       <TableCell align="center">
                         <IconButton>{expandedUser === user.id ? <ChevronUp /> : <ChevronDown />}</IconButton>
                       </TableCell>

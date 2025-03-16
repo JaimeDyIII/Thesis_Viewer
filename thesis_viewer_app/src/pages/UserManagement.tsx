@@ -12,26 +12,26 @@ import {
   Box,
   IconButton,
   Collapse,
-  Checkbox,
-  Typography,
   Snackbar,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
+import CheckLogs from "../components/CheckLogs";
+import UserPermissions from "../components/UserPermissions";
+import { useAuth } from "../context/AuthContext";
 import "../styles/Manage.css";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
-}
-
-interface Permission {
-  subsystem: string;
-  permission_type: string;
-  permitted: boolean;
+  role: string | null;
 }
 
 const UserManagement: React.FC = () => {
@@ -39,47 +39,39 @@ const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [permissions, setPermissions] = useState<{ [key: string]: Permission[] }>({});
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("Changes saved successfully ✅");
+  const [logsOpen, setLogsOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const { session } = useAuth();
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      
+      try {
+        let query = supabase.from("users").select("id, name, email, role");
+        
+        if (selectedRole) {
+          query = query.eq("role", selectedRole);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching users:", error);
+        } else {
+          setUsers(data || []);
+        }
+      } catch (error) {
+        console.error("Error in fetchUsers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("users").select("id, name, email, role");
-    if (error) console.error("Error fetching users:", error);
-    else setUsers(data || []);
-    setLoading(false);
-  };
-
-  const fetchPermissions = async (userId: string) => {
-    const { data, error } = await supabase.from("user_permissions").select("subsystem, permission_type, permitted").eq("userid", userId);
-    if (error) console.error("Error fetching permissions:", error);
-    else setPermissions((prev) => ({ ...prev, [userId]: data || [] }));
-  };
-
-  const handlePermissionChange = async (userId: string, subsystem: string, permission_type: string, permitted: boolean) => {
-    const { error } = await supabase
-      .from("user_permissions")
-      .update({ permitted: !permitted })
-      .eq("userid", userId)
-      .eq("subsystem", subsystem)
-      .eq("permission_type", permission_type);
-
-    if (error) {
-      console.error("Error updating permission:", error);
-    } else {
-      setPermissions((prev) => {
-        const updatedPermissions = prev[userId].map((perm) =>
-          perm.subsystem === subsystem && perm.permission_type === permission_type ? { ...perm, permitted: !permitted } : perm
-        );
-        return { ...prev, [userId]: updatedPermissions };
-      });
-      setSnackbarOpen(true);
-    }
-  };
+  }, [selectedRole]);
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -90,14 +82,19 @@ const UserManagement: React.FC = () => {
       setExpandedUser(null);
     } else {
       setExpandedUser(userId);
-      if (!permissions[userId]) fetchPermissions(userId);
     }
   };
 
-  const filteredUsers = users.filter(user => 
-    (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
-    (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-  );  
+  const handlePermissionUpdate = (message: string) => {
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
+  };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      (user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       user.email?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <>
@@ -108,6 +105,16 @@ const UserManagement: React.FC = () => {
         <div className="manage-background-radial"></div>
 
         <h1 className="title">Manage Users</h1>
+
+        <Box display="flex" justifyContent="flex-end" mb={2}>
+          <Button
+            onClick={() => setLogsOpen(true)}
+            variant="contained"
+            className="view-logs-btn"
+          >
+            View Logs
+          </Button>
+        </Box>
 
         <div className="filters-wrapper">
           <Box className="search-box">
@@ -121,6 +128,20 @@ const UserManagement: React.FC = () => {
             />
             <Search size={25} className="search-icon" />
           </Box>
+
+          <FormControl variant="outlined" size="small" style={{ minWidth: 200, marginLeft: 20 }}>
+            <InputLabel>Filter by Role</InputLabel>
+            <Select
+              value={selectedRole || ""}
+              onChange={(e) => setSelectedRole(e.target.value || null)}
+              label="Filter by Role"
+            >
+              <MenuItem value="">All Roles</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="librarian">Librarian</MenuItem>
+              <MenuItem value="student">Student</MenuItem>
+            </Select>
+          </FormControl>
         </div>
 
         <TableContainer component={Paper} className="content">
@@ -148,7 +169,7 @@ const UserManagement: React.FC = () => {
                 filteredUsers.map((user) => (
                   <React.Fragment key={user.id}>
                     <TableRow onClick={() => handleRowClick(user.id)} style={{ cursor: "pointer" }}>
-                      <TableCell>{user.name? user.name : "No name found!"}</TableCell>
+                      <TableCell>{user.name || "No name found!"}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.role}</TableCell>
                       <TableCell align="center">
@@ -158,34 +179,14 @@ const UserManagement: React.FC = () => {
                     <TableRow>
                       <TableCell colSpan={4} style={{ padding: 0 }}>
                         <Collapse in={expandedUser === user.id} timeout="auto" unmountOnExit>
-                          <Box margin={2}>
-                            {permissions[user.id]?.length ? (
-                              Object.entries(
-                                permissions[user.id].reduce((acc, perm) => {
-                                  acc[perm.subsystem] = acc[perm.subsystem] || [];
-                                  acc[perm.subsystem].push(perm);
-                                  return acc;
-                                }, {} as Record<string, Permission[]>)
-                              ).map(([subsystem, perms]) => (
-                                <Box key={subsystem} mb={2}>
-                                  <Typography variant="h6">{subsystem}</Typography>
-                                  <Box display="flex" gap={2}>
-                                    {perms.map((perm) => (
-                                      <Box key={perm.permission_type} display="flex" alignItems="center">
-                                        <Checkbox
-                                          checked={perm.permitted}
-                                          onChange={() => handlePermissionChange(user.id, subsystem, perm.permission_type, perm.permitted)}
-                                        />
-                                        {perm.permission_type.charAt(0).toUpperCase() + perm.permission_type.slice(1)}
-                                      </Box>
-                                    ))}
-                                  </Box>
-                                </Box>
-                              ))
-                            ) : (
-                              <p>No permissions found.</p>
-                            )}
-                          </Box>
+                          {expandedUser === user.id && (
+                            <UserPermissions 
+                              userId={user.id} 
+                              userName={user.name || "Unknown User"} 
+                              currentUserId={session?.user?.id}
+                              onPermissionUpdate={handlePermissionUpdate}
+                            />
+                          )}
                         </Collapse>
                       </TableCell>
                     </TableRow>
@@ -196,7 +197,19 @@ const UserManagement: React.FC = () => {
           </Table>
         </TableContainer>
       </div>
-      <Snackbar open={snackbarOpen} autoHideDuration={5000} onClose={handleSnackbarClose} message="Permissions changed successfully ✅" />
+
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={5000} 
+        onClose={handleSnackbarClose} 
+        message={snackbarMessage} 
+      />
+      
+      <CheckLogs 
+        open={logsOpen} 
+        onClose={() => setLogsOpen(false)} 
+        context="user" 
+      />
     </>
   );
 };

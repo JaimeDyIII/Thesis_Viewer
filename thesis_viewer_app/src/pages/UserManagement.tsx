@@ -18,14 +18,16 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  SelectChangeEvent,
 } from "@mui/material";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
 import CheckLogs from "../components/CheckLogs";
 import UserPermissions from "../components/UserPermissions";
 import { useAuth } from "../context/AuthContext";
 import { addLogEntry, Subsystem, ActionType } from "../components/CheckLogs";
+import AddUserDialog from "../components/AddUserDialog"; // Import the new component
 import "../styles/Manage.css";
 
 interface User {
@@ -35,50 +37,56 @@ interface User {
   role: string | null;
 }
 
+interface UserAddedData {
+  message: string;
+  newUser: User;
+}
+
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("Changes saved successfully ✅");
-  const [logsOpen, setLogsOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>("Changes saved successfully ✅");
+  const [logsOpen, setLogsOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const { session } = useAuth();
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState<boolean>(false); // New state for add user dialog
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      
-      try {
-        let query = supabase.from("users").select("id, name, email, role");
-        
-        if (selectedRole) {
-          query = query.eq("role", selectedRole);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error("Error fetching users:", error);
-        } else {
-          setUsers(data || []);
-        }
-      } catch (error) {
-        console.error("Error in fetchUsers:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchUsers();
   }, [selectedRole]);
 
-  const handleSnackbarClose = () => {
+  const fetchUsers = async (): Promise<void> => {
+    setLoading(true);
+    
+    try {
+      let query = supabase.from("users").select("id, name, email, role");
+      
+      if (selectedRole) {
+        query = query.eq("role", selectedRole);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error fetching users:", error);
+      } else {
+        setUsers(data || []);
+      }
+    } catch (error) {
+      console.error("Error in fetchUsers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSnackbarClose = (): void => {
     setSnackbarOpen(false);
   };
 
-  const handleRowClick = (userId: string) => {
+  const handleRowClick = (userId: string): void => {
     if (expandedUser === userId) {
       setExpandedUser(null);
     } else {
@@ -86,12 +94,12 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handlePermissionUpdate = (message: string) => {
+  const handlePermissionUpdate = (message: string): void => {
     setSnackbarMessage(message);
     setSnackbarOpen(true);
   };
 
-  const handleRoleChange = async (userId: string, userName: string, newRole: string) => {
+  const handleRoleChange = async (userId: string, userName: string, newRole: string): Promise<void> => {
     try {
       // Find old role for logging purposes
       const oldRole = users.find(u => u.id === userId)?.role || "none";
@@ -109,7 +117,7 @@ const UserManagement: React.FC = () => {
       }
 
       // Define default permissions for each role
-      const defaultPermissions = {
+      const defaultPermissions: Record<string, Record<string, string[]>> = {
         "Admin": {
           "ThesisRepository": ["view", "add", "edit", "delete"],
           "UserManagement": ["view", "add", "edit", "delete"]
@@ -125,7 +133,7 @@ const UserManagement: React.FC = () => {
       };
 
       // Get the default permissions for the new role
-      const permissions = defaultPermissions[newRole as keyof typeof defaultPermissions];
+      const permissions = defaultPermissions[newRole];
       
       // Update permissions in the user_permissions table
       for (const [subsystem, actions] of Object.entries(permissions)) {
@@ -186,6 +194,12 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // Handle new user added
+  const handleUserAdded = ({ message, newUser }: UserAddedData): void => {
+    handlePermissionUpdate(message);
+    fetchUsers(); // Refresh the user list
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       (user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -202,7 +216,17 @@ const UserManagement: React.FC = () => {
 
         <h1 className="title">Manage Users</h1>
 
-        <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Button
+            onClick={() => setAddUserDialogOpen(true)}
+            variant="contained"
+            color="primary"
+            className="add-user-btn"
+            startIcon={<UserPlus size={18} />}
+          >
+            Add User
+          </Button>
+          
           <Button
             onClick={() => setLogsOpen(true)}
             variant="contained"
@@ -229,7 +253,7 @@ const UserManagement: React.FC = () => {
             <InputLabel>Filter by Role</InputLabel>
             <Select
               value={selectedRole || ""}
-              onChange={(e) => setSelectedRole(e.target.value || null)}
+              onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
               label="Filter by Role"
             >
               <MenuItem value="">All Roles</MenuItem>
@@ -334,6 +358,14 @@ const UserManagement: React.FC = () => {
         open={logsOpen} 
         onClose={() => setLogsOpen(false)} 
         context="user" 
+      />
+      
+      {/* Add User Dialog */}
+      <AddUserDialog
+        open={addUserDialogOpen}
+        onClose={() => setAddUserDialogOpen(false)}
+        onUserAdded={handleUserAdded}
+        currentUserId={session?.user?.id}
       />
     </>
   );

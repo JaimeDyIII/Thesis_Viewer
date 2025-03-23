@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, Typography, Box, Container } from "@mui/material";
-import { Eye } from "lucide-react";
+import { Eye, Glasses, User } from "lucide-react";
 import { Header } from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
@@ -10,77 +10,95 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { permissions } = usePermissions();
-
   const userRole = profile.role;
-
+  
   return (
     <div className="admin-dashboard">
       {/* Background Layers */}
       <div className="admin-background-gradient"></div>
       <div className="admin-background-blur"></div>
       <div className="admin-background-radial"></div>
-
       <Header />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <main className="admin-content">
-        {/* Main Action Cards */}
-        <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={4} mb={6}>
-          {/* Thesis Repository*/}
-          {(permissions?.ThesisRepository_add || 
-            permissions?.ThesisRepository_view || 
-            permissions?.ThesisRepository_edit || 
-            permissions?.ThesisRepository_delete) ? 
-          (
-            <Card className="card-hover" onClick={() => navigate("/thesis-repository")}>
+          {/* Main Action Cards */}
+          <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={4} mb={6}>
+            {/* Thesis Repository*/}
+            {(permissions?.ThesisRepository_add ||
+              permissions?.ThesisRepository_view ||
+              permissions?.ThesisRepository_edit ||
+              permissions?.ThesisRepository_delete) ?
+              (
+                <Card className="card-hover" onClick={() => navigate("/thesis-repository")}>
+                  <CardHeader
+                    title={
+                      <Box className="card-title">
+                        <Box className="icon-circle">
+                          <Eye size={28} />
+                        </Box>
+                        Thesis Repository
+                      </Box>
+                    }
+                    titleTypographyProps={{ className: "card-title-text" }}
+                  />
+                  <CardContent>
+                    <Typography className="card-description">
+                      Where the browsing and management of all thesis are done.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )
+              :
+              (null)}
+              
+            {/* JaimeGpt - Updated to use Glasses icon */}
+            <Card className="card-hover" onClick={() => navigate("/jaimeGPT")}>
               <CardHeader
                 title={
                   <Box className="card-title">
                     <Box className="icon-circle">
-                      <Eye size={28} />
+                      <Glasses size={28} />
                     </Box>
-                    Thesis Repository
+                    JaimeGPT
                   </Box>
                 }
                 titleTypographyProps={{ className: "card-title-text" }}
               />
               <CardContent>
                 <Typography className="card-description">
-                  Where the browsing and management of all thesis are done.
+                  Ask Jaime anything.
                 </Typography>
               </CardContent>
             </Card>
-          ) 
-          :
-          (null)}
-
-          {/* User Management */}
-          {((userRole === 'Admin' || userRole === 'SuperAdmin') &&
-            (permissions?.UserManagement_add || 
-            permissions?.UserManagement_view || 
-            permissions?.UserManagement_edit || 
-            permissions?.UserManagement_delete)) ? 
-          (
-            <Card className="card-hover" onClick={() => navigate("/user-management")}>
-              <CardHeader
-                title={
-                  <Box className="card-title">
-                    <Box className="icon-circle">
-                      <Eye size={28} />
-                    </Box>
-                    User Management
-                  </Box>
-                }
-                titleTypographyProps={{ className: "card-title-text" }}
-              />
-              <CardContent>
-                <Typography className="card-description">
-                  Where the browsing and management of all users are done.
-                </Typography>
-              </CardContent>
-            </Card>
-          ) 
-          :
-          (null)}
+              
+            {/* User Management - Updated to use User icon */}
+            {((userRole === 'Admin' || userRole === 'SuperAdmin') &&
+              (permissions?.UserManagement_add ||
+                permissions?.UserManagement_view ||
+                permissions?.UserManagement_edit ||
+                permissions?.UserManagement_delete)) ?
+              (
+                <Card className="card-hover" onClick={() => navigate("/user-management")}>
+                  <CardHeader
+                    title={
+                      <Box className="card-title">
+                        <Box className="icon-circle">
+                          <User size={28} />
+                        </Box>
+                        User Management
+                      </Box>
+                    }
+                    titleTypographyProps={{ className: "card-title-text" }}
+                  />
+                  <CardContent>
+                    <Typography className="card-description">
+                      Where the browsing and management of all users are done.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )
+              :
+              (null)}
           </Box>
         </main>
       </Container>

@@ -10,6 +10,7 @@ import ViewThesis from "../pages/ViewThesis";
 import ThesisRepository from '../pages/ThesisRepository';
 import ManageThesis from '../pages/ManageThesis';
 import UserManagement from '../pages/UserManagement';
+import JaimeGPT from '../pages/JaimeGPT';
 
 // Doesn't matter what page we throw in the / path, protected routes throw them back to their page based on their role.
 const AppRoutes: React.FC = () => (
@@ -46,6 +47,12 @@ const AppRoutes: React.FC = () => (
                                                             <UserManagement />
                                                         </ProtectedRoute> }>
                     </Route>
+                    
+                    <Route path="/jaimeGPT" element={ 
+                        <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}>
+                            <JaimeGPT />
+                        </ProtectedRoute> 
+                    } />
 
                     <Route path="/login" element={ <Login /> } />
                     <Route path="/*" element={ <Unauthorized /> } />

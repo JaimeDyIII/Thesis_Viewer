@@ -2,78 +2,298 @@ import { useState, useRef, useEffect } from 'react';
 import { Box, TextField, IconButton, Typography, Drawer, List, ListItem, Divider } from '@mui/material';
 import { Send, Glasses, History, ChevronLeft, Menu } from 'lucide-react';
 import { Header } from "../components/Header";
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { useAuth } from "../context/AuthContext";
 import "../styles/JaimeGPT.css";
+import { supabase } from "../lib/supabase";
+import { motion } from "framer-motion";
 
-// Define proper TypeScript interfaces
+// Define TypeScript interfaces for our data
 interface Message {
-  text: string;
-  sender: 'user' | 'jaime';
+  id: number;
+  conversation_id: number;
+  role: string;
+  content: string;
+  created_at: Date;
 }
 
 interface ChatSession {
-  id: string;
+  id: number;
+  user_id: string;
   title: string;
-  date: string;
-  preview: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
+// Typing indicator component using Framer Motion
+const TypingIndicator = () => {
+  return (
+    <Box className="typing-indicator">
+      <Box className="typing-indicator-dots">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            initial={{ y: 0 }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{
+              repeat: Infinity,
+              duration: 0.8,
+              delay: i * 0.15,
+              ease: "easeInOut"
+            }}
+            className="typing-indicator-dot"
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 export default function JaimeGPT() {
+  const { session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState<string>('');
+  const [inputValue, setInputValue] = useState<string>("");
+  const [query, setQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversations, setConversations] = useState<ChatSession[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [chatHistory, setChatHistory] = useState<ChatSession[]>([
-    { id: '1', title: 'Thesis Structure Help', date: 'Mar 22, 2025', preview: 'How should I structure my literature review...' },
-    { id: '2', title: 'APA Citation Format', date: 'Mar 20, 2025', preview: 'Can you show me how to cite a journal...' },
-    { id: '3', title: 'Research Methodology', date: 'Mar 18, 2025', preview: 'What methodology would work best for...' },
-    { id: '4', title: 'Statistical Analysis', date: 'Mar 15, 2025', preview: 'How do I interpret these regression results...' },
-  ]);
-  
-  // Sidebar state (open/closed)
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  // Mobile drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  const OPENROUTER_API_KEY = ''; // Replace with your API key
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    if(query !== '') fetchResponse();
+  }, [query]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
+  const fetchConversations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('conversation')
+        .select('*')
+        .eq('user_id', session?.user?.id)
+        .order('updated_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setConversations(data);
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    }
+  };
+
+  const fetchMessages = async (conversationId: number) => {
+    try {
+      // First verify this conversation belongs to the current user
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversation')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('user_id', session?.user?.id)
+        .single();
+      
+      if (conversationError) throw conversationError;
+      
+      if (!conversationData) {
+        console.error("Unauthorized access to conversation");
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('message')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setMessages(data);
+        setCurrentConversationId(conversationId);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // Create a new conversation
+  const createNewConversation = async (firstMessage: string) => {
+    try {
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversation')
+        .insert([
+          { 
+            title: firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : ''),
+            user_id: session?.user?.id
+          }
+        ])
+        .select();
+      
+      if (conversationError) throw conversationError;
+      
+      if (conversationData && conversationData.length > 0) {
+        const newConversationId = conversationData[0].id;
+        setCurrentConversationId(newConversationId);
+        
+        await saveMessage({
+          conversation_id: newConversationId,
+          role: 'user',
+          content: firstMessage,
+          created_at: new Date()
+        });
+        
+        fetchConversations();
+        
+        return newConversationId;
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      return null;
+    }
+  };
+
+  // Save a message to Supabase
+  const saveMessage = async (messageData: Omit<Message, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('message')
+        .insert([messageData])
+        .select();
+      
+      if (error) throw error;
+      
+      // Update conversation's updated_at timestamp
+      if (messageData.conversation_id) {
+        await supabase
+          .from('conversation')
+          .update({ updated_at: new Date() })
+          .eq('id', messageData.conversation_id);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error saving message:", error);
+      return null;
+    }
+  };
+
+  // Fetch response from API
+  const fetchResponse = async () => {
+    try {
+      setIsLoading(true);
+      
+      let conversationId = currentConversationId;
+      
+      // If no current conversation, create a new one
+      if (!conversationId) {
+        conversationId = await createNewConversation(query);
+        if (!conversationId) throw new Error("Failed to create conversation");
+      } else {
+        // Add user message to existing conversation
+        await saveMessage({
+          conversation_id: conversationId,
+          role: 'user',
+          content: query,
+          created_at: new Date()
+        });
+      }
+      
+      // Add user message to UI state
+      const userMsg: Message = {
+        id: messages.length,
+        conversation_id: conversationId,
+        role: "user",
+        content: query,
+        created_at: new Date()
+      };
+
+      setMessages(prevMessages => [...prevMessages, userMsg]);
+
+      // Prepare messages for API
+      const apiMessages = [...messages, userMsg].map(message => ({
+        role: message.role,
+        content: message.content,
+      }));
+
+      // Make API request
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "model": "deepseek/deepseek-r1:free",
+          "messages": apiMessages
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP Error! Status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const responseContent = data.choices[0].message.content;
+
+      // Save assistant response to Supabase
+      await saveMessage({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: responseContent,
+        created_at: new Date()
+      });
+
+      // Add assistant response to UI state
+      const assistantMsg: Message = {
+        id: messages.length + 1,
+        conversation_id: conversationId,
+        role: "assistant",
+        content: responseContent,
+        created_at: new Date()
+      };
+  
+      setMessages(prevMessages => [...prevMessages, assistantMsg]);
+
+      // Update conversations list after the message exchange
+      fetchConversations();
+
+      setIsLoading(false);
+      setQuery('');
+    } catch (error) {
+      console.error("Error fetching chat response:", error);
+      setIsLoading(false);
+    }
+  };
+
+  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      // Add user message
-      const newUserMessage: Message = { text: inputValue, sender: 'user' };
-      setMessages([...messages, newUserMessage]);
-      
-      // Simulate response (replace with actual API call)
-      setTimeout(() => {
-        const jaimeResponse: Message = { 
-          text: getJaimeResponse(inputValue), 
-          sender: 'jaime' 
-        };
-        setMessages(prev => [...prev, jaimeResponse]);
-      }, 1000);
-      
+      setQuery(inputValue);
       setInputValue('');
     }
   };
 
-  // Simple response generator (replace with actual AI integration)
-  const getJaimeResponse = (userMessage: string) => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-      return "Hello! I'm Jaime, your thesis assistant. How can I help you today?";
-    } else if (lowerMessage.includes('thesis')) {
-      return "I can help you with various aspects of your thesis. Would you like help with research, formatting, citations, or something else?";
-    } else if (lowerMessage.includes('reference') || lowerMessage.includes('citation')) {
-      return "For APA style citations, remember to include author, year, title, and source. For example: Smith, J. (2023). Title of the work. Publisher.";
-    } else {
-      return "I'm here to assist with your thesis. Could you provide more details about what you need help with?";
-    }
+  // Render markdown
+  const renderMarkdown = (content: string) => {
+    const rawHtml = marked.parse(content, { async: false }) as string;
+    const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+    return { __html: sanitizedHtml };
   };
 
   // Toggle sidebar function
@@ -81,108 +301,59 @@ export default function JaimeGPT() {
     setSidebarOpen(!sidebarOpen);
   };
 
+  // Start a new conversation
+  const startNewConversation = () => {
+    setMessages([]);
+    setCurrentConversationId(null);
+  };
+
   return (
-    <div className="jaime-gpt-container">
+    <div className="bot-gpt-container">
       {/* Background layers */}
-      <div className="jaime-background-gradient"></div>
-      <div className="jaime-background-blur"></div>
-      <div className="jaime-background-radial"></div>
+      <div className="bot-background-gradient"></div>
+      <div className="bot-background-blur"></div>
+      <div className="bot-background-radial"></div>
       
       <Header />
       
       {/* Full-width layout with collapsible sidebar */}
-      <Box sx={{ 
-        display: 'flex',
-        height: 'calc(100vh - 64px)',
-        width: '100%',
-        position: 'relative'
-      }}>
+      <Box className="bot-gpt-layout">
         {/* Collapsible sidebar for desktop */}
-        <Box 
-          sx={{ 
-            width: sidebarOpen ? 255 : 0,
-            height: '100%',
-            bgcolor: '#f6f2f9',
-            borderRight: '1px solid #e9e0f0',
-            display: { xs: 'none', md: 'block' },
-            transition: 'width 0.3s ease',
-            overflow: 'hidden',
-            position: 'relative'
-          }}
-        >
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            pr: 1
-          }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                p: 2, 
-                pl: 3, 
-                fontWeight: 600, 
-                fontSize: '1.1rem',
-                color: '#9c27b0'  
-              }}
-            >
-              Chat History
-            </Typography>
+        <Box className={`bot-sidebar bot-sidebar-hidden ${sidebarOpen ? 'bot-sidebar-expanded' : 'bot-sidebar-collapsed'}`}>
+          <Box className="bot-sidebar-header">
+            <Typography className="bot-sidebar-title">Chat History</Typography>
             
             {/* Close sidebar button */}
-            <IconButton onClick={toggleSidebar} size="small">
-              <ChevronLeft size={20} color="#7a1b86" />
+            <IconButton onClick={toggleSidebar} size="small" className="bot-sidebar-toggle">
+              <ChevronLeft size={20} />
             </IconButton>
           </Box>
           
           <Divider />
           
+          {/* New chat button */}
+          <Box onClick={startNewConversation} className="bot-new-chat">
+            <Typography className="bot-new-chat-text">+ New Chat</Typography>
+          </Box>
+          
+          <Divider />
+          
           {/* Chat history items */}
-          <List sx={{ p: 0 }}>
-            {chatHistory.map((chat) => (
+          <List className="bot-chat-list">
+            {conversations.map((chat) => (
               <ListItem 
                 key={chat.id} 
                 disablePadding 
-                sx={{ 
-                  display: 'block',
-                  borderBottom: '1px solid #f0e6f5',
-                  '&:hover': {
-                    bgcolor: 'rgba(156, 39, 176, 0.04)'
-                  }
-                }}
+                onClick={() => fetchMessages(chat.id)}
+                className={`bot-chat-item ${currentConversationId === chat.id ? 'bot-chat-item-active' : ''}`}
               >
-                <Box sx={{ p: 2, pl: 3 }}>
-                  <Typography 
-                    sx={{ 
-                      fontWeight: 600, 
-                      fontSize: '0.95rem',
-                      color: '#6a1b9a',
-                      mb: 0.5
-                    }}
-                  >
+                <Box className="bot-chat-item-content">
+                  <Typography className="bot-chat-item-title">
                     {chat.title}
                   </Typography>
                   
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      color: '#666',
-                      display: 'block',
-                      mb: 0.75
-                    }}
-                  >
-                    {chat.date}
-                  </Typography>
-                  
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: '#666',
-                      fontSize: '0.8rem',
-                      lineHeight: 1.4
-                    }}
-                  >
-                    {chat.preview}
+                  <Typography variant="caption" className="bot-chat-item-date">
+                    {new Date(chat.updated_at).toLocaleDateString()}
                   </Typography>
                 </Box>
               </ListItem>
@@ -194,34 +365,18 @@ export default function JaimeGPT() {
         {!sidebarOpen && (
           <IconButton
             onClick={toggleSidebar}
-            sx={{ 
-              display: { xs: 'none', md: 'flex' }, 
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              zIndex: 10,
-              bgcolor: 'rgba(211, 99, 255, 0.1)',
-              '&:hover': { bgcolor: 'rgba(211, 99, 255, 0.2)' }
-            }}
+            className="bot-desktop-toggle"
           >
-            <Menu size={24} color="#7a1b86" />
+            <Menu size={24} />
           </IconButton>
         )}
 
         {/* Mobile toggle button */}
         <IconButton
           onClick={() => setDrawerOpen(true)}
-          sx={{ 
-            display: { xs: 'flex', md: 'none' }, 
-            position: 'fixed',
-            top: 80,
-            left: 16,
-            zIndex: 10,
-            bgcolor: 'rgba(211, 99, 255, 0.1)',
-            '&:hover': { bgcolor: 'rgba(211, 99, 255, 0.2)' }
-          }}
+          className="bot-mobile-toggle"
         >
-          <History size={24} color="#7a1b86" />
+          <History size={24} />
         </IconButton>
 
         {/* Mobile drawer */}
@@ -229,86 +384,49 @@ export default function JaimeGPT() {
           anchor="left"
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: 255,
-              bgcolor: '#f6f2f9'
-            },
-          }}
+          className="bot-mobile-drawer"
         >
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            pr: 1
-          }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                p: 2, 
-                pl: 3, 
-                fontWeight: 600, 
-                fontSize: '1.1rem',
-                color: '#9c27b0'  
-              }}
-            >
-              Chat History
-            </Typography>
+          <Box className="bot-sidebar-header">
+            <Typography className="bot-sidebar-title">Chat History</Typography>
             
-            <IconButton onClick={() => setDrawerOpen(false)} size="small">
-              <ChevronLeft size={20} color="#7a1b86" />
+            <IconButton onClick={() => setDrawerOpen(false)} size="small" className="bot-sidebar-toggle">
+              <ChevronLeft size={20} />
             </IconButton>
           </Box>
           
           <Divider />
           
-          <List sx={{ p: 0 }}>
-            {chatHistory.map((chat) => (
+          {/* New chat button in mobile drawer */}
+          <Box
+            onClick={() => {
+              startNewConversation();
+              setDrawerOpen(false);
+            }}
+            className="bot-new-chat"
+          >
+            <Typography className="bot-new-chat-text">+ New Chat</Typography>
+          </Box>
+          
+          <Divider />
+          
+          <List className="bot-chat-list">
+            {conversations.map((chat) => (
               <ListItem 
                 key={chat.id} 
                 disablePadding 
-                sx={{ 
-                  display: 'block',
-                  borderBottom: '1px solid #f0e6f5',
-                  '&:hover': {
-                    bgcolor: 'rgba(156, 39, 176, 0.04)'
-                  }
+                onClick={() => {
+                  fetchMessages(chat.id);
+                  setDrawerOpen(false);
                 }}
+                className={`bot-chat-item ${currentConversationId === chat.id ? 'bot-chat-item-active' : ''}`}
               >
-                <Box sx={{ p: 2, pl: 3 }}>
-                  <Typography 
-                    sx={{ 
-                      fontWeight: 600, 
-                      fontSize: '0.95rem',
-                      color: '#6a1b9a',
-                      mb: 0.5
-                    }}
-                  >
+                <Box className="bot-chat-item-content">
+                  <Typography className="bot-chat-item-title">
                     {chat.title}
                   </Typography>
                   
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      color: '#666',
-                      display: 'block',
-                      mb: 0.75
-                    }}
-                  >
-                    {chat.date}
-                  </Typography>
-                  
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: '#666',
-                      fontSize: '0.8rem',
-                      lineHeight: 1.4
-                    }}
-                  >
-                    {chat.preview}
+                  <Typography variant="caption" className="bot-chat-item-date">
+                    {new Date(chat.updated_at).toLocaleDateString()}
                   </Typography>
                 </Box>
               </ListItem>
@@ -316,72 +434,40 @@ export default function JaimeGPT() {
           </List>
         </Drawer>
 
-        {/* Main content area - direct messages display without container */}
-        <Box sx={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column',
-          p: { xs: 2, md: 3 },
-          bgcolor: 'rgba(237, 231, 246, 0.4)'
-        }}>
-          <Typography 
-            variant="h2" 
-            className="jaime-title" 
-            sx={{ 
-              textAlign: 'center',
-              mb: 4,
-              fontSize: { xs: '2.2rem', md: '2.6rem' },
-              color: '#7a1b86'
-            }}
-          >
-            JaimeGPT
-          </Typography>
+        {/* Main content area */}
+        <Box className="bot-content">
+          <Typography variant="h2" className="bot-title">JaimeGPT</Typography>
           
-          {/* Messages directly in the main area without container */}
-          <Box 
-            sx={{
-              flex: 1,
-              maxWidth: '850px',
-              mx: 'auto',
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              overflowY: 'auto',
-              mb: 2
-            }}
-          >
+          {/* Messages area */}
+          <Box className="bot-messages-container">
             {messages.length === 0 ? (
-              <Box 
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  height: '100%',
-                  gap: 1,
-                  p: 3,
-                  color: '#666'
-                }}
-              >
-                <Glasses size={45} color="#9c27b0" />
-                <Typography variant="h6" sx={{ mt: 1, color: '#7a1b86' }}>Ask Jaime anything</Typography>
+              <Box className="empty-state">
+                <Glasses size={45} className="empty-state-icon" />
+                <Typography variant="h6" className="empty-state-title">Ask Jaime anything</Typography>
                 <Typography variant="body2">Your thesis assistant is ready to help</Typography>
               </Box>
             ) : (
-              messages.map((message, index) => (
-                <Box 
-                  key={index} 
-                  className={message.sender === 'user' ? 'user-message' : 'jaime-message'}
-                  sx={{
-                    maxWidth: '75%',
-                    alignSelf: message.sender === 'user' ? 'flex-end' : 'flex-start',
-                    mb: 2
-                  }}
-                >
-                  <Typography>{message.text}</Typography>
-                </Box>
-              ))
+              <>
+                {messages.map((msg, index) => (
+                  <Box 
+                    key={index} 
+                    className={msg.role === 'user' ? 'user-message' : 'bot-message'}
+                  >
+                    {msg.role === 'user' ? (
+                      <Typography>{msg.content}</Typography>
+                    ) : (
+                      <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />
+                    )}
+                  </Box>
+                ))}
+                
+                {/* Show typing indicator while loading */}
+                {isLoading && (
+                  <Box className="typing-indicator-container">
+                    <TypingIndicator />
+                  </Box>
+                )}
+              </>
             )}
             <div ref={messagesEndRef} />
           </Box>
@@ -390,17 +476,7 @@ export default function JaimeGPT() {
           <Box 
             component="form" 
             onSubmit={handleSubmit}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              p: 2,
-              maxWidth: '850px',
-              mx: 'auto',
-              width: '100%',
-              borderRadius: '20px',
-              bgcolor: 'rgba(255, 255, 255, 0.5)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-            }}
+            className="bot-input-container"
           >
             <TextField
               fullWidth
@@ -409,28 +485,12 @@ export default function JaimeGPT() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '20px',
-                  bgcolor: '#fafafa',
-                }
-              }}
+              className="bot-input-field"
             />
             <IconButton 
               type="submit" 
-              disabled={!inputValue.trim()}
-              sx={{
-                ml: 1,
-                bgcolor: inputValue.trim() ? '#9c27b0' : '#e1bee7',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: '#7b1fa2'
-                },
-                '&.Mui-disabled': {
-                  bgcolor: '#f3e5f5',
-                  color: '#bdbdbd'
-                }
-              }}
+              disabled={!inputValue.trim() || isLoading}
+              className={`bot-send-button ${inputValue.trim() && !isLoading ? 'bot-send-button-enabled' : 'bot-send-button-disabled'}`}
             >
               <Send size={18} />
             </IconButton>

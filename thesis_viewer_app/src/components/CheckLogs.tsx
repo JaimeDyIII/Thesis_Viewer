@@ -35,7 +35,7 @@ export enum ActionType {
   EDIT_THESIS = "edit_thesis",
   CHANGE_THESIS_STATUS = "change_thesis_status",
   DELETE_THESIS = "delete_thesis",
-  CHANGE_USER_PERMISSION = "change_user_permission",
+  ADD_USER = "add_user",
   CHANGE_USER_ROLE = "change_user_role"
 }
 
@@ -139,7 +139,7 @@ const getActionColor = (action: ActionType) => {
       return "warning";
     case ActionType.DELETE_THESIS:
       return "error";
-    case ActionType.CHANGE_USER_PERMISSION:
+    case ActionType.ADD_USER:
     case ActionType.CHANGE_USER_ROLE:
       return "secondary";
     default:
@@ -203,7 +203,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
   ];
   
   const userActions = [
-    ActionType.CHANGE_USER_PERMISSION,
+    ActionType.ADD_USER,
     ActionType.CHANGE_USER_ROLE
   ];
 
@@ -320,7 +320,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
 
   // Function to determine if an action is related to roles or permissions
   const determineActionType = (detailsObject: any) => {
-    if (!detailsObject) return ActionType.CHANGE_USER_PERMISSION;
+    if (!detailsObject) return ActionType.ADD_USER;
     
     // Check if details contain role changes
     if (
@@ -331,7 +331,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
     }
     
     // Default to permission change
-    return ActionType.CHANGE_USER_PERMISSION;
+    return ActionType.ADD_USER;
   };
 
   return (
@@ -412,7 +412,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
               <TableBody>
                 {filteredLogs.map((log) => {
                   // Determine the correct action type based on details
-                  const displayAction = context === 'user' && log.action === ActionType.CHANGE_USER_PERMISSION
+                  const displayAction = context === 'user' && log.action === ActionType.ADD_USER
                     ? determineActionType(log.details)
                     : log.action;
                     

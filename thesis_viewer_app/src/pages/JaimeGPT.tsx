@@ -61,8 +61,8 @@ export default function JaimeGPT() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  
-  const OPENROUTER_API_KEY = ''; // Replace with your API key
+
+  const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
 
   useEffect(() => {
     fetchConversations();
@@ -234,7 +234,7 @@ export default function JaimeGPT() {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Authorization": `Bearer ${OPEN_ROUTER_KEY}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -367,7 +367,7 @@ export default function JaimeGPT() {
             onClick={toggleSidebar}
             className="bot-desktop-toggle"
           >
-            <Menu size={24} />
+            <Menu size={2} />
           </IconButton>
         )}
 

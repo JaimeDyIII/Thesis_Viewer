@@ -38,15 +38,18 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onClose, onUserAdde
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const name = e.target.name as keyof FormDataType;
-    const value = e.target.value as string;
-    
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement> | { target: { name?: string; value: unknown } }) => {
+    if ("target" in e) {
+      const { name, value } = e.target as HTMLInputElement;
+      if (name) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
+    }
   };
+  
 
   const validateEmail = (email: string): boolean => {
     const re = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;

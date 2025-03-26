@@ -10,7 +10,7 @@ import "../styles/View.css";
 import { supabase } from "../lib/supabase";
 
 type Thesis = {
-  id: string;
+  id: number;
   title: string;
   description: string | null;
   pdf_url: string | null;

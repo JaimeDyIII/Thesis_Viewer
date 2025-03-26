@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Box, TextField, IconButton, Typography, Drawer, List, ListItem, Divider } from '@mui/material';
 import { Send, Glasses, History, ChevronLeft, Menu } from 'lucide-react';
+import pdfToText from 'react-pdftotext';
 import { Header } from "../components/Header";
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -8,6 +9,8 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/JaimeGPT.css";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
+import { useLocation } from 'react-router-dom';
+import { useThesis } from "../context/ThesisContext";
 
 // Define TypeScript interfaces for our data
 interface Message {
@@ -26,6 +29,23 @@ interface ChatSession {
   updated_at: Date;
 }
 
+// Function to extract text from PDF
+const extractPdfText = async (pdfUrl: string, maxCharacters = 50000): Promise<string> => {
+  try {
+    // Fetch PDF file first
+    const response = await fetch(pdfUrl);
+    const pdfBlob = await response.blob();
+
+    // Convert PDF to text
+    const text = await pdfToText(pdfBlob);
+
+    // Truncate text if it exceeds max characters
+    return text.substring(0, maxCharacters).trim();
+  } catch (error) {
+    console.error('Error extracting PDF text:', error);
+    return '';
+  }
+};
 // Typing indicator component using Framer Motion
 const TypingIndicator = () => {
   return (
@@ -52,17 +72,49 @@ const TypingIndicator = () => {
 
 export default function JaimeGPT() {
   const { session } = useAuth();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [conversations, setConversations] = useState<ChatSession[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
+  const [pdfContext, setPdfContext] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { selectedThesis } = useThesis();
 
-  const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+  const OPEN_ROUTER_KEY = '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'; // Replace with your actual key
+
+  useEffect(() => {
+    const fetchPdfContext = async () => {
+      try {
+        // Ensure we have a selected thesis and a PDF URL
+        if (!selectedThesis?.id) return;
+
+        const { data, error } = await supabase
+          .from('Thesis')
+          .select('pdf_url')
+          .eq('id', selectedThesis.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.pdf_url) {
+          // Extract text from PDF
+          const pdfText = await extractPdfText(data.pdf_url);
+          
+          // Set PDF context for use in chat
+          setPdfContext(pdfText);
+        }
+      } catch (error) {
+        console.error("Error fetching PDF context:", error);
+      }
+    };
+
+    fetchPdfContext();
+  }, [selectedThesis?.id, session?.user?.id, location]);
 
   useEffect(() => {
     fetchConversations();
@@ -229,6 +281,14 @@ export default function JaimeGPT() {
         role: message.role,
         content: message.content,
       }));
+
+      // Add PDF context if available
+      if (pdfContext) {
+        apiMessages.unshift({
+          role: 'system',
+          content: `Thesis PDF Context: ${pdfContext}. Please use this context to answer the following query precisely and relevantly.`
+        });
+      }
 
       // Make API request
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {

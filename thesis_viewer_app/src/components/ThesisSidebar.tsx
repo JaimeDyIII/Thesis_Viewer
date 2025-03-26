@@ -1,8 +1,12 @@
 import { Drawer, Typography, Box, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import DefaultBookCover from "../components/DefaultBookCover.png"; // Import book cover
+import { FileText, Glasses } from "lucide-react";
+import DefaultBookCover from "../components/DefaultBookCover.png";
+import { useNavigate } from "react-router-dom";
+import { useThesis } from "../context/ThesisContext";
 
 type Thesis = {
+  id: number;
   title: string;
   description: string | null;
   author: string;
@@ -17,6 +21,16 @@ type ThesisSidebarProps = {
 };
 
 export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarProps) {
+  const navigate = useNavigate();
+  const { setSelectedThesis } = useThesis();
+
+  const handleAskJaime = () => {
+    if (thesis) {
+      setSelectedThesis(thesis);
+      navigate("/jaimeGPT");
+    }
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -55,7 +69,7 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
       <Typography fontWeight="bold">Description:</Typography>
       <Typography mb={3}>{thesis?.description || "No description provided."}</Typography>
 
-      {/* View PDF Button */}
+      {/* Buttons */}
       {thesis?.pdf_url && (
         <Button
           variant="contained"
@@ -67,13 +81,32 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
             borderRadius: "8px",
             padding: "10px",
             "&:hover": { backgroundColor: "#6828e9", color: "white" },
+            mb: 2,
           }}
           href={thesis.pdf_url}
           target="_blank"
+          startIcon={<FileText size={18} />}
         >
           View PDF
         </Button>
       )}
+
+      {/* Ask Jaime Button */}
+      <Button onClick={handleAskJaime}
+        variant="contained"
+        fullWidth
+        sx={{
+          backgroundColor: "black",
+          color: "white",
+          fontWeight: "bold",
+          borderRadius: "8px",
+          padding: "10px",
+          "&:hover": { backgroundColor: "#6828e9"},
+        }}
+        startIcon={<Glasses size={18} />}
+      >
+        Ask Jaime
+      </Button>
     </Drawer>
   );
 }

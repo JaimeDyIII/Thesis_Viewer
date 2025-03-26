@@ -85,7 +85,7 @@ export default function JaimeGPT() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { selectedThesis } = useThesis();
 
-  const OPEN_ROUTER_KEY = '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'; // Replace with your actual key
+  const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY; // Replace with your actual key
 
   useEffect(() => {
     const fetchPdfContext = async () => {

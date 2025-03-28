@@ -29,6 +29,7 @@ import { Header } from "../components/Header";
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Manage.css";
+import ManageCategories from "../components/ManageCategories";
 
 interface Thesis {
   id: number;
@@ -66,6 +67,7 @@ const ManageThesis: React.FC = () => {
   const { deleteThesis } = DeleteThesis();
   const { permissions } = usePermissions();
   const { session } = useAuth();
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   // Fetch user profile to determine role
   useEffect(() => {
@@ -186,7 +188,7 @@ const ManageThesis: React.FC = () => {
         <h1 className="title">Manage Theses</h1>
 
         {!isLibrarian && (
-          <Box display="flex" justifyContent="flex-end" width="100%">
+          <Box display="flex" gap= "10px" justifyContent="flex-end" width="100%">
             <Button
               onClick={() => setLogsOpen(true)}
               className="add-thesis-btn"
@@ -194,10 +196,20 @@ const ManageThesis: React.FC = () => {
             >
               View Logs
             </Button>
+            {permissions?.ThesisRepository_edit && (
+              <Button
+                onClick={() => setCategoriesOpen(true)}
+                className="add-thesis-btn"
+                variant="contained"
+              >
+                Manage Categories
+              </Button>
+              )}
           </Box>
         )}
 
         <CheckLogs open={logsOpen} onClose={() => setLogsOpen(false)} context="thesis" />
+        <ManageCategories open={categoriesOpen} onClose={() => setCategoriesOpen(false)} />
 
         {/* Filters & Search */}
         <div className="filters-wrapper">

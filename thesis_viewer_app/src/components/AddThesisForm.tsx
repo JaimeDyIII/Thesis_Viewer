@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import {
   Dialog,
@@ -19,20 +19,20 @@ import "../styles/Manage.css";
 import { addLogEntry, Subsystem, ActionType } from '../components/CheckLogs';
 import { useAuth } from "../context/AuthContext";
 
+// Interface for Category
+interface Category {
+  id: number;
+  name: string;
+  is_active?: boolean;
+}
+
 interface Thesis {
   title: string;
   description: string;
   author: string;
-  category: Category;
+  category: string;
   pdf_url: string;
   isActive: boolean;
-}
-
-// Enum for thesis categories
-enum Category {
-  MATHEMATICS = "Mathematics",
-  SCIENCE = "Science",
-  TECHNOLOGY = "Technology"
 }
 
 interface AddThesisFormProps {
@@ -43,11 +43,12 @@ interface AddThesisFormProps {
 
 const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshTheses }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<Thesis>({
     title: "",
     description: "",
     author: "",
-    category: Category.MATHEMATICS, // Default value
+    category: "", // Default to empty string
     pdf_url: "",
     isActive: true,
   });
@@ -57,6 +58,42 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  // Fetch active categories when form opens
+  useEffect(() => {
+    const fetchActiveCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('category')
+          .select('id, name')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) throw error;
+
+        setCategories(data || []);
+
+        // Set first category as default if categories exist
+        if (data && data.length > 0) {
+          setFormData(prev => ({
+            ...prev, 
+            category: data[0].name
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setSnackbar({ 
+          open: true, 
+          message: "Failed to load categories", 
+          severity: "error" 
+        });
+      }
+    };
+
+    if (open) {
+      fetchActiveCategories();
+    }
+  }, [open]);
 
   const uploadPDF = async (file: File) => {
     try {
@@ -117,6 +154,7 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
         user_id,
         thesisId,
         null,
+        null,
         {
           author: formData.author,
           category: formData.category
@@ -129,7 +167,7 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
         title: "",
         description: "",
         author: "",
-        category: Category.MATHEMATICS,
+        category: categories.length > 0 ? categories[0].name : "",
         pdf_url: "",
         isActive: true
       });
@@ -202,9 +240,9 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
                 },
               }}
             >
-              {Object.values(Category).map((category) => (
-                <MenuItem key={category} value={category}>
-                  {category}
+              {categories.map((category) => (
+                <MenuItem key={category.id} value={category.name}>
+                  {category.name}
                 </MenuItem>
               ))}
             </TextField>

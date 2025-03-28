@@ -164,6 +164,7 @@ const UserManagement: React.FC = () => {
         session?.user?.id as string,
         null,
         userId,
+        null,
         { 
           role: {
             old: oldRole,

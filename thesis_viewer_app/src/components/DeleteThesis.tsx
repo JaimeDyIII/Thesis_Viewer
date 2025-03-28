@@ -54,6 +54,7 @@ export const DeleteThesis = () => {
             userId,
             null, // ID still exists at this point
             null,
+            null,
             {
               deletion_type: "permanent",
               thesis_id: thesis.id,
@@ -96,6 +97,7 @@ export const DeleteThesis = () => {
             ActionType.DELETE_THESIS,
             userId,
             thesis.id,
+            null,
             null,
             {
               deletion_type: "set to inactive"

@@ -170,6 +170,7 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
         currentUserId,
         null,
         userId,
+        null,
         changeDetails
       );
       

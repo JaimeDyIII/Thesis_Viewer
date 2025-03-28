@@ -33,10 +33,11 @@ export enum Subsystem{
 export enum ActionType {
   ADD_THESIS = "add_thesis",
   EDIT_THESIS = "edit_thesis",
-  CHANGE_THESIS_STATUS = "change_thesis_status",
+  EDIT_CATEGORIES = "edit_categories",
   DELETE_THESIS = "delete_thesis",
   ADD_USER = "add_user",
-  CHANGE_USER_ROLE = "change_user_role"
+  CHANGE_USER_ROLE = "change_user_role",
+  CHANGE_USER_PERMISSION = "change_user_permission"
 }
 
 export interface LogEntry {
@@ -46,6 +47,7 @@ export interface LogEntry {
   user_id: string;
   thesis_id: number | null;
   affected_user_id: string | null;
+  affected_category: number | null;
   details: any;
   timestamp: string;
 }
@@ -53,7 +55,7 @@ export interface LogEntry {
 interface CheckLogsProps {
   open: boolean;
   onClose: () => void;
-  context?: 'thesis' | 'user';
+  context?: 'thesis' | 'user' | 'category';
 }
 
 export const addLogEntry = async (
@@ -62,6 +64,7 @@ export const addLogEntry = async (
   user_id: string,
   thesis_id: number | null = null,
   affected_user_id: string | null = null,
+  affected_category: number | null = null,
   details: any = {}
 ) => {
   try {
@@ -110,6 +113,7 @@ export const addLogEntry = async (
         user_id,
         thesis_id,
         affected_user_id,
+        affected_category,
         details: {
           ...details
         },
@@ -135,13 +139,15 @@ const getActionColor = (action: ActionType) => {
       return "success";
     case ActionType.EDIT_THESIS:
       return "info";
-    case ActionType.CHANGE_THESIS_STATUS:
+    case ActionType.EDIT_CATEGORIES:
       return "warning";
     case ActionType.DELETE_THESIS:
       return "error";
     case ActionType.ADD_USER:
     case ActionType.CHANGE_USER_ROLE:
       return "secondary";
+    case ActionType.CHANGE_USER_PERMISSION:
+    return "secondary";
     default:
       return "default";
   }
@@ -198,13 +204,18 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
   const thesisActions = [
     ActionType.ADD_THESIS,
     ActionType.EDIT_THESIS,
-    ActionType.CHANGE_THESIS_STATUS,
+    ActionType.EDIT_CATEGORIES,
     ActionType.DELETE_THESIS
   ];
   
   const userActions = [
     ActionType.ADD_USER,
-    ActionType.CHANGE_USER_ROLE
+    ActionType.CHANGE_USER_ROLE,
+    ActionType.CHANGE_USER_PERMISSION
+  ];
+
+  const categoryActions = [
+    ActionType.EDIT_CATEGORIES
   ];
 
   useEffect(() => {
@@ -263,13 +274,29 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
           thesisMap = thesisData ? Object.fromEntries(thesisData.map(thesis => [thesis.id, thesis.title])) : {};
         }
       }
-  
+      
+      let categoryMap: Record<number, string> = {};
+      const categoryIds = Array.from(new Set(logsData.map(log => log.affected_category).filter(Boolean)));
+      if (categoryIds.length > 0) {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from("category")
+          .select("id, name")
+          .in("id", categoryIds);
+    
+        if (categoryError) {
+          console.error("Error fetching categories:", categoryError);
+        }
+    
+        categoryMap = categoryData ? Object.fromEntries(categoryData.map(category => [category.id, category.name])) : {};
+      }
+
       // Replace IDs with names/titles
       const processedLogs = logsData.map(log => ({
         ...log,
         user_id: userMap[log.user_id] || "Unknown User",
         affected_user_id: log.affected_user_id ? userMap[log.affected_user_id] || "Unknown User" : "N/A",
-        thesis_id: log.thesis_id && context === 'thesis' ? thesisMap[log.thesis_id] || "Unknown Thesis" : "N/A"
+        thesis_id: log.thesis_id && context === 'thesis' ? thesisMap[log.thesis_id] || "Unknown Thesis" : "N/A",
+        affected_category: log.affected_category ? categoryMap[log.affected_category] || "Unknown Category" : "N/A"
       }));
   
       setLogs(processedLogs);
@@ -315,12 +342,13 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
   const getContextActions = () => {
     if (context === 'thesis') return thesisActions;
     if (context === 'user') return userActions;
+    if (context === 'category') return categoryActions;
     return Object.values(ActionType);
   };
 
   // Function to determine if an action is related to roles or permissions
   const determineActionType = (detailsObject: any) => {
-    if (!detailsObject) return ActionType.ADD_USER;
+    if (!detailsObject) return ActionType.CHANGE_USER_PERMISSION;
     
     // Check if details contain role changes
     if (
@@ -331,7 +359,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
     }
     
     // Default to permission change
-    return ActionType.ADD_USER;
+    return ActionType.CHANGE_USER_PERMISSION;
   };
 
   return (
@@ -405,6 +433,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
                   <TableCell>User</TableCell>
                   {context === 'thesis' && <TableCell>Thesis Title</TableCell>}
                   {context === 'user' && <TableCell>Affected User</TableCell>}
+                  {context === 'category' && <TableCell>Affected Category</TableCell>}
                   <TableCell>Details</TableCell>
                   <TableCell>Timestamp</TableCell>
                 </TableRow>
@@ -412,7 +441,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
               <TableBody>
                 {filteredLogs.map((log) => {
                   // Determine the correct action type based on details
-                  const displayAction = context === 'user' && log.action === ActionType.ADD_USER
+                  const displayAction = context === 'user' && log.action === ActionType.CHANGE_USER_PERMISSION
                     ? determineActionType(log.details)
                     : log.action;
                     
@@ -425,6 +454,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
                       <TableCell>{log.user_id}</TableCell>
                       {context === 'thesis' && <TableCell>{log.thesis_id}</TableCell>}
                       {context === 'user' && <TableCell>{log.affected_user_id}</TableCell>}
+                      {context === 'category' && <TableCell>{log.affected_category}</TableCell>}
                       <TableCell>{formatDetails(log.details)}</TableCell>
                       <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
                     </TableRow>

@@ -29,6 +29,12 @@ interface Thesis {
   isActive: boolean;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  is_active?: boolean;
+}
+
 interface EditThesisFormProps {
   open: boolean;
   handleClose: () => void;
@@ -85,11 +91,35 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
   const [formData, setFormData] = useState({ ...thesis });
   const [file, setFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from("category")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) {
+        console.error("Error fetching categories:", error);
+        setSnackbar({
+          open: true,
+          message: "Failed to load categories",
+          severity: "error",
+        });
+      } else {
+        setCategories(data || []);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (thesis) {
@@ -132,7 +162,6 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
   const user_id = session?.user?.id;
 
   const handleSave = async () => {
-
     if (!user_id) {
       console.error("User is not authenticated, cannot log action.");
       setSnackbar({ open: true, message: "User not authenticated", severity: "error" });
@@ -190,7 +219,6 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
     }
     
     try {
-      // If librarian, preserve the original isActive status
       const updateData = {
         title: formData.title,
         description: formData.description,
@@ -200,35 +228,34 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
         isActive: isLibrarian ? thesis.isActive : formData.isActive
       };
 
-      // Prepare log data comparing old vs new values
       const changes: any = {};
 
-        if (thesis.title !== updateData.title) {
-          changes.title = { old: thesis.title, new: updateData.title };
-        }
-        if (thesis.description !== updateData.description) {
-          changes.description = { old: thesis.description, new: updateData.description };
-        }
-        if (thesis.author !== updateData.author) {
-          changes.author = { old: thesis.author, new: updateData.author };
-        }
-        if (thesis.category !== updateData.category) {
-          changes.category = { old: thesis.category, new: updateData.category };
-        }
-        if (thesis.pdf_url !== pdfUrl) {
-          changes.pdf_url = { old: thesis.pdf_url, new: pdfUrl };
-        }
+      if (thesis.title !== updateData.title) {
+        changes.title = { old: thesis.title, new: updateData.title };
+      }
+      if (thesis.description !== updateData.description) {
+        changes.description = { old: thesis.description, new: updateData.description };
+      }
+      if (thesis.author !== updateData.author) {
+        changes.author = { old: thesis.author, new: updateData.author };
+      }
+      if (thesis.category !== updateData.category) {
+        changes.category = { old: thesis.category, new: updateData.category };
+      }
+      if (thesis.pdf_url !== pdfUrl) {
+        changes.pdf_url = { old: thesis.pdf_url, new: pdfUrl };
+      }
 
-        const statusChanged = thesis.isActive !== updateData.isActive;
-        const fileUpdated = !!file;
+      const statusChanged = thesis.isActive !== updateData.isActive;
+      const fileUpdated = !!file;
 
-        if (statusChanged) {
-          changes.status = { old: thesis.isActive, new: updateData.isActive };
-        }
+      if (statusChanged) {
+        changes.status = { old: thesis.isActive, new: updateData.isActive };
+      }
 
-        if (fileUpdated) {
-          changes.file_updated = true;
-        }
+      if (fileUpdated) {
+        changes.file_updated = true;
+      }
 
       const { error } = await supabase
         .from("Thesis")
@@ -244,12 +271,12 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
           severity: "error",
         });
       } else {
-        // Log the edit action
         await addLogEntry(
           Subsystem.THESIS_REPOSITORY,
           ActionType.EDIT_THESIS,
           user_id,
           thesis.id,
+          null,
           null,
           changes
         );
@@ -284,17 +311,27 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
         <DialogContent>
           <TextField label="Title" name="title" value={formData.title} onChange={handleChange} fullWidth margin="dense" />
           <TextField label="Description" name="description" value={formData.description} onChange={handleChange} fullWidth margin="dense" />
-          <TextField select label="Category" name="category" value={formData.category} onChange={handleChange} fullWidth margin="dense" 
+          <TextField 
+            select 
+            label="Category" 
+            name="category" 
+            value={formData.category} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="dense" 
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&.Mui-focused fieldset': {
                   borderColor: "#6a0dad",
                 },
               },
-            }}>
-            <StyledMenuItem value="Technology">Technology</StyledMenuItem>
-            <StyledMenuItem value="Science">Science</StyledMenuItem>
-            <StyledMenuItem value="Mathematics">Mathematics</StyledMenuItem>
+            }}
+          >
+            {categories.map((category) => (
+              <StyledMenuItem key={category.id} value={category.name}>
+                {category.name}
+              </StyledMenuItem>
+            ))}
           </TextField>
           <TextField label="Author" name="author" value={formData.author} onChange={handleChange} fullWidth margin="dense" />
           
@@ -322,7 +359,6 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
             )}
           </Box>
 
-          {/* Only show status toggle if NOT a librarian */}
           {!isLibrarian && (
             <Box display="flex" alignItems="center" mt={2}>
               <FormControlLabel
@@ -356,7 +392,6 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

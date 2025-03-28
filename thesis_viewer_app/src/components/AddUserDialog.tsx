@@ -146,6 +146,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onClose, onUserAdde
         currentUserId as string,
         null,
         newUser.id,
+        null,
         {
           name: newUser.name,
           email: newUser.email,

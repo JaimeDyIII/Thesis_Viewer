@@ -84,13 +84,13 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
             "&:hover": { backgroundColor: "#6828e9", color: "white" },
             mb: 2,
           }}
-          onClick={() => navigate(`/pdf-viewer/${encodeURIComponent(thesis!.pdf_url as string)}`)}
+          onClick={() => navigate(`/pdf-viewer?url=${encodeURIComponent(thesis!.pdf_url as string)}`)}
           startIcon={<FileText size={18} />}
         >
           View PDF
         </Button>
       )}
-      
+
       {/* Ask Jaime Button */}
       <Button onClick={handleAskJaime}
         variant="contained"

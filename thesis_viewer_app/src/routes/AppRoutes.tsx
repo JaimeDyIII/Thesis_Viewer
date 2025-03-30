@@ -54,7 +54,7 @@ const AppRoutes: React.FC = () => (
                             <JaimeGPT />
                         </ProtectedRoute> 
                     } />
-                    <Route path="/pdf-viewer" element={
+                    <Route path="/pdf-viewer/:title" element={
                         <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['UserManagement_view']}>
                             <PDFViewerWrapper />
                         </ProtectedRoute>

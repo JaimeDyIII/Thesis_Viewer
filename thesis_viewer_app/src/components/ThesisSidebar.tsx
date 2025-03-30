@@ -4,7 +4,6 @@ import { FileText, Glasses } from "lucide-react";
 import DefaultBookCover from "../components/DefaultBookCover.png";
 import { useNavigate } from "react-router-dom";
 import { useThesis } from "../context/ThesisContext";
-import { Document, Page } from "react-pdf";
 
 type Thesis = {
   id: number;
@@ -84,7 +83,7 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
             "&:hover": { backgroundColor: "#6828e9", color: "white" },
             mb: 2,
           }}
-          onClick={() => navigate(`/pdf-viewer?url=${encodeURIComponent(thesis!.pdf_url as string)}`)}
+          onClick={() => navigate(`/pdf-viewer/${encodeURIComponent(thesis.title)}`)}
           startIcon={<FileText size={18} />}
         >
           View PDF

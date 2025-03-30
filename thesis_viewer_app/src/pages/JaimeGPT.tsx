@@ -77,21 +77,24 @@ export default function JaimeGPT() {
   const [inputValue, setInputValue] = useState<string>("");
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAIResponseLoading, setIsAIResponseLoading] = useState(false);
   const [conversations, setConversations] = useState<ChatSession[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
   const [pdfContext, setPdfContext] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { selectedThesis } = useThesis();
+  const { selectedThesis, setSelectedThesis } = useThesis();
 
-  const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY; // Replace with your actual key
-
+  const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+  
   useEffect(() => {
+    // Ensure we have a selected thesis and a PDF URL
+    if (!selectedThesis?.id) return;
+    
     const fetchPdfContext = async () => {
       try {
-        // Ensure we have a selected thesis and a PDF URL
-        if (!selectedThesis?.id) return;
+        setIsLoading(true);
 
         const { data, error } = await supabase
           .from('Thesis')
@@ -107,22 +110,34 @@ export default function JaimeGPT() {
           
           // Set PDF context for use in chat
           setPdfContext(pdfText);
+        } else {
+          setPdfContext(null);
         }
       } catch (error) {
         console.error("Error fetching PDF context:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchPdfContext();
-  }, [selectedThesis?.id, session?.user?.id, location]);
+  }, [selectedThesis?.id, session?.user?.id]);
 
   useEffect(() => {
     fetchConversations();
   }, []);
 
   useEffect(() => {
-    if(query !== '') fetchResponse();
-  }, [query]);
+    if(pdfContext && selectedThesis && !currentConversationId) {
+      setQuery(`"${selectedThesis.title}", I have a question regarding this specific thesis.`);
+    }
+  }, [pdfContext, selectedThesis, currentConversationId]);
+
+  useEffect(() => {
+    if(query !== '' && !isAIResponseLoading) {
+      fetchResponse();
+    }
+  }, [query, isAIResponseLoading]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -165,6 +180,16 @@ export default function JaimeGPT() {
         console.error("Unauthorized access to conversation");
         return;
       }
+
+      if (conversationData?.context_pdf_url) {
+        // Extract text from PDF
+        const pdfText = await extractPdfText(conversationData?.context_pdf_url);
+        
+        // Set PDF context for the conversation
+        setPdfContext(pdfText);
+      } else {
+        setPdfContext(null);
+      }
       
       const { data, error } = await supabase
         .from('message')
@@ -183,15 +208,47 @@ export default function JaimeGPT() {
     }
   };
 
+  const checkForSameTitleThenGivNumberedTitleIfItExists = async (title: string) => {
+      // Check for exact matches first
+      const { data: exactMatches, error: exactError } = await supabase
+      .from('conversation')
+      .select('title')
+      .eq('title', title);
+
+      if (exactError) throw exactError;
+
+      // If no exact match exists, use the title as is
+      if (!exactMatches || exactMatches.length === 0) {
+        return title;
+      }
+
+      // Otherwise, find all numbered versions to determine the next number
+      const { data: numberedMatches, error: numberedError } = await supabase
+      .from('conversation')
+      .select('title')
+      .like('title', `${title} (%)`);
+
+      if (numberedError) throw numberedError;
+
+      // Calculate the next number
+      const nextNumber = (numberedMatches?.length || 0) + 1;
+      return `${title} (${nextNumber})`;
+  } 
+
   // Create a new conversation
   const createNewConversation = async (firstMessage: string) => {
     try {
+      const title = firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : '');
+
+      const uniqueTitle = await checkForSameTitleThenGivNumberedTitleIfItExists(title);
+
       const { data: conversationData, error: conversationError } = await supabase
         .from('conversation')
         .insert([
           { 
-            title: firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : ''),
-            user_id: session?.user?.id
+            title: uniqueTitle,
+            user_id: session?.user?.id,
+            context_pdf_url: selectedThesis?.pdf_url || null
           }
         ])
         .select();
@@ -211,6 +268,7 @@ export default function JaimeGPT() {
         
         fetchConversations();
         
+        setSelectedThesis(null);
         return newConversationId;
       }
     } catch (error) {
@@ -246,8 +304,10 @@ export default function JaimeGPT() {
 
   // Fetch response from API
   const fetchResponse = async () => {
+    if (isAIResponseLoading) return;
+
     try {
-      setIsLoading(true);
+      setIsAIResponseLoading(true);
       
       let conversationId = currentConversationId;
       
@@ -282,11 +342,20 @@ export default function JaimeGPT() {
         content: message.content,
       }));
 
+      // AI context on what it is being used for
+      apiMessages.unshift({
+        role: 'system',
+        content: 'You are an A.I. assistant for the New Era University Thesis Knowledge Management System. Answer the queries to the best of your capabilities.'
+      });
+        
       // Add PDF context if available
       if (pdfContext) {
         apiMessages.unshift({
           role: 'system',
-          content: `Thesis PDF Context: ${pdfContext}. Please use this context to answer the following query precisely and relevantly.`
+          content: `
+          This is the entire Thesis PDF Document taken directly from the thesis repository: ${pdfContext}. 
+          
+          Please use this context to answer the following query precisely and relevantly. But do not share it to the user, we do not want them to be able to copy or save this due to the intellectual property act. Just answer their questions you can give summarization or other things but not the entire document.`
         });
       }
 
@@ -332,7 +401,7 @@ export default function JaimeGPT() {
       // Update conversations list after the message exchange
       fetchConversations();
 
-      setIsLoading(false);
+      setIsAIResponseLoading(false);
       setQuery('');
     } catch (error) {
       console.error("Error fetching chat response:", error);
@@ -522,7 +591,7 @@ export default function JaimeGPT() {
                 ))}
                 
                 {/* Show typing indicator while loading */}
-                {isLoading && (
+                {isAIResponseLoading && (
                   <Box className="typing-indicator-container">
                     <TypingIndicator />
                   </Box>

@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Error signing out: ', e);
         }
     }
-    
+
 
     const value = {
         session,

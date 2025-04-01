@@ -208,7 +208,7 @@ export default function JaimeGPT() {
     }
   };
 
-  const checkForSameTitleThenGivNumberedTitleIfItExists = async (title: string) => {
+  const checkForSameTitleThenGiveNumberedTitleIfItExists = async (title: string) => {
       // Check for exact matches first
       const { data: exactMatches, error: exactError } = await supabase
       .from('conversation')
@@ -240,7 +240,7 @@ export default function JaimeGPT() {
     try {
       const title = firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : '');
 
-      const uniqueTitle = await checkForSameTitleThenGivNumberedTitleIfItExists(title);
+      const uniqueTitle = await checkForSameTitleThenGiveNumberedTitleIfItExists(title);
 
       const { data: conversationData, error: conversationError } = await supabase
         .from('conversation')
@@ -345,7 +345,10 @@ export default function JaimeGPT() {
       // AI context on what it is being used for
       apiMessages.unshift({
         role: 'system',
-        content: 'You are an A.I. assistant for the New Era University Thesis Knowledge Management System. Answer the queries to the best of your capabilities.'
+        content: `You are an A.I. assistant for the New Era University Thesis Knowledge Management System. 
+                  Answer the queries to the best of your capabilities. 
+                  You will not answer anything outside the scope of your task.
+                  You will only answer questions regarding the New Era University Thesis Knowledge Management System and nothing else`
       });
         
       // Add PDF context if available
@@ -355,7 +358,10 @@ export default function JaimeGPT() {
           content: `
           This is the entire Thesis PDF Document taken directly from the thesis repository: ${pdfContext}. 
           
-          Please use this context to answer the following query precisely and relevantly. But do not share it to the user, we do not want them to be able to copy or save this due to the intellectual property act. Just answer their questions you can give summarization or other things but not the entire document.`
+          Please use this context to answer the following query precisely and relevantly. 
+          But do not share it to the user, we do not want them to be able to copy or save this due to the intellectual property act. 
+          Just answer their questions you can give summarization or other things but not the entire document.
+          If the user asked other specific thesis, direct them to go to the Thesis Repository then View Thesis and ask them to find the specific thesis to ask you about it.`
         });
       }
 

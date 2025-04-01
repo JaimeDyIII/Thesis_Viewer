@@ -1,9 +1,13 @@
-import { Drawer, Typography, Box, Button } from "@mui/material";
+import { Drawer, Typography, Box, Button, Switch, Checkbox } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { FileText, Glasses } from "lucide-react";
 import DefaultBookCover from "../components/DefaultBookCover.png";
 import { useNavigate } from "react-router-dom";
 import { useThesis } from "../context/ThesisContext";
+import { useView } from "../context/ViewContext";
+import { useAuth } from "../context/AuthContext";
+import { useBookmark } from "../context/BookmarkContext";
+import { useEffect, useState } from "react";
 
 type Thesis = {
   id: number;
@@ -23,6 +27,36 @@ type ThesisSidebarProps = {
 export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarProps) {
   const navigate = useNavigate();
   const { setSelectedThesis } = useThesis();
+  const { recordView } = useView();
+  const { session } = useAuth();
+  const { getViewCount } = useView();
+  const { checkBookmark, toggleBookmark } = useBookmark();
+  const [viewCount, setViewCount] = useState<number>(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  useEffect(() => {
+    const fetchViews = async () => {
+      if(!thesis || !thesis.id) return console.error('Thesis not found!');
+
+      const count = await getViewCount(thesis?.id);
+      setViewCount(count);
+    }
+
+    fetchViews();
+  }, [thesis?.id])
+
+  useEffect(() => {
+    if (!thesis?.id || !session?.user?.id) return;
+    
+    checkBookmark(session.user.id, thesis.id).then(setIsBookmarked);
+  }, [thesis?.id, session?.user?.id]);
+
+  const handleToggleBookmark = async () => {
+    if (!thesis?.id || !session?.user?.id) return;
+  
+    await toggleBookmark(session.user.id, thesis.id, isBookmarked);
+    setIsBookmarked((prev) => !prev);
+  };
 
   const handleAskJaime = () => {
     if (thesis) {
@@ -30,6 +64,15 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
       navigate("/jaimeGPT");
     }
   };
+  
+  const handleViewPDF = (thesis: Thesis) => {
+    if(!session) return console.error("no session found!");
+    if(!thesis.id) return console.error("no thesis id found");
+
+    window.open(`/pdf-viewer/${encodeURIComponent(thesis.title)}`);
+    recordView(session?.user.id, thesis?.id);
+  }
+  
 
   return (
     <Drawer
@@ -69,6 +112,15 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
       <Typography fontWeight="bold">Description:</Typography>
       <Typography mb={3}>{thesis?.description || "No description provided."}</Typography>
 
+      <Typography fontWeight="bold">Views:</Typography>
+      <Typography mb={3}>{viewCount}</Typography>
+
+      <Typography fontWeight="bold">Bookmark:</Typography>
+      <Checkbox
+        checked={isBookmarked}
+        onChange={handleToggleBookmark}
+      />
+
       {/* Buttons */}
       {thesis?.pdf_url && (
         <Button
@@ -83,7 +135,7 @@ export default function ThesisSidebar({ open, onClose, thesis }: ThesisSidebarPr
             "&:hover": { backgroundColor: "#6828e9", color: "white" },
             mb: 2,
           }}
-          onClick={() => navigate(`/pdf-viewer/${encodeURIComponent(thesis.title)}`)}
+          onClick={() => handleViewPDF(thesis)}
           startIcon={<FileText size={18} />}
         >
           View PDF

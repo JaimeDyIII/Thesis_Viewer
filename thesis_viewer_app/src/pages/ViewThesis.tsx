@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { 
   Container, TextField, Select, MenuItem, Box, Typography, 
-  Grid, Card, CardContent, CardHeader, CircularProgress, IconButton
+  Grid, Card, CardContent, CardHeader, CircularProgress, IconButton,
+  Button,  FormControl
 } from "@mui/material";
 import { Header } from "../components/Header";
 import ThesisSidebar from "../components/ThesisSidebar";
-import { Search, ArrowUpDown } from "lucide-react";
+import { Search, ArrowUpDown, Bookmark } from "lucide-react";
 import "../styles/View.css";
 import { supabase } from "../lib/supabase";
 
@@ -27,7 +28,12 @@ export default function ViewThesis() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedThesis, setSelectedThesis] = useState<Thesis | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // State for bookmarked filter
+  const [showBookmarked, setShowBookmarked] = useState(false);
+  const [bookmarkedThesisIds, setBookmarkedThesisIds] = useState<number[]>([]);
 
+  // Fetch all theses based on filters      
   useEffect(() => {
     const fetchThesis = async () => {
       setIsLoading(true);
@@ -53,6 +59,29 @@ export default function ViewThesis() {
     fetchThesis();
   }, [selectedCategory]);
 
+  // Fetch bookmarked theses
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) return;
+        
+        const { data, error } = await supabase
+          .from("bookmarks")
+          .select("thesis_id")
+          .eq("user_id", userData.user.id);
+          
+        if (error) throw error;
+        
+        setBookmarkedThesisIds(data.map(item => item.thesis_id));
+      } catch (err) {
+        console.error("Failed to fetch bookmarks:", err);
+      }
+    };
+
+    fetchBookmarks();
+  }, []);
+
   const handleSortToggle = () => {
     setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
@@ -63,15 +92,29 @@ export default function ViewThesis() {
       : b.title.localeCompare(a.title);
   });
 
+  // Filter theses based on search and bookmarks
   const filteredThesis = sortedThesis.filter(
-    (thesis) =>
-      thesis.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      thesis.author.toLowerCase().includes(searchQuery.toLowerCase())
+    (thesis) => {
+      const matchesSearch = 
+        thesis.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        thesis.author.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // If bookmark filter is on, only show bookmarked theses
+      if (showBookmarked) {
+        return matchesSearch && bookmarkedThesisIds.includes(thesis.id);
+      }
+      
+      return matchesSearch;
+    }
   );
 
   const handleCardClick = (thesis: Thesis) => {
     setSelectedThesis(thesis);
     setSidebarOpen(true);
+  };
+
+  const toggleBookmarkFilter = () => {
+    setShowBookmarked(!showBookmarked);
   };
 
   return (
@@ -88,39 +131,73 @@ export default function ViewThesis() {
         </Typography>
 
         <Box display="flex" alignItems="center" gap={2} width="100%">
-        {/* Search Box & Sort Group */}
-        <Box display="flex" alignItems="center" flexGrow={1} className="search-box">
-          <TextField
-            fullWidth
-            variant="standard"
-            placeholder="Search thesis..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              disableUnderline: true,
-              className: "search-field",
-            }}
-          />
-          <Search size={25} className="search-icon" />
-        </Box>
+          {/* Search Box & Sort Group */}
+          <Box display="flex" alignItems="center" flexGrow={1} className="search-box">
+            <TextField
+              fullWidth
+              variant="standard"
+              placeholder="Search thesis..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                disableUnderline: true,
+                className: "search-field",
+              }}
+            />
+            <Search size={25} className="search-icon" />
+          </Box>
 
           <IconButton onClick={handleSortToggle}>
             <ArrowUpDown size={25} />
           </IconButton>
 
-        {/* Categories Dropdown at the End */}
-        <Box className="filter-box" sx={{ marginLeft: "auto" }}>
-          <Select
-            value={selectedCategory || ""}
-            displayEmpty
-            onChange={(e) => setSelectedCategory(e.target.value || null)}
-          >
-            <MenuItem value="">All Categories</MenuItem>
-            <MenuItem value="Science">Science</MenuItem>
-            <MenuItem value="Technology">Technology</MenuItem>
-          </Select>
+          {/* Bookmark Filter Button - Removing hover effect and 3D appearance */}
+<Box className="filter-box">
+  <Button
+    onClick={toggleBookmarkFilter}
+    startIcon={<Bookmark size={20} />}
+    variant="text"
+    disableElevation
+    disableRipple
+    sx={{
+      bgcolor: 'transparent',
+      color: 'black',
+      boxShadow: 'none',
+      '&:hover': {
+        bgcolor: 'transparent',
+        boxShadow: 'none'
+      },
+      textTransform: 'none',
+      px: 2,
+      borderRadius: 1
+    }}
+  >
+    {showBookmarked ? "Bookmarked" : "Bookmarks"}
+  </Button>
+</Box>
+          {/* Categories Dropdown */}
+          <Box className="filter-box">
+            <FormControl>
+              <Select
+                value={selectedCategory || ""}
+                displayEmpty
+                onChange={(e) => setSelectedCategory(e.target.value || null)}
+                sx={{
+                  bgcolor: 'white',
+                  minWidth: '150px',
+                  '& .MuiSelect-select': {
+                    padding: '8px 14px'
+                  }
+                }}
+              >
+                <MenuItem value="">All Categories</MenuItem>
+                <MenuItem value="Science">Science</MenuItem>
+                <MenuItem value="Technology">Technology</MenuItem>
+                <MenuItem value="Mathematics">Mathematics</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
-      </Box>
 
         {/* Thesis Cards */}
         {isLoading ? (
@@ -138,6 +215,11 @@ export default function ViewThesis() {
                         {thesis.title}
                       </Typography>
                     }
+                    action={
+                      bookmarkedThesisIds.includes(thesis.id) ? (
+                        <Bookmark size={16} color="var(--primary)" />
+                      ) : null
+                    }
                   />
                   <CardContent>
                     <Typography variant="body2" color="textSecondary">
@@ -151,7 +233,10 @@ export default function ViewThesis() {
         ) : (
           <Box display="flex" justifyContent="center" alignItems="center" height="200px">
             <Typography variant="h6" color="textSecondary">
-              No thesis found matching your search.
+              {showBookmarked 
+                ? "No bookmarked thesis yet."
+                : "No thesis found matching your search."
+              }
             </Typography>
           </Box>
         )}
@@ -160,5 +245,4 @@ export default function ViewThesis() {
         <ThesisSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} thesis={selectedThesis} />
       </Container>
     </div>
-  );
-}
+  );}

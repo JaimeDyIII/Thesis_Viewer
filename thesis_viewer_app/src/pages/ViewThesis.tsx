@@ -172,7 +172,7 @@ export default function ViewThesis() {
       borderRadius: 1
     }}
   >
-    {showBookmarked ? "Bookmarked" : "Bookmarks"}
+    {showBookmarked ? "Bookmarks" : "Bookmarks"}
   </Button>
 </Box>
           {/* Categories Dropdown */}

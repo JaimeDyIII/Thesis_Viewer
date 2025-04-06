@@ -32,6 +32,7 @@ export default function ViewThesis() {
   // State for bookmarked filter
   const [showBookmarked, setShowBookmarked] = useState(false);
   const [bookmarkedThesisIds, setBookmarkedThesisIds] = useState<number[]>([]);
+  const [isBookmarkUpdated, setIsBookmarkUpdated] = useState(false);
 
   // Fetch all theses based on filters      
   useEffect(() => {
@@ -60,28 +61,28 @@ export default function ViewThesis() {
   }, [selectedCategory]);
 
   // Fetch bookmarked theses
+  const fetchBookmarks = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+
+      const { data, error } = await supabase
+        .from("bookmarks")
+        .select("thesis_id")
+        .eq("user_id", userData.user.id);
+
+      if (error) throw error;
+
+      setBookmarkedThesisIds(data.map(item => item.thesis_id));
+    } catch (err) {
+      console.error("Failed to fetch bookmarks:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchBookmarks = async () => {
-      try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData?.user) return;
-        
-        const { data, error } = await supabase
-          .from("bookmarks")
-          .select("thesis_id")
-          .eq("user_id", userData.user.id);
-          
-        if (error) throw error;
-        
-        setBookmarkedThesisIds(data.map(item => item.thesis_id));
-      } catch (err) {
-        console.error("Failed to fetch bookmarks:", err);
-      }
-    };
-
     fetchBookmarks();
-  }, []);
-
+  }, [isBookmarkUpdated]);
+  
   const handleSortToggle = () => {
     setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
@@ -242,7 +243,7 @@ export default function ViewThesis() {
         )}
 
         {/* Sidebar */}
-        <ThesisSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} thesis={selectedThesis} />
+        <ThesisSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} thesis={selectedThesis} onBookmarkToggle={() => setIsBookmarkUpdated(prev => !prev)} />
       </Container>
     </div>
   );}

@@ -1,16 +1,21 @@
-import { Card, CardContent, CardHeader, Typography, Box, Container } from "@mui/material";
-import { Eye, Glasses, User } from "lucide-react";
+import { Card, CardContent, CardHeader, Typography, Box, Container, Grid } from "@mui/material";
+import { Eye, Glasses, User, BarChart2 } from "lucide-react";
 import { Header } from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
 import "../styles/View.css";
 import { useAuth } from "../context/AuthContext";
+import { useState } from 'react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { permissions } = usePermissions();
   const userRole = profile.role;
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const handleCategorySelect = (category: string | null) => {
+    setSelectedCategory(category);
+  };
   
   return (
     <div className="admin-dashboard">
@@ -51,7 +56,7 @@ export default function Dashboard() {
               :
               (null)}
               
-            {/* JaimeGpt - Updated to use Glasses icon */}
+            {/* JaimeGpt */}
             <Card className="card-hover" onClick={() => navigate("/jaimeGPT")}>
               <CardHeader
                 title={
@@ -71,7 +76,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
               
-            {/* User Management - Updated to use User icon */}
+            {/* User Management */}
             {((userRole === 'Admin' || userRole === 'SuperAdmin') &&
               (permissions?.UserManagement_add ||
                 permissions?.UserManagement_view ||
@@ -99,6 +104,26 @@ export default function Dashboard() {
               )
               :
               (null)}
+
+            {/* Analytics Card */}
+            <Card className="card-hover" onClick={() => navigate("/analytics")}>
+              <CardHeader
+                title={
+                  <Box className="card-title">
+                    <Box className="icon-circle">
+                      <BarChart2 size={28} />
+                    </Box>
+                    Analytics
+                  </Box>
+                }
+                titleTypographyProps={{ className: "card-title-text" }}
+              />
+              <CardContent>
+                <Typography className="card-description">
+                  View thesis statistics and analytics.
+                </Typography>
+              </CardContent>
+            </Card>
           </Box>
         </main>
       </Container>

@@ -14,6 +14,7 @@ import ManageThesis from '../pages/ManageThesis';
 import UserManagement from '../pages/UserManagement';
 import JaimeGPT from '../pages/JaimeGPT';
 import PDFViewerWrapper from '../pages/PDFViewerWrapper';
+import Analytics from '../pages/Analytics';
 
 // Doesn't matter what page we throw in the / path, protected routes throw them back to their page based on their role.
 const AppRoutes: React.FC = () => (
@@ -62,6 +63,12 @@ const AppRoutes: React.FC = () => (
                             <Route path="/pdf-viewer/:title" element={
                                 <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['UserManagement_view']}>
                                     <PDFViewerWrapper />
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/analytics" element={
+                                <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']}>
+                                    <Analytics />
                                 </ProtectedRoute>
                             } />
 

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import "../styles/View.css";
 import { Card, CardContent, CardHeader } from '@mui/material';
 import { Users, FileText } from 'lucide-react';
-import { supabase } from "../lib/supabase"; // Make sure this import matches your project structure
+import { supabase } from "../lib/supabase";
 
 export default function Analytics() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -20,15 +20,12 @@ export default function Analytics() {
   };
 
   useEffect(() => {
-    // Fetch data directly from Supabase
     const fetchData = async () => {
       try {
-        // Count all rows from theses table
         const { count: thesesCount, error: thesesError } = await supabase
           .from('Thesis')
           .select('*', { count: 'exact', head: true });
         
-        // Count all rows from users table
         const { count: usersCount, error: usersError } = await supabase
           .from('users')
           .select('*', { count: 'exact', head: true });
@@ -116,7 +113,6 @@ export default function Analytics() {
           </Grid>
         </Grid>
 
-        {/* Existing Charts */}
         <Grid container spacing={3}>
           {/* Category Pie Chart */}
           <Grid item xs={12} md={5}>

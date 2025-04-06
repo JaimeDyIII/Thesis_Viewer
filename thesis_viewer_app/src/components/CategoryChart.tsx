@@ -37,7 +37,6 @@ const CategoryChart = ({ onCategorySelect, selectedCategory }: CategoryChartProp
           
         if (thesesError) throw thesesError;
         
-        // Count theses per category
         const categoryCounts: Record<string, number> = {};
         
         thesesData.forEach((thesis: {category: string}) => {
@@ -46,7 +45,6 @@ const CategoryChart = ({ onCategorySelect, selectedCategory }: CategoryChartProp
           }
         });
         
-        // Create pie chart data from the categories found in active theses
         const pieData: PieChartData[] = Object.entries(categoryCounts).map(([category, count], index) => ({
           id: index,
           label: category,

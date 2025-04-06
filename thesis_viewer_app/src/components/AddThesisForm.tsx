@@ -33,6 +33,7 @@ interface Thesis {
   category: string;
   pdf_url: string;
   isActive: boolean;
+  publishing_year: number | null;
 }
 
 interface AddThesisFormProps {
@@ -51,6 +52,7 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
     category: "", // Default to empty string
     pdf_url: "",
     isActive: true,
+    publishing_year: null
   });
 
   const [snackbar, setSnackbar] = useState({
@@ -169,7 +171,8 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
         author: "",
         category: categories.length > 0 ? categories[0].name : "",
         pdf_url: "",
-        isActive: true
+        isActive: true,
+        publishing_year: null
       });
       setSelectedFile(null);
       setOpen(false);
@@ -254,6 +257,17 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
               value={formData.author}
               onChange={handleChange}
               className="custom-input"
+            />
+            <TextField
+              fullWidth
+              margin="dense"
+              label="Publishing Year"
+              name="publishing_year"
+              type="number"
+              value={formData.publishing_year || ""}
+              onChange={handleChange}
+              className="custom-input"
+              inputProps={{ min: 1900, max: new Date().getFullYear() }}
             />
 
             {/* File Upload */}

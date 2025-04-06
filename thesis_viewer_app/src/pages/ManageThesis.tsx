@@ -39,6 +39,7 @@ interface Thesis {
   category: string;
   pdf_url?: string | null;
   isActive: boolean;
+  publishing_year: number;
 }
 
 interface UserProfile {
@@ -275,6 +276,7 @@ const ManageThesis: React.FC = () => {
                 <TableCell>Description</TableCell>
                 <TableCell>Author</TableCell>
                 <TableCell>Category</TableCell>
+                <TableCell>Publishing Year</TableCell>
                 {!isLibrarian && <TableCell>Status</TableCell>}
                 <TableCell>PDF</TableCell>
                 <TableCell>Actions</TableCell>
@@ -300,6 +302,7 @@ const ManageThesis: React.FC = () => {
                     <TableCell>{thesis.description}</TableCell>
                     <TableCell>{thesis.author}</TableCell>
                     <TableCell>{thesis.category}</TableCell>
+                    <TableCell>{thesis.publishing_year || 'No publishing year added'}</TableCell>
                     {!isLibrarian && (
                       <TableCell>
                         {thesis.isActive ? (

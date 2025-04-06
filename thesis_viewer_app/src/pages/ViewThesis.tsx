@@ -17,6 +17,7 @@ type Thesis = {
   pdf_url: string | null;
   category: string | null;
   author: string;
+  publishing_year: number;
 };
 
 export default function ViewThesis() {
@@ -33,6 +34,7 @@ export default function ViewThesis() {
   const [showBookmarked, setShowBookmarked] = useState(false);
   const [bookmarkedThesisIds, setBookmarkedThesisIds] = useState<number[]>([]);
   const [isBookmarkUpdated, setIsBookmarkUpdated] = useState(false);
+  const [selectedYear, setSelectedYear] = useState("");
 
   // Fetch all theses based on filters      
   useEffect(() => {
@@ -41,10 +43,18 @@ export default function ViewThesis() {
       try {
         let query = supabase
           .from("Thesis")
-          .select("id, title, description, pdf_url, category, author, isActive")
+          .select("id, title, description, pdf_url, category, author, publishing_year, isActive")
           .eq("isActive", true);
 
         if (selectedCategory) query = query.eq("category", selectedCategory);
+        
+        if (selectedYear) {
+          if (selectedYear === "older") {
+            query = query.lt("publishing_year", 2010);
+          } else {
+            query = query.eq("publishing_year", parseInt(selectedYear));
+          }
+        }
   
         const { data, error } = await query;
         if (error) throw error;
@@ -58,7 +68,7 @@ export default function ViewThesis() {
     };
 
     fetchThesis();
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedYear]);
 
   // Fetch bookmarked theses
   const fetchBookmarks = async () => {
@@ -153,29 +163,67 @@ export default function ViewThesis() {
           </IconButton>
 
           {/* Bookmark Filter Button - Removing hover effect and 3D appearance */}
-<Box className="filter-box">
-  <Button
-    onClick={toggleBookmarkFilter}
-    startIcon={<Bookmark size={20} />}
-    variant="text"
-    disableElevation
-    disableRipple
-    sx={{
-      bgcolor: 'transparent',
-      color: 'black',
-      boxShadow: 'none',
-      '&:hover': {
-        bgcolor: 'transparent',
-        boxShadow: 'none'
-      },
-      textTransform: 'none',
-      px: 2,
-      borderRadius: 1
-    }}
-  >
-    {showBookmarked ? "Bookmarks" : "Bookmarks"}
-  </Button>
-</Box>
+          <Box className="filter-box">
+            <Button
+              onClick={toggleBookmarkFilter}
+              startIcon={<Bookmark size={20} />}
+              variant="text"
+              disableElevation
+              disableRipple
+              sx={{
+                bgcolor: 'transparent',
+                color: 'black',
+                boxShadow: 'none',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                  boxShadow: 'none'
+                },
+                textTransform: 'none',
+                px: 2,
+                borderRadius: 1
+              }}
+            >
+              {showBookmarked ? "Bookmarks" : "Bookmarks"}
+            </Button>
+          </Box>
+          
+          {/* Year Filter Dropdown */}    
+          <Box className="filter-box">
+            <FormControl>
+              <Select
+                value={selectedYear || ""}
+                displayEmpty
+                onChange={(e) => setSelectedYear(e.target.value)}
+                sx={{
+                  bgcolor: 'white',
+                  minWidth: '120px',
+                  '& .MuiSelect-select': {
+                    padding: '8px 14px'
+                  }
+                }}
+              >
+                <MenuItem value="">All Years</MenuItem>
+                <MenuItem value="2025">2025</MenuItem>
+                <MenuItem value="2024">2024</MenuItem>
+                <MenuItem value="2023">2023</MenuItem>
+                <MenuItem value="2022">2022</MenuItem>
+                <MenuItem value="2021">2021</MenuItem>
+                <MenuItem value="2020">2020</MenuItem>
+                <MenuItem value="2019">2019</MenuItem>
+                <MenuItem value="2018">2018</MenuItem>
+                <MenuItem value="2017">2017</MenuItem>
+                <MenuItem value="2016">2016</MenuItem>
+                <MenuItem value="2015">2015</MenuItem>
+                <MenuItem value="2014">2014</MenuItem>
+                <MenuItem value="2013">2013</MenuItem>
+                <MenuItem value="2012">2012</MenuItem>
+                <MenuItem value="2011">2011</MenuItem>
+                <MenuItem value="2010">2010</MenuItem>
+                <MenuItem value="older">Before 2010</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
           {/* Categories Dropdown */}
           <Box className="filter-box">
             <FormControl>

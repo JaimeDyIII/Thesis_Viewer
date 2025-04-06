@@ -27,6 +27,7 @@ interface Thesis {
   category: string;
   pdf_url?: string | null;
   isActive: boolean;
+  publishing_year: number | null;
 }
 
 interface Category {
@@ -40,7 +41,7 @@ interface EditThesisFormProps {
   handleClose: () => void;
   thesis: Thesis;
   onUpdate: () => void;
-  isLibrarian?: boolean; 
+  isLibrarian?: boolean;
 }
 
 const UploadButton = styled("label")({
@@ -225,7 +226,8 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
         author: formData.author,
         category: formData.category,
         pdf_url: pdfUrl,
-        isActive: isLibrarian ? thesis.isActive : formData.isActive
+        isActive: isLibrarian ? thesis.isActive : formData.isActive,
+        publishing_year: formData.publishing_year,
       };
 
       const changes: any = {};
@@ -334,6 +336,16 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
             ))}
           </TextField>
           <TextField label="Author" name="author" value={formData.author} onChange={handleChange} fullWidth margin="dense" />
+          <TextField 
+            label="Publishing Year" 
+            name="publishing_year" 
+            value={formData.publishing_year || ''} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="dense"
+            type="number"
+            inputProps={{ min: 1900, max: new Date().getFullYear() }}
+          />
           
           <Box display="flex" flexDirection="column" mt={2}>
             <Box display="flex" alignItems="center">

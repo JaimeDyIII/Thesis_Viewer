@@ -29,6 +29,16 @@ interface ChatSession {
   updated_at: Date;
 }
 
+type Thesis = {
+  id: number;
+  title: string;
+  description: string | null;
+  pdf_url: string | null;
+  category: string | null;
+  author: string;
+  publishing_year: number;
+};
+
 // Function to extract text from PDF
 const extractPdfText = async (pdfUrl: string, maxCharacters = 50000): Promise<string> => {
   try {
@@ -46,6 +56,7 @@ const extractPdfText = async (pdfUrl: string, maxCharacters = 50000): Promise<st
     return '';
   }
 };
+
 // Typing indicator component using Framer Motion
 const TypingIndicator = () => {
   return (
@@ -70,6 +81,7 @@ const TypingIndicator = () => {
   );
 };
 
+
 export default function JaimeGPT() {
   const { session } = useAuth();
   const location = useLocation();
@@ -85,9 +97,33 @@ export default function JaimeGPT() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { selectedThesis, setSelectedThesis } = useThesis();
+  const [thesisList, setThesisList] = useState<Thesis[]>([]);
 
   const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
   
+  useEffect(() => {
+    const fetchActiveThesis = async () => {
+      setIsLoading(true);
+      try {
+        let query = supabase
+          .from("Thesis")
+          .select("id, title, description, pdf_url, category, author, publishing_year, isActive")
+          .eq("isActive", true);
+  
+        const { data, error } = await query;
+        if (error) throw error;
+
+        setThesisList(data || []);
+      } catch (err) {
+        console.error("Failed to fetch thesis data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchActiveThesis();
+  })
+
   useEffect(() => {
     // Ensure we have a selected thesis and a PDF URL
     if (!selectedThesis?.id) return;
@@ -349,6 +385,12 @@ export default function JaimeGPT() {
                   Answer the queries to the best of your capabilities. 
                   You will not answer anything outside the scope of your task.
                   You will only answer questions regarding the New Era University Thesis Knowledge Management System and nothing else`
+      });
+
+      // AI context for the active thesis in the database
+      apiMessages.unshift({
+        role: 'system',
+        content: `Here is the active theses in the databasse ${JSON.stringify(thesisList)}`
       });
         
       // Add PDF context if available

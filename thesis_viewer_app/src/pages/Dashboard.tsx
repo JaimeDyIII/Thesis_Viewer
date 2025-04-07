@@ -106,24 +106,30 @@ export default function Dashboard() {
               (null)}
 
             {/* Analytics Card */}
-            <Card className="card-hover" onClick={() => navigate("/analytics")}>
-              <CardHeader
-                title={
-                  <Box className="card-title">
-                    <Box className="icon-circle">
-                      <BarChart2 size={28} />
-                    </Box>
-                    Analytics
-                  </Box>
-                }
-                titleTypographyProps={{ className: "card-title-text" }}
-              />
-              <CardContent>
-                <Typography className="card-description">
-                  View thesis statistics and analytics.
-                </Typography>
-              </CardContent>
-            </Card>
+            {!(userRole=='User' || userRole=='Librarian') ? 
+              (
+                <Card className="card-hover" onClick={() => navigate("/analytics")}>
+                  <CardHeader
+                    title={
+                      <Box className="card-title">
+                        <Box className="icon-circle">
+                          <BarChart2 size={28} />
+                        </Box>
+                        Analytics
+                      </Box>
+                    }
+                    titleTypographyProps={{ className: "card-title-text" }}
+                  />
+                  <CardContent>
+                    <Typography className="card-description">
+                      View thesis statistics and analytics.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ) 
+              : 
+              (null)
+            }
           </Box>
         </main>
       </Container>

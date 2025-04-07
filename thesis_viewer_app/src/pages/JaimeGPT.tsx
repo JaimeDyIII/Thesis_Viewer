@@ -102,6 +102,8 @@ export default function JaimeGPT() {
   const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
   
   useEffect(() => {
+    if(thesisList) return;
+
     const fetchActiveThesis = async () => {
       setIsLoading(true);
       try {
@@ -122,7 +124,7 @@ export default function JaimeGPT() {
     };
 
     fetchActiveThesis();
-  })
+  }, [thesisList]);
 
   useEffect(() => {
     // Ensure we have a selected thesis and a PDF URL
@@ -449,11 +451,12 @@ export default function JaimeGPT() {
       // Update conversations list after the message exchange
       fetchConversations();
 
-      setIsAIResponseLoading(false);
       setQuery('');
     } catch (error) {
       console.error("Error fetching chat response:", error);
       setIsLoading(false);
+    } finally {
+      setIsAIResponseLoading(false);
     }
   };
 

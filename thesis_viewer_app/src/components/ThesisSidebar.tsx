@@ -16,6 +16,7 @@ type Thesis = {
   author: string;
   category: string | null;
   pdf_url: string | null;
+  publishing_year: number | null;
 };
 
 type ThesisSidebarProps = {
@@ -135,6 +136,13 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
       <Typography mb={2} fontSize="14px">
         {thesis?.description || "No description provided."}
       </Typography>
+      
+      <Typography fontWeight="bold" fontSize="14px">
+        Publishing Year:
+      </Typography>
+      <Typography mb={3} fontSize="14px">
+        {thesis?.publishing_year}
+      </Typography>
 
       <Typography fontWeight="bold" fontSize="14px">
         Views:
@@ -142,6 +150,8 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
       <Typography mb={3} fontSize="14px">
         {viewCount}
       </Typography>
+
+      
 
       {/* Buttons */}
       {/* View PDF Button */}

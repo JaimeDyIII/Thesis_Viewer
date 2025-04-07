@@ -102,8 +102,6 @@ export default function JaimeGPT() {
   const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
   
   useEffect(() => {
-    if(thesisList) return;
-
     const fetchActiveThesis = async () => {
       setIsLoading(true);
       try {
@@ -124,7 +122,7 @@ export default function JaimeGPT() {
     };
 
     fetchActiveThesis();
-  }, [thesisList]);
+  }, []);
 
   useEffect(() => {
     // Ensure we have a selected thesis and a PDF URL
@@ -344,6 +342,7 @@ export default function JaimeGPT() {
   const fetchResponse = async () => {
     if (isAIResponseLoading) return;
 
+
     try {
       setIsAIResponseLoading(true);
       
@@ -386,13 +385,15 @@ export default function JaimeGPT() {
         content: `You are an A.I. assistant for the New Era University Thesis Knowledge Management System. 
                   Answer the queries to the best of your capabilities. 
                   You will not answer anything outside the scope of your task.
-                  You will only answer questions regarding the New Era University Thesis Knowledge Management System and nothing else`
+                  You will only answer questions regarding the New Era University Thesis Knowledge Management System and nothing else
+                  If question is asked, unless otherwise stated, assume the intent is about the thesis repository`
       });
 
       // AI context for the active thesis in the database
       apiMessages.unshift({
         role: 'system',
-        content: `Here is the active theses in the databasse ${JSON.stringify(thesisList)}`
+        content: `Here is all the active theses in the database, if anyone asked anything about general theses, refer to this:
+                  ${JSON.stringify(thesisList)}`
       });
         
       // Add PDF context if available

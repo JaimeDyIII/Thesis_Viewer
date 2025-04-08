@@ -150,7 +150,6 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
       <Typography mb={3} fontSize="14px">
         {viewCount}
       </Typography>
-
       
 
       {/* Buttons */}

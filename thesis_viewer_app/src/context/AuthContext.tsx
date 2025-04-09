@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, ReactNode, useState } from "react
 import { useNavigate, useLocation } from "react-router-dom";
 import { Session } from "@supabase/supabase-js";
 import { getUserSession, signInWithGoogle, signOutUser, fetchUserProfile } from "../api/auth";
+import { supabase } from "../lib/supabase";
 
 type AuthContextType = {
   session: Session | null | undefined;
@@ -46,8 +47,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await signOutUser();
           navigate("/login");
         }
-        setSession(session);
-      } catch (error) {
+
+        const setData = async () => {
+          const { data: { session }, error } = await supabase.auth.getSession();
+
+          if (!session?.user?.email?.endsWith('@neu.edu.ph')) {
+            await supabase.auth.signOut();
+            navigate('/login')
+          }
+
+          if(error) throw error;
+          setSession(session);
+          setLoading(false);
+      }
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          setSession(session);
+          setLoading(false);
+          console.log("Auth state changed:", event, session?.user?.id);
+      });
+
+      setData();
+
+      return () => {
+          subscription.unsubscribe();
+      };
+    } catch (error) {
         console.error("Error fetching session:", error);
       } finally {
         setLoading(false);

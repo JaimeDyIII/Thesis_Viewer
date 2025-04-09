@@ -7,7 +7,7 @@ import { ViewProvider } from '../context/ViewContext';
 import { BookmarkProvider } from '../context/BookmarkContext';
 import Login from '../pages/Login';
 import Dashboard from "../pages/Dashboard";
-import Unauthorized from "../pages/Unauthorized";
+import NoPage from '../pages/NoPage';
 import ViewThesis from "../pages/ViewThesis";
 import ThesisRepository from '../pages/ThesisRepository';
 import ManageThesis from '../pages/ManageThesis';
@@ -61,7 +61,7 @@ const AppRoutes: React.FC = () => (
                                 </ProtectedRoute> 
                             } />
                             <Route path="/pdf-viewer/:title" element={
-                                <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['UserManagement_view']}>
+                                <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}>
                                     <PDFViewerWrapper />
                                 </ProtectedRoute>
                             } />
@@ -73,7 +73,7 @@ const AppRoutes: React.FC = () => (
                             } />
 
                             <Route path="/login" element={ <Login /> } />
-                            <Route path="/*" element={ <Unauthorized /> } />
+                            <Route path="/*" element={ <NoPage /> } />
                         </Routes>
                     </BookmarkProvider>
                 </ViewProvider>

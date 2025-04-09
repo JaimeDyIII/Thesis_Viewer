@@ -51,7 +51,7 @@ const UserManagement: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState<string>("Changes saved successfully ✅");
   const [logsOpen, setLogsOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const [addUserDialogOpen, setAddUserDialogOpen] = useState<boolean>(false); // New state for add user dialog
 
   useEffect(() => {
@@ -62,7 +62,20 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     
     try {
-      let query = supabase.from("users").select("id, name, email, role");
+      if(!profile) return console.error('User not found');
+      
+      let query;
+      const userRole = profile.role;
+
+      if(userRole == 'Admin'){
+        query = supabase.from("users")
+          .select("id, name, email, role")
+          .or(`role.eq.User, id.eq.${profile.id}`);
+      } else if (userRole == 'SuperAdmin') { 
+        query = supabase.from("users").select("id, name, email, role");
+      } else {
+        return console.error('User is not permitted to fetch and manage users');
+      }
       
       if (selectedRole) {
         query = query.eq("role", selectedRole);

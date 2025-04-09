@@ -5,6 +5,7 @@ import { AuthProvider } from "../context/AuthContext";
 import { PermissionsProvider } from '../context/PermissionsContext';
 import { ViewProvider } from '../context/ViewContext';
 import { BookmarkProvider } from '../context/BookmarkContext';
+import { AnalyticsProvider } from '../context/AnalyticsContext';
 import Login from '../pages/Login';
 import Dashboard from "../pages/Dashboard";
 import NoPage from '../pages/NoPage';
@@ -23,58 +24,59 @@ const AppRoutes: React.FC = () => (
             <PermissionsProvider>
                 <ViewProvider>
                     <BookmarkProvider>
+                        <AnalyticsProvider>
+                            <Routes>
+                                <Route path="/" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
+                                <Route path="/dashboard" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
+                                <Route path="/thesis-repository" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} 
+                                                                                        requiredPermissions={['ThesisRepository_view', 
+                                                                                                                'ThesisRepository_add',
+                                                                                                                'ThesisRepository_edit', 
+                                                                                                                'ThesisRepository_delete']}
+                                                                                        >
+                                                                                <ThesisRepository />
+                                                                            </ProtectedRoute> }>
+                                </Route>
 
-                        <Routes>
-                            <Route path="/" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
-                            <Route path="/dashboard" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
-                            <Route path="/thesis-repository" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} 
-                                                                                    requiredPermissions={['ThesisRepository_view', 
-                                                                                                            'ThesisRepository_add',
+                                <Route path="/view-thesis" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}><ViewThesis /></ProtectedRoute> } />
+                                <Route path="/manage-thesis" element={ <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']} 
+                                                                                    requiredPermissions={['ThesisRepository_add',
                                                                                                             'ThesisRepository_edit', 
-                                                                                                            'ThesisRepository_delete']}
-                                                                                    >
-                                                                            <ThesisRepository />
+                                                                                                            'ThesisRepository_delete']}>
+                                                                            <ManageThesis />
                                                                         </ProtectedRoute> }>
-                            </Route>
-
-                            <Route path="/view-thesis" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}><ViewThesis /></ProtectedRoute> } />
-                            <Route path="/manage-thesis" element={ <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']} 
-                                                                                requiredPermissions={['ThesisRepository_add',
-                                                                                                        'ThesisRepository_edit', 
-                                                                                                        'ThesisRepository_delete']}>
-                                                                        <ManageThesis />
+                                </Route>
+                                                    
+                                <Route path="/user-management" element={ <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']} 
+                                                requiredPermissions={['UserManagement_view',
+                                                                    'UserManagement_add',
+                                                                    'UserManagement_edit', 
+                                                                    'UserManagement_delete']}>
+                                                                        <UserManagement />
                                                                     </ProtectedRoute> }>
-                            </Route>
-                                                
-                            <Route path="/user-management" element={ <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']} 
-                                            requiredPermissions={['UserManagement_view',
-                                                                'UserManagement_add',
-                                                                'UserManagement_edit', 
-                                                                'UserManagement_delete']}>
-                                                                    <UserManagement />
-                                                                </ProtectedRoute> }>
-                            </Route>
-                            
-                            <Route path="/jaimeGPT" element={ 
-                                <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}>
-                                    <JaimeGPT />
-                                </ProtectedRoute> 
-                            } />
-                            <Route path="/pdf-viewer/:title" element={
-                                <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}>
-                                    <PDFViewerWrapper />
-                                </ProtectedRoute>
-                            } />
+                                </Route>
+                                
+                                <Route path="/jaimeGPT" element={ 
+                                    <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}>
+                                        <JaimeGPT />
+                                    </ProtectedRoute> 
+                                } />
+                                <Route path="/pdf-viewer/:title" element={
+                                    <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}>
+                                        <PDFViewerWrapper />
+                                    </ProtectedRoute>
+                                } />
 
-                            <Route path="/analytics" element={
-                                <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']}>
-                                    <Analytics />
-                                </ProtectedRoute>
-                            } />
+                                    <Route path="/analytics" element={
+                                        <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']}>
+                                            <Analytics />
+                                        </ProtectedRoute>
+                                    } />
 
-                            <Route path="/login" element={ <Login /> } />
-                            <Route path="/*" element={ <NoPage /> } />
-                        </Routes>
+                                <Route path="/login" element={ <Login /> } />
+                                <Route path="/*" element={ <NoPage /> } />
+                            </Routes>
+                        </AnalyticsProvider>
                     </BookmarkProvider>
                 </ViewProvider>
             </PermissionsProvider>

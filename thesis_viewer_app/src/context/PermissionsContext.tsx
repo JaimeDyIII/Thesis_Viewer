@@ -30,54 +30,52 @@ export const PermissionsProvider = ({ children }: { children: React.ReactNode })
     const { session } = useAuth();
 
     useEffect(() => {
-        const fetchPermissions = async () => {
-          setPermissionLoading(true);
-          if(!session) return console.error("Session not found!");
-
-          const user = session.user;
-          console.log("Current user:", user?.id);
-
-          if (!user?.id) {
-              setPermissions({ 
-                ThesisRepository_view: false, 
-                ThesisRepository_add: false, 
-                ThesisRepository_edit: false, 
-                ThesisRepository_delete: false,
-                UserManagement_view: false,
-                UserManagement_add: false,
-                UserManagement_edit: false,
-                UserManagement_delete: false, 
-              });
-
+      const fetchPermissions = async () => {
+        setPermissionLoading(true);
+        if(!session) {
+          setPermissions({ 
+            ThesisRepository_view: false, 
+            ThesisRepository_add: false, 
+            ThesisRepository_edit: false, 
+            ThesisRepository_delete: false,
+            UserManagement_view: false,
+            UserManagement_add: false,
+            UserManagement_edit: false,
+            UserManagement_delete: false, 
+          });
+          setPermissionLoading(false);
+          return;
+        }
+    
+        const user = session.user;
+    
+        if (!user?.id) {
+          setPermissions({ 
+            ThesisRepository_view: false, 
+            ThesisRepository_add: false, 
+            ThesisRepository_edit: false, 
+            ThesisRepository_delete: false,
+            UserManagement_view: false,
+            UserManagement_add: false,
+            UserManagement_edit: false,
+            UserManagement_delete: false, 
+          });
+          setPermissionLoading(false);
+          return;
+        }
+    
+        try {
+          const { data, error } = await supabase
+            .from('user_permissions')
+            .select("subsystem, permission_type, permitted")
+            .eq('userid', user.id);
+    
+          if (error) {
+            console.error("Error fetching permissions:", error);
+            setPermissionLoading(false);
             return;
           }
-
-          let { data, error } = await supabase
-              .from('user_permissions')
-              .select("subsystem, permission_type, permitted")
-              .eq('userid', user.id);
-
-          if (error) {
-              console.error("Error fetching permissions:", error);
-              return;
-          }
-
-          if (!data || data.length === 0) {
-              console.log("No matching permissions found in database");
-              setPermissions({ 
-                ThesisRepository_view: false, 
-                ThesisRepository_add: false, 
-                ThesisRepository_edit: false, 
-                ThesisRepository_delete: false,
-                UserManagement_view: false,
-                UserManagement_add: false,
-                UserManagement_edit: false,
-                UserManagement_delete: false, 
-              });
-
-              return;
-          }
-
+    
           const newPermissions: Permissions = { 
             ThesisRepository_view: false, 
             ThesisRepository_add: false, 
@@ -87,24 +85,49 @@ export const PermissionsProvider = ({ children }: { children: React.ReactNode })
             UserManagement_add: false,
             UserManagement_edit: false,
             UserManagement_delete: false, 
-          }
-
-          data.forEach(({ subsystem, permission_type, permitted }) => {
-            const permissionKey = `${subsystem}_${permission_type}` as keyof Permissions;
+          };
     
-            if (permissionKey in newPermissions) {
-              newPermissions[permissionKey] = Boolean(permitted);
-            }
-          });
-        
-        setPermissions(newPermissions);
-        setPermissionLoading(false);
+          if (data && data.length > 0) {
+            data.forEach(({ subsystem, permission_type, permitted }) => {
+              const permissionKey = `${subsystem}_${permission_type}` as keyof Permissions;
+              
+              if (permissionKey in newPermissions) {
+                newPermissions[permissionKey] = Boolean(permitted);
+              }
+            });
+          }
+          
+          setPermissions(newPermissions);
+        } catch (err) {
+          console.error("Unexpected error fetching permissions:", err);
+        } finally {
+          setPermissionLoading(false);
+        }
       };
-
-    fetchPermissions();
-  }, [session]);
-
-  
+    
+      if (session) {
+        fetchPermissions();
+      }
+    
+      const permissionsSubscription = supabase
+        .channel('user_permissions_changes')
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'user_permissions',
+            filter: session?.user?.id ? `userid=eq.${session.user.id}` : undefined
+          }, 
+          async () => {
+            await fetchPermissions();
+          }
+        )
+        .subscribe();
+    
+      return () => {
+        permissionsSubscription.unsubscribe();
+      };
+    }, [session?.user?.id]);
 
   return (
     <PermissionsContext.Provider value={{ permissions, permissionLoading }}>

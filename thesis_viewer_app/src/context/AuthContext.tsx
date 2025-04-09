@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Session } from "@supabase/supabase-js";
-import { getUserSession, signInWithGoogle, signOutUser, fetchUserProfile } from "../api/auth";
+import { signInWithGoogle, signOutUser, fetchUserProfile } from "../api/auth";
 import { supabase } from "../lib/supabase";
 
 type AuthContextType = {
@@ -39,48 +39,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [location]);
 
   // Set session and listen to auth changes
-  useEffect(() => {
-    const setData = async () => {
+    useEffect(() => {
+    const initializeSession = async () => {
       try {
-        const session = await getUserSession();
-        if (!session?.user?.email?.endsWith("@neu.edu.ph")) {
+        // Fetch the session once during mount
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+
+        // Check if the email domain is valid
+        if (session?.user?.email?.endsWith("@neu.edu.ph")) {
+          setSession(session);
+        } else {
           await signOutUser();
           navigate("/login");
         }
-
-        const setData = async () => {
-          const { data: { session }, error } = await supabase.auth.getSession();
-
-          if (!session?.user?.email?.endsWith('@neu.edu.ph')) {
-            await supabase.auth.signOut();
-            navigate('/login')
-          }
-
-          if(error) throw error;
-          setSession(session);
-          setLoading(false);
-      }
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-          setSession(session);
-          setLoading(false);
-          console.log("Auth state changed:", event, session?.user?.id);
-      });
-
-      setData();
-
-      return () => {
-          subscription.unsubscribe();
-      };
-    } catch (error) {
+        setLoading(false);
+      } catch (error) {
         console.error("Error fetching session:", error);
-      } finally {
         setLoading(false);
       }
     };
 
-    setData();
-  }, []);
+    initializeSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Update session when auth state changes
+      setSession(session);
+      setLoading(false);
+      console.log("Auth state changed:", session?.user?.id);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   // Fetch user profile when session is set
   useEffect(() => {

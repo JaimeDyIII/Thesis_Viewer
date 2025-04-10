@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import { Download } from 'lucide-react';
-import { useAnalytics } from '../context/AnalyticsContext';
-import { generateAnalyticsPDF } from '../services/AnalyticsPDFService';
+import { useAnalytics } from '../../context/AnalyticsContext';
+import { generateAnalyticsPDF } from '../../services/AnalyticsPDFService';
 
 const AnalyticsPDFExport: React.FC = () => {
   const { fetchAnalyticsData } = useAnalytics();

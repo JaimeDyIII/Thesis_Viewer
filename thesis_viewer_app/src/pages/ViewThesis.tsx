@@ -5,7 +5,7 @@ import {
   Button,  FormControl
 } from "@mui/material";
 import { Header } from "../components/Header";
-import ThesisSidebar from "../components/ThesisSidebar";
+import ThesisSidebar from "../components/ThesisRepository/ThesisSidebar";
 import { Search, ArrowUpDown, Bookmark } from "lucide-react";
 import "../styles/View.css";
 import { supabase } from "../lib/supabase";

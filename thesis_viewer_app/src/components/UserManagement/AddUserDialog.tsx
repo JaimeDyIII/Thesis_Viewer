@@ -13,8 +13,8 @@ import {
   Box,
   CircularProgress,
 } from "@mui/material";
-import { supabase } from "../lib/supabase";
-import { addLogEntry, Subsystem, ActionType } from "../components/CheckLogs";
+import { supabase } from "../../lib/supabase";
+import { addLogEntry, Subsystem, ActionType } from "../../components/CheckLogs";
 
 interface AddUserDialogProps {
   open: boolean;

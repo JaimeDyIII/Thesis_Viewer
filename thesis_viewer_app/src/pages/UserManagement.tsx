@@ -24,10 +24,10 @@ import { Search, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Header";
 import CheckLogs from "../components/CheckLogs";
-import UserPermissions from "../components/UserPermissions";
+import UserPermissions from "../components/UserManagement/UserPermissions";
 import { useAuth } from "../context/AuthContext";
 import { addLogEntry, Subsystem, ActionType } from "../components/CheckLogs";
-import AddUserDialog from "../components/AddUserDialog"; // Import the new component
+import AddUserDialog from "../components/UserManagement/AddUserDialog"; // Import the new component
 import "../styles/Manage.css";
 
 interface User {

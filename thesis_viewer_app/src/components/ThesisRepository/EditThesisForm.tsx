@@ -15,9 +15,9 @@ import {
   Alert
 } from "@mui/material";
 import { styled } from "@mui/system";
-import { supabase } from "../lib/supabase";
-import { addLogEntry, ActionType, Subsystem } from "./CheckLogs";
-import { useAuth } from "../context/AuthContext";
+import { supabase } from "../../lib/supabase";
+import { addLogEntry, ActionType, Subsystem } from "../CheckLogs";
+import { useAuth } from "../../context/AuthContext";
 
 interface Thesis {
   id: number;

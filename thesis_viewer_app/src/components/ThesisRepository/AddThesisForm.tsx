@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import {
   Dialog,
   DialogTitle,
@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import { Upload, X } from "lucide-react";
 import "../styles/Manage.css";
-import { addLogEntry, Subsystem, ActionType } from '../components/CheckLogs';
-import { useAuth } from "../context/AuthContext";
+import { addLogEntry, Subsystem, ActionType } from '../CheckLogs';
+import { useAuth } from "../../context/AuthContext";
 
 // Interface for Category
 interface Category {

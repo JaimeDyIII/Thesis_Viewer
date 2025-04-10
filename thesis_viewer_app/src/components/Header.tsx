@@ -1,7 +1,7 @@
 import { Avatar, Typography, Box, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { LogoutButton } from "./LogoutButton";
+import { LogoutButton } from "./Authentication/LogoutButton";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/View.css";

@@ -1,5 +1,5 @@
 import { useParams } from "react-router";
-import PDFViewer from "../components/PDFViewer";
+import PDFViewer from "../components/ThesisRepository/PDFViewer";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 

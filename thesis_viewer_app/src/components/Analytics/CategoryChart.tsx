@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 type PieChartData = {
   id: number;

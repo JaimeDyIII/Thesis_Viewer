@@ -3,10 +3,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Bookmark, FileText, Glasses } from "lucide-react";
 import DefaultBookCover from "../components/DefaultBookCover.png";
 import { useNavigate } from "react-router-dom";
-import { useThesis } from "../context/ThesisContext";
-import { useView } from "../context/ViewContext";
-import { useAuth } from "../context/AuthContext";
-import { useBookmark } from "../context/BookmarkContext";
+import { useThesis } from "../../context/ThesisContext";
+import { useView } from "../../context/ViewContext";
+import { useAuth } from "../../context/AuthContext";
+import { useBookmark } from "../../context/BookmarkContext";
 import { useEffect, useState } from "react";
 
 type Thesis = {

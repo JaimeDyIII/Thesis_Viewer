@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { addLogEntry, ActionType, Subsystem } from "./CheckLogs";
-import DeletionAlert from "./DeletionAlert";
+import { supabase } from "../../lib/supabase";
+import { addLogEntry, ActionType, Subsystem } from "../CheckLogs";
+import DeletionAlert from "../DeletionAlert";
 
 interface Thesis {
   id: number;

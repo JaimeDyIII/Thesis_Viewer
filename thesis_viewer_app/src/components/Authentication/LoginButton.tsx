@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginButton = () => {
     const { handleGoogleLogin } = useAuth();

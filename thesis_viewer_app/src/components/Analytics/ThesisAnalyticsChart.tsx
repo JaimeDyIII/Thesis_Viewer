@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { Box, ToggleButtonGroup, ToggleButton, Paper, Typography, CircularProgress } from '@mui/material';
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 type ThesisData = {
   id: number;

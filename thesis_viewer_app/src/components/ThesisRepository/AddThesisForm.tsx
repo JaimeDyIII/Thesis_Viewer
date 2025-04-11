@@ -15,11 +15,10 @@ import {
   MenuItem,
 } from "@mui/material";
 import { Upload, X } from "lucide-react";
-import "../styles/Manage.css";
+import "../../styles/Manage.css";
 import { addLogEntry, Subsystem, ActionType } from '../CheckLogs';
 import { useAuth } from "../../context/AuthContext";
 
-// Interface for Category
 interface Category {
   id: number;
   name: string;

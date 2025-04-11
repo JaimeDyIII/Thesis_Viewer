@@ -17,9 +17,9 @@ import {
   Typography
 } from '@mui/material';
 import { Edit, Trash2, Plus } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { addLogEntry, Subsystem, ActionType } from '../components/CheckLogs';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
+import { addLogEntry, Subsystem, ActionType } from '../../components/CheckLogs';
 
 interface Category {
   id: number;

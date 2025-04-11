@@ -42,7 +42,7 @@ export const generateAnalyticsPDF = async (data: AnalyticsData): Promise<void> =
   pdf.text('', 150, yPos);
   yPos += 150;
   
-  // Category distribution
+  // Category distribution section
   pdf.setFontSize(16);
   pdf.setTextColor(106, 27, 154);
   pdf.text('Thesis Distribution by Category', 14, 75);
@@ -73,8 +73,59 @@ export const generateAnalyticsPDF = async (data: AnalyticsData): Promise<void> =
     }
   });
   
+  // Top thesis per category section (most viewed and bookmarked)
+  const topThesesY = (pdf as any).lastAutoTable.finalY + 15;
+  
+  pdf.setFontSize(16);
+  pdf.setTextColor(106, 27, 154);
+  pdf.text('Top Thesis Per Category', 14, topThesesY);
+  
+  const topThesesData = [];
+  
+  for (const category of data.topCategories) {
+    const categoryTheses = data.thesesByCategory[category]
+      .filter(thesis => thesis.isActive);
+    
+    if (!categoryTheses || categoryTheses.length === 0) continue;
+    
+    const mostViewed = [...categoryTheses].sort((a, b) => b.view_count - a.view_count)[0];
+    const mostBookmarked = [...categoryTheses].sort((a, b) => b.bookmark_count - a.bookmark_count)[0];
+    
+    topThesesData.push([
+      category,
+      mostViewed.title,
+      mostViewed.view_count,
+      mostBookmarked.title,
+      mostBookmarked.bookmark_count
+    ]);
+  }
+  
+  autoTable(pdf, {
+    startY: topThesesY + 5,
+    head: [['Category', 'Most Viewed Thesis', 'Views', 'Most Bookmarked Thesis', 'Bookmarks']],
+    body: topThesesData,
+    headStyles: { fillColor: [46, 125, 50], textColor: [255, 255, 255] },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    tableWidth: 'auto',
+    margin: { top: 10, right: 14, bottom: 10, left: 14 },
+    styles: { overflow: 'linebreak', cellPadding: 5, fontSize: 10 },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 20 },
+      3: { cellWidth: 60 },
+      4: { cellWidth: 20 }
+    }
+  });
+  
+  // Add a page break if needed
+  if ((pdf as any).lastAutoTable.finalY > pdf.internal.pageSize.getHeight() - 40) {
+    pdf.addPage();
+  } else {
+    pdf.addPage();
+  }
+  
   // Most viewed theses section
-  pdf.addPage();
   pdf.setFontSize(16);
   pdf.setTextColor(106, 27, 154);
   pdf.text('Most Viewed Theses', 14, 15);
@@ -129,64 +180,6 @@ export const generateAnalyticsPDF = async (data: AnalyticsData): Promise<void> =
       2: { cellWidth: 25 }
     }
   });
-  
-  // Category-specific detailed analysis
-  pdf.addPage();
-  
-  let currentY = 15;
-  
-  for (const category of data.topCategories) {
-    const categoryTheses = data.thesesByCategory[category]
-      .filter(thesis => thesis.isActive);
-    
-    if (!categoryTheses || categoryTheses.length === 0) continue;
-    
-    pdf.setFontSize(16);
-    pdf.setTextColor(106, 27, 154);
-    pdf.text(`${category} Category Analysis`, 14, currentY);
-    
-    currentY += 10;
-    
-    const catMetrics = data.categoryMetrics.find(c => c.category === category);
-    
-    if (catMetrics) {
-      pdf.setFontSize(12);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(`Total Theses: ${catMetrics.active}`, 14, currentY);
-      pdf.text(`Total Views: ${catMetrics.views}`, 80, currentY);
-      pdf.text(`Total Bookmarks: ${catMetrics.bookmarks}`, 140, currentY);
-      
-      currentY += 10;
-    }
-    
-    // Top theses in this category
-    autoTable(pdf, {
-      startY: currentY,
-      head: [['Title', 'Views', 'Bookmarks']],
-      body: categoryTheses.slice(0, 5).map(thesis => [
-        thesis.title,
-        thesis.view_count,
-        thesis.bookmark_count
-      ]),
-      headStyles: { fillColor: [76, 154, 255], textColor: [255, 255, 255] },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      tableWidth: 'auto',
-      margin: { top: 5, right: 14, bottom: 5, left: 14 },
-      styles: { overflow: 'linebreak', cellPadding: 5 },
-      columnStyles: {
-        0: { cellWidth: 120 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 30 }
-      }
-    });
-    
-    currentY = (pdf as any).lastAutoTable.finalY + 20;
-    
-    if (currentY > pdf.internal.pageSize.getHeight() - 40) {
-      pdf.addPage();
-      currentY = 15;
-    }
-  }
   
   const formattedDate = date.toISOString().split('T')[0];
   pdf.save(`thesis_analytics_report_${formattedDate}.pdf`);

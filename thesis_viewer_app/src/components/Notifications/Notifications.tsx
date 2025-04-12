@@ -37,7 +37,6 @@ const Notifications: React.FC<NotificationsProps> = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<"CONNECTED" | "DISCONNECTED" | "ERROR">("DISCONNECTED");
 
   const navigate = useNavigate();
   const notificationCount = notifications.filter(n => !n.is_read).length;
@@ -48,7 +47,7 @@ const Notifications: React.FC<NotificationsProps> = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id) {
           setUserId(session.user.id);
-          await fetchNotifications(session.user.id);
+          fetchNotifications(session.user.id);
         }
       } catch (error) {
         console.error("Error fetching user session:", error);
@@ -80,7 +79,6 @@ const Notifications: React.FC<NotificationsProps> = () => {
     }
   };
 
-  // Real-time subscription for notifications
   useEffect(() => {
     if (!userId) return;
 
@@ -95,55 +93,32 @@ const Notifications: React.FC<NotificationsProps> = () => {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          try {
-            if (payload.eventType === "INSERT") {
-              setNotifications((prev) => [
-                payload.new as Notification,
-                ...prev,
-              ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-            } else if (payload.eventType === "UPDATE") {
-              setNotifications((prev) =>
-                prev.map((notification) =>
-                  notification.id === payload.new.id
-                    ? (payload.new as Notification)
-                    : notification
-                )
-              );
-            } else if (payload.eventType === "DELETE") {
-              setNotifications((prev) =>
-                prev.filter((notification) => notification.id !== payload.old.id)
-              );
-            }
-          } catch (error) {
-            console.error("Error processing real-time notification update:", error);
+          if (payload.eventType === "INSERT") {
+            setNotifications((prev) => [
+              payload.new as Notification,
+              ...prev,
+            ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+          } else if (payload.eventType === "UPDATE") {
+            setNotifications((prev) =>
+              prev.map((notification) =>
+                notification.id === payload.new.id
+                  ? (payload.new as Notification)
+                  : notification
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            setNotifications((prev) =>
+              prev.filter((notification) => notification.id !== payload.old.id)
+            );
           }
         }
       )
-      .subscribe((status) => {
-        setSubscriptionStatus(status === "SUBSCRIBED" ? "CONNECTED" : status === "CLOSED" ? "DISCONNECTED" : "ERROR");
-        console.log("Real-time subscription status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [userId]);
-
-  // Fallback polling mechanism
-  useEffect(() => {
-    if (!userId || subscriptionStatus === "CONNECTED") return;
-
-    const interval = setInterval(async () => {
-      try {
-        await fetchNotifications(userId);
-        console.log("Fallback polling: Fetched notifications");
-      } catch (error) {
-        console.error("Error during fallback polling:", error);
-      }
-    }, 30000); // Poll every 30 seconds if disconnected
-
-    return () => clearInterval(interval);
-  }, [userId, subscriptionStatus]);
 
   const formatTime = (timestamp: string) => {
     try {
@@ -211,10 +186,14 @@ const Notifications: React.FC<NotificationsProps> = () => {
         .eq("user_id", userId);
       
       if (error) throw error;
+  
+      // ✅ Clear the notifications from local state too
+      setNotifications([]);
     } catch (error) {
       console.error("Error clearing all notifications:", error);
     }
   };
+  
 
   const getNotificationColor = (content: string) => {
     if (content.includes("role") || content.includes("permissions")) return '#4caf50';

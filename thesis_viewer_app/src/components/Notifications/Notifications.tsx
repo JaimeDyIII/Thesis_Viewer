@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Badge, 
   Popover, 
@@ -10,17 +10,20 @@ import {
   ListItemText, 
   Divider, 
   Button,
-  Chip
+  Chip,
+  CircularProgress
 } from "@mui/material";
 import { Bell } from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import { formatDistanceToNow } from "date-fns";
 
 // Define a type for notifications
 interface Notification {
   id: number;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'info' | 'success' | 'warning' | 'error';
+  user_id: string;
+  content: string;
+  created_at: string;
+  is_read: boolean;
 }
 
 interface NotificationsProps {
@@ -28,41 +31,67 @@ interface NotificationsProps {
   initialNotifications?: Notification[];
 }
 
-const Notifications: React.FC<NotificationsProps> = ({ 
-  initialNotifications = [] 
-}) => {
+const Notifications: React.FC<NotificationsProps> = () => {
   // State for notification dropdown
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   
-  // Placeholder notifications data
-  const [notifications, setNotifications] = useState<Notification[]>(
-    initialNotifications.length > 0 ? initialNotifications : [
-      {
-        id: 1,
-        message: "New thesis uploaded by John Doe",
-        time: "Just now",
-        read: false,
-        type: 'info'
-      },
-      {
-        id: 2,
-        message: "Your permissions have been updated by admin",
-        time: "2 hours ago",
-        read: false,
-        type: 'success'
-      },
-      {
-        id: 3,
-        message: "System maintenance scheduled for tonight",
-        time: "Yesterday",
-        read: false,
-        type: 'warning'
-      }
-    ]
-  );
+  // State for notifications
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const notificationCount = notifications.filter(n => !n.read).length;
+  const notificationCount = notifications.filter(n => !n.is_read).length;
+
+  // Fetch the current user ID and notifications
+  useEffect(() => {
+    const fetchUserAndNotifications = async () => {
+      try {
+        // Get the current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user?.id) {
+          setUserId(session.user.id);
+          fetchNotifications(session.user.id);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUserAndNotifications();
+  }, []);
+
+  // Fetch notifications from the database
+  const fetchNotifications = async (id: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("Notification")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setNotifications(data || []);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format the time
+  const formatTime = (timestamp: string) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (error) {
+      return "Just now";
+    }
+  };
 
   // Handle notification icon click
   const handleNotificationClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -75,34 +104,59 @@ const Notifications: React.FC<NotificationsProps> = ({
   };
 
   // Mark a notification as read
-  const markAsRead = (id: number) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
+  const markAsRead = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from("Notification")
+        .update({ is_read: true })
+        .eq("id", id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === id ? { ...notification, is_read: true } : notification
+        )
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
 
   // Mark all notifications as read
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
+  const markAllAsRead = async () => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase
+        .from("Notification")
+        .update({ is_read: true })
+        .eq("user_id", userId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
   };
 
-  // Get color based on notification type
-  const getNotificationColor = (type: string) => {
-    switch(type) {
-      case 'info':
-        return '#2196f3';
-      case 'success':
-        return '#4caf50';
-      case 'warning':
-        return '#ff9800';
-      case 'error':
-        return '#f44336';
-      default:
-        return '#2196f3';
+  // Get color based on notification content
+  const getNotificationColor = (content: string) => {
+    if (content.includes("role") || content.includes("permissions")) {
+      return '#4caf50'; // Success/green
+    } else if (content.includes("thesis")) {
+      return '#2196f3'; // Info/blue
+    } else if (content.includes("maintenance") || content.includes("warning")) {
+      return '#ff9800'; // Warning/orange
+    } else {
+      return '#2196f3'; // Default blue
     }
   };
 
@@ -183,7 +237,20 @@ const Notifications: React.FC<NotificationsProps> = ({
         </Box>
         
         {/* Notification List */}
-        {notifications.length === 0 ? (
+        {loading ? (
+          <Box 
+            sx={{ 
+              p: 4, 
+              textAlign: 'center', 
+              color: 'text.secondary',
+              backgroundColor: '#fff',
+              display: 'flex',
+              justifyContent: 'center'
+            }}
+          >
+            <CircularProgress size={24} />
+          </Box>
+        ) : notifications.length === 0 ? (
           <Box 
             sx={{ 
               p: 4, 
@@ -204,8 +271,8 @@ const Notifications: React.FC<NotificationsProps> = ({
                     px: 2,
                     py: 1.5,
                     position: 'relative',
-                    opacity: notification.read ? 0.7 : 1,
-                    backgroundColor: notification.read ? '#fff' : '#fafafa',
+                    opacity: notification.is_read ? 0.7 : 1,
+                    backgroundColor: notification.is_read ? '#fff' : '#fafafa',
                     cursor: 'pointer',
                     '&:hover': {
                       backgroundColor: '#f5f5f5'
@@ -217,15 +284,15 @@ const Notifications: React.FC<NotificationsProps> = ({
                       top: 0,
                       bottom: 0,
                       width: '4px',
-                      backgroundColor: notification.read ? 'transparent' : getNotificationColor(notification.type)
+                      backgroundColor: notification.is_read ? 'transparent' : getNotificationColor(notification.content)
                     }
                   }}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <ListItemText
                     primary={
-                      <Typography variant="body2" fontWeight={notification.read ? 400 : 500}>
-                        {notification.message}
+                      <Typography variant="body2" fontWeight={notification.is_read ? 400 : 500}>
+                        {notification.content}
                       </Typography>
                     }
                     secondary={
@@ -234,7 +301,7 @@ const Notifications: React.FC<NotificationsProps> = ({
                         color="text.secondary"
                         component="span"
                       >
-                        {notification.time}
+                        {formatTime(notification.created_at)}
                       </Typography>
                     }
                   />
@@ -255,17 +322,7 @@ const Notifications: React.FC<NotificationsProps> = ({
               backgroundColor: '#fff'
             }}
           >
-            <Button 
-              fullWidth
-              variant="text"
-              size="small" 
-              sx={{ 
-                textTransform: 'none',
-                fontSize: '0.85rem'
-              }}
-            >
-              View all notifications
-            </Button>
+            
           </Box>
         )}
       </Popover>

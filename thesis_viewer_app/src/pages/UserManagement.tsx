@@ -119,15 +119,15 @@ const UserManagement: React.FC = () => {
       
       // Update the role in the database
       const { error } = await supabase
-        .from("users")
-        .update({ role: newRole })
-        .eq("id", userId);
+      .from("users")
+      .update({ role: newRole })
+      .eq("id", userId);
 
-      if (error) {
-        console.error("Error updating role:", error);
-        handlePermissionUpdate(`Failed to update user role: ${error.message}. Please try again.`);
-        return;
-      }
+    if (error) {
+      console.error("Error updating role:", error);
+      handlePermissionUpdate(`Failed to update user role: ${error.message}. Please try again.`);
+      return;
+    }
 
       // Define default permissions for each role
       const defaultPermissions: Record<string, Record<string, string[]>> = {
@@ -152,61 +152,72 @@ const UserManagement: React.FC = () => {
       for (const [subsystem, actions] of Object.entries(permissions)) {
         // First, delete existing permissions for this user and subsystem
         await supabase
+        .from("user_permissions")
+        .delete()
+        .eq("user_id", userId)
+        .eq("subsystem", subsystem);
+      
+      // Then insert new permissions
+      for (const action of actions) {
+        await supabase
           .from("user_permissions")
-          .delete()
-          .eq("user_id", userId)
-          .eq("subsystem", subsystem);
-        
-        // Then insert new permissions
-        for (const action of actions) {
-          await supabase
-            .from("user_permissions")
-            .insert({
-              user_id: userId,
-              subsystem: subsystem,
-              action: action,
-              created_by: session?.user?.id
-            });
-        }
+          .insert({
+            user_id: userId,
+            subsystem: subsystem,
+            action: action,
+            created_by: session?.user?.id
+          });
       }
-
-      // Log the role change
-      await addLogEntry(
-        Subsystem.USER_MANAGEMENT,
-        ActionType.CHANGE_USER_ROLE,
-        session?.user?.id as string,
-        null,
-        userId,
-        null,
-        { 
-          role: {
-            old: oldRole,
-            new: newRole
-          }
-        }
-      );
-
-      // Update local state
-      setUsers(prev => 
-        prev.map(user => 
-          user.id === userId ? { ...user, role: newRole } : user
-        )
-      );
-
-      // Show success message
-      handlePermissionUpdate(`Role updated successfully for ${userName} to ${newRole} ✅`);
-
-      // If the currently expanded user is the one being modified, refresh the permissions view
-      if (expandedUser === userId) {
-        setExpandedUser(null);
-        setTimeout(() => setExpandedUser(userId), 100);
-      }
-
-    } catch (error) {
-      console.error("Error in handleRoleChange:", error);
-      handlePermissionUpdate("Failed to update user role. Please try again.");
     }
-  };
+      
+  // Create notification for the user
+  console.log("Attempting to create notification for user", userId);
+const { data: notificationData, error: notificationError } = await supabase
+  .from("notification")
+  .insert({
+    user_id: userId,
+    content: `Your role has been updated to ${newRole} by an admin`,
+    is_read: false
+  });
+console.log("Notification creation result:", { data: notificationData, error: notificationError });
+
+// Log the role change
+await addLogEntry(
+  Subsystem.USER_MANAGEMENT,
+  ActionType.CHANGE_USER_ROLE,
+  session?.user?.id as string,
+  null,
+  userId,
+  null,
+  { 
+    role: {
+      old: oldRole,
+      new: newRole
+    }
+  }
+);
+
+// Update local state
+setUsers(prev => 
+  prev.map(user => 
+    user.id === userId ? { ...user, role: newRole } : user
+  )
+);
+
+// Show success message
+handlePermissionUpdate(`Role updated successfully for ${userName} to ${newRole} ✅`);
+
+// If the currently expanded user is the one being modified, refresh the permissions view
+if (expandedUser === userId) {
+  setExpandedUser(null);
+  setTimeout(() => setExpandedUser(userId), 100);
+}
+
+} catch (error) {
+console.error("Error in handleRoleChange:", error);
+handlePermissionUpdate("Failed to update user role. Please try again.");
+}
+};
 
   // Handle new user added
   const handleUserAdded = ({ message, newUser }: UserAddedData): void => {

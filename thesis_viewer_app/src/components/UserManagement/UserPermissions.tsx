@@ -40,11 +40,7 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
   const [pendingChanges, setPendingChanges] = useState<PermissionChange[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
 
-  useEffect(() => {
-    fetchPermissions();
-  }, [userId]);
-
-  const fetchPermissions = async () => {
+  const fetchPermissions = React.useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -62,7 +58,11 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [fetchPermissions]);
 
   const handlePermissionChange = (
     subsystem: string, 
@@ -114,12 +114,12 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
       onPermissionUpdate("User is not authenticated, cannot save changes");
       return;
     }
-
+  
     if (pendingChanges.length === 0) {
       onPermissionUpdate("No changes to save");
       return;
     }
-
+  
     setSaveLoading(true);
     
     try {
@@ -163,6 +163,15 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
         changeDetails[subsystem] = logEntries[subsystem].join(", ");
       }
       
+      // Create notification for the user
+      await supabase
+        .from("Notification")
+        .insert({
+          user_id: userId,
+          content: "Your permissions have been updated by admin",
+          is_read: false
+        });
+      
       // Log the changes as a single entry
       await addLogEntry(
         Subsystem.USER_MANAGEMENT,
@@ -184,33 +193,8 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
       setSaveLoading(false);
     }
   };
-
-  const cancelChanges = () => {
-    // Revert permissions state to original values
-    setPermissions(prev => {
-      const updatedPermissions = [...prev];
-      
-      pendingChanges.forEach(change => {
-        const permIndex = updatedPermissions.findIndex(
-          p => p.subsystem === change.subsystem && p.permission_type === change.permission_type
-        );
-        
-        if (permIndex !== -1) {
-          updatedPermissions[permIndex] = {
-            ...updatedPermissions[permIndex],
-            permitted: change.oldValue
-          };
-        }
-      });
-      
-      return updatedPermissions;
-    });
-    
-    // Clear pending changes
-    setPendingChanges([]);
-    onPermissionUpdate("Changes cancelled");
-  };
-
+  
+  
   // Group permissions by subsystem
   const permissionsBySubsystem = permissions.reduce((acc, perm) => {
     acc[perm.subsystem] = acc[perm.subsystem] || [];
@@ -234,6 +218,10 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
         change.permission_type === permission_type
     );
   };
+
+  function cancelChanges(event: React.MouseEvent<HTMLButtonElement>): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <Box margin={2}>

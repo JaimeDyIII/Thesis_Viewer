@@ -83,7 +83,7 @@ export function Header() {
           <Home size={24} />
         </IconButton>
         
-        {/* Using the new Notifications component */}
+        {/* Using our updated Notifications component */}
         <Notifications />
         
         <LogoutButton />

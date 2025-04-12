@@ -18,6 +18,7 @@ import { Upload, X } from "lucide-react";
 import "../../styles/Manage.css";
 import { addLogEntry, Subsystem, ActionType } from '../CheckLogs';
 import { useAuth } from "../../context/AuthContext";
+import { ThesisNotificationService } from "../../services/ThesisNotificationService";
 
 interface Category {
   id: number;
@@ -116,8 +117,8 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
   const { session } = useAuth();
   const user_id = session?.user?.id;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!user_id) {
       console.error("User is not authenticated, cannot log action.");
@@ -147,6 +148,12 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
       }
 
       const thesisId = newThesis.id;
+
+      // Send notification after successful upload
+      await ThesisNotificationService.notifyThesisUpload(
+        formData.title,
+        user_id
+      );
 
       // Log the action
       await addLogEntry(
@@ -179,7 +186,7 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
       refreshTheses();
 
     } catch (error: any) {
-      console.error("Error saving thesis:", error);
+      console.error("Error submitting thesis:", error);
       setSnackbar({ open: true, message: error.message || "Error saving thesis", severity: "error" });
     }
   };

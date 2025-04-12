@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { LogoutButton } from "./Authentication/LogoutButton";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Notifications from "./Notifications/Notifications";
 import "../styles/View.css";
 
 export function Header() {
@@ -81,6 +82,10 @@ export function Header() {
         <IconButton onClick={() => navigate('/dashboard')}>
           <Home size={24} />
         </IconButton>
+        
+        {/* Using the new Notifications component */}
+        <Notifications />
+        
         <LogoutButton />
       </Box>
     </Box>

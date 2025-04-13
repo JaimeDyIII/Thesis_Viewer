@@ -1,18 +1,52 @@
-import { useEffect } from 'react';
-import { Viewer, Worker } from '@react-pdf-viewer/core';
-import '@react-pdf-viewer/core/lib/styles/index.css';
+import { useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import '../../styles/PDFViewer.css';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs`;
 
 const PDFViewer: React.FC<{ pdfUrl: string }> = ({ pdfUrl }) => {
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
+
   return (
-    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-      <div 
-        onContextMenu={(e) => e.preventDefault()} 
-        onMouseDown={(e) => e.button === 2 && e.preventDefault()} 
-        style={{ width: '100%', height: '100%' }}
+    <div className="pdf-viewer-container">
+      <div
+        className="pdf-document-wrapper"
+        onContextMenu={(e) => e.preventDefault()}
+        onMouseDown={(e) => e.button === 2 && e.preventDefault()}
       >
-        <Viewer fileUrl={pdfUrl} defaultScale={1.0} />
+        <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
+          <Page pageNumber={pageNumber} scale={1.0} className="pdf-page" />
+        </Document>
       </div>
-    </Worker>
+      {numPages && (
+        <div className="pdf-controls">
+          <button
+            onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
+            disabled={pageNumber === 1}
+            className="pdf-button"
+          >
+            Previous
+          </button>
+          <span className="pdf-page-info">
+            Page {pageNumber} of {numPages}
+          </span>
+          <button
+            onClick={() => setPageNumber((prev) => Math.min(prev + 1, numPages))}
+            disabled={pageNumber === numPages}
+            className="pdf-button"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 

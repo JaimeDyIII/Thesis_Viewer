@@ -18,7 +18,6 @@ import { supabase } from "../../lib/supabase";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
-// Define a type for notifications
 interface Notification {
   id: number;
   user_id: string;
@@ -187,7 +186,6 @@ const Notifications: React.FC<NotificationsProps> = () => {
       
       if (error) throw error;
   
-      // ✅ Clear the notifications from local state too
       setNotifications([]);
     } catch (error) {
       console.error("Error clearing all notifications:", error);

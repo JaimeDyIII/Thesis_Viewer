@@ -67,11 +67,11 @@ const UserManagement: React.FC = () => {
       let query;
       const userRole = profile.role;
 
-      if(userRole == 'Admin'){
+      if(userRole === 'Admin'){
         query = supabase.from("users")
           .select("id, name, email, role")
           .or(`role.eq.User, id.eq.${profile.id}`);
-      } else if (userRole == 'SuperAdmin') { 
+      } else if (userRole === 'SuperAdmin') { 
         query = supabase.from("users").select("id, name, email, role");
       } else {
         return console.error('User is not permitted to fetch and manage users');

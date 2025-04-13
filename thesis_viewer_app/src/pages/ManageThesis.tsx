@@ -116,7 +116,7 @@ const ManageThesis: React.FC = () => {
     else setTheses(data || []);
 
     setLoading(false);
-  }, [selectedCategory, selectedStatus, isLibrarian, isAdmin]);
+  }, [selectedCategory, selectedStatus, isLibrarian]);
 
   useEffect(() => {
     fetchTheses();

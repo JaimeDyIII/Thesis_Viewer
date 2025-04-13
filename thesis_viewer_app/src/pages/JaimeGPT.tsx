@@ -9,7 +9,6 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/JaimeGPT.css";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
-import { useLocation } from 'react-router-dom';
 import { useThesis } from "../context/ThesisContext";
 
 // Define TypeScript interfaces for our data
@@ -84,7 +83,6 @@ const TypingIndicator = () => {
 
 export default function JaimeGPT() {
   const { session } = useAuth();
-  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [query, setQuery] = useState("");

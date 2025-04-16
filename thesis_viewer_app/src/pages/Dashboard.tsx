@@ -56,22 +56,22 @@ export default function Dashboard() {
               :
               (null)}
               
-            {/* JaimeGpt */}
-            <Card className="card-hover" onClick={() => navigate("/jaimeGPT")}>
+            {/* thessaAI */}
+            <Card className="card-hover" onClick={() => navigate("/thessaAI")}>
               <CardHeader
                 title={
                   <Box className="card-title">
                     <Box className="icon-circle">
                       <Glasses size={28} />
                     </Box>
-                    JaimeGPT
+                    ThessaAI - AI Assistant
                   </Box>
                 }
                 titleTypographyProps={{ className: "card-title-text" }}
               />
               <CardContent>
                 <Typography className="card-description">
-                  Ask Jaime anything.
+                  Ask ThessaAI about the Theses.
                 </Typography>
               </CardContent>
             </Card>

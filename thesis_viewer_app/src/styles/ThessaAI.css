@@ -2,9 +2,9 @@
 .bot-gpt-container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Changed back to fixed height */
+  height: 100vh;
   width: 100%;
-  overflow: hidden; /* Prevent container scrolling */
+  overflow: hidden;
 }
 
 .bot-background-gradient {

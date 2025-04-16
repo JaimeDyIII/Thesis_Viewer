@@ -70,10 +70,10 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
   };
 
   
-  const handleAskJaime = () => {
+  const handleAskThessa = () => {
     if (thesis) {
       setSelectedThesis(thesis);
-      navigate("/jaimeGPT");
+      navigate("/thessaAI");
     }
   };
   
@@ -220,9 +220,9 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
         )
       }
 
-      {/* Ask Jaime Button */}
+      {/* Ask Thessa Button */}
       <Button
-        onClick={handleAskJaime}
+        onClick={handleAskThessa}
         variant="contained"
         fullWidth
         sx={{
@@ -236,7 +236,7 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
         }}
         startIcon={<Glasses size={18} />}
       >
-        Ask Jaime
+        Ask Thessa
       </Button>
     </Drawer>
   );

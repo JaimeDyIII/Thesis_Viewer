@@ -6,12 +6,11 @@ import { Header } from "../components/Header";
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { useAuth } from "../context/AuthContext";
-import "../styles/JaimeGPT.css";
+import "../styles/ThessaAI.css";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import { useThesis } from "../context/ThesisContext";
 
-// Define TypeScript interfaces for our data
 interface Message {
   id: number;
   conversation_id: number;
@@ -38,17 +37,13 @@ type Thesis = {
   publishing_year: number;
 };
 
-// Function to extract text from PDF
 const extractPdfText = async (pdfUrl: string, maxCharacters = 50000): Promise<string> => {
   try {
-    // Fetch PDF file first
     const response = await fetch(pdfUrl);
     const pdfBlob = await response.blob();
 
-    // Convert PDF to text
     const text = await pdfToText(pdfBlob);
 
-    // Truncate text if it exceeds max characters
     return text.substring(0, maxCharacters).trim();
   } catch (error) {
     console.error('Error extracting PDF text:', error);
@@ -56,7 +51,6 @@ const extractPdfText = async (pdfUrl: string, maxCharacters = 50000): Promise<st
   }
 };
 
-// Typing indicator component using Framer Motion
 const TypingIndicator = () => {
   return (
     <Box className="typing-indicator">
@@ -81,7 +75,7 @@ const TypingIndicator = () => {
 };
 
 
-export default function JaimeGPT() {
+export default function ThessaAI() {
   const { session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -123,7 +117,6 @@ export default function JaimeGPT() {
   }, []);
 
   useEffect(() => {
-    // Ensure we have a selected thesis and a PDF URL
     if (!selectedThesis?.id) return;
     
     const fetchPdfContext = async () => {
@@ -139,10 +132,8 @@ export default function JaimeGPT() {
         if (error) throw error;
 
         if (data?.pdf_url) {
-          // Extract text from PDF
           const pdfText = await extractPdfText(data.pdf_url);
           
-          // Set PDF context for use in chat
           setPdfContext(pdfText);
         } else {
           setPdfContext(null);
@@ -615,14 +606,14 @@ export default function JaimeGPT() {
 
         {/* Main content area */}
         <Box className="bot-content">
-          <Typography variant="h2" className="bot-title">JaimeGPT</Typography>
+          <Typography variant="h2" className="bot-title">ThessaAI</Typography>
           
           {/* Messages area */}
           <Box className="bot-messages-container">
             {messages.length === 0 ? (
               <Box className="empty-state">
                 <Glasses size={45} className="empty-state-icon" />
-                <Typography variant="h6" className="empty-state-title">Ask Jaime anything</Typography>
+                <Typography variant="h6" className="empty-state-title">Ask ThessaAI anything about the Theses</Typography>
                 <Typography variant="body2">Your thesis assistant is ready to help</Typography>
               </Box>
             ) : (

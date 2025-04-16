@@ -13,7 +13,7 @@ import ViewThesis from "../pages/ViewThesis";
 import ThesisRepository from '../pages/ThesisRepository';
 import ManageThesis from '../pages/ManageThesis';
 import UserManagement from '../pages/UserManagement';
-import JaimeGPT from '../pages/JaimeGPT';
+import ThessaAI from '../pages/ThessaAI';
 import PDFViewerWrapper from '../pages/PDFViewerWrapper';
 import Analytics from '../pages/Analytics';
 
@@ -56,9 +56,9 @@ const AppRoutes: React.FC = () => (
                                                                     </ProtectedRoute> }>
                                 </Route>
                                 
-                                <Route path="/jaimeGPT" element={ 
+                                <Route path="/thessaAI" element={ 
                                     <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}>
-                                        <JaimeGPT />
+                                        <ThessaAI />
                                     </ProtectedRoute> 
                                 } />
                                 <Route path="/pdf-viewer/:title" element={

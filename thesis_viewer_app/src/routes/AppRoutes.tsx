@@ -16,6 +16,7 @@ import UserManagement from '../pages/UserManagement';
 import ThessaAI from '../pages/ThessaAI';
 import PDFViewerWrapper from '../pages/PDFViewerWrapper';
 import Analytics from '../pages/Analytics';
+import HomePage from '../pages/HomePage';
 
 // Doesn't matter what page we throw in the / path, protected routes throw them back to their page based on their role.
 const AppRoutes: React.FC = () => (
@@ -74,6 +75,7 @@ const AppRoutes: React.FC = () => (
                                     } />
 
                                 <Route path="/login" element={ <Login /> } />
+                                <Route path="/homepage" element={ <HomePage /> } />
                                 <Route path="/*" element={ <NoPage /> } />
                             </Routes>
                         </AnalyticsProvider>

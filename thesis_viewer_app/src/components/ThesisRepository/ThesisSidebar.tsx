@@ -1,7 +1,6 @@
 import { Drawer, Typography, Box, Button, Switch, Checkbox } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Bookmark, FileText, Glasses } from "lucide-react";
-import DefaultBookCover from "../components/DefaultBookCover.png";
 import { useNavigate } from "react-router-dom";
 import { useThesis } from "../../context/ThesisContext";
 import { useView } from "../../context/ViewContext";

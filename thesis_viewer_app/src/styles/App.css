@@ -42,7 +42,7 @@
   .admin-header {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    height: 70px !important; /* Slightly taller to accommodate content */
+    height: 70px !important;
   }
   
   .header-avatar {

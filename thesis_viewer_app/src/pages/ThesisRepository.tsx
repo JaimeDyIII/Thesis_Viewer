@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, Typography, Box, Container } from "@mui/material";
 import { Eye, Settings } from "lucide-react";
-import { Header } from "../components/Header";
+import { Header } from "../components/Global/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";

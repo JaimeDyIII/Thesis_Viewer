@@ -1,15 +1,12 @@
+// ChatBot.tsx
 import { useState, useRef, useEffect } from 'react';
 import { Box, TextField, IconButton, Typography, Drawer, List, ListItem, Divider } from '@mui/material';
 import { Send, Glasses, History, ChevronLeft, Menu } from 'lucide-react';
-import pdfToText from 'react-pdftotext';
-import { Header } from "../components/Global/Header";
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { useAuth } from "../context/AuthContext";
-import "../styles/ThessaAI.css";
-import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
-import { useThesis } from "../context/ThesisContext";
+import { supabase } from "../../lib/supabase";
+import "../styles/ChatBot.css";
 
 interface Message {
   id: number;
@@ -27,29 +24,13 @@ interface ChatSession {
   updated_at: Date;
 }
 
-type Thesis = {
-  id: number;
-  title: string;
-  description: string | null;
-  pdf_url: string | null;
-  category: string | null;
-  author: string;
-  publishing_year: number;
-};
-
-const extractPdfText = async (pdfUrl: string, maxCharacters = 50000): Promise<string> => {
-  try {
-    const response = await fetch(pdfUrl);
-    const pdfBlob = await response.blob();
-
-    const text = await pdfToText(pdfBlob);
-
-    return text.substring(0, maxCharacters).trim();
-  } catch (error) {
-    console.error('Error extracting PDF text:', error);
-    return '';
-  }
-};
+interface ChatBotProps {
+  userId: string;
+  pdfContext: string | null;
+  pdfUrl: string | null;
+  thesisData: any[];
+  apiKey: string;
+}
 
 const TypingIndicator = () => {
   return (
@@ -74,9 +55,7 @@ const TypingIndicator = () => {
   );
 };
 
-
-export default function ThessaAI() {
-  const { session } = useAuth();
+export const ChatBot = ({ userId, pdfContext, pdfUrl, thesisData, apiKey }: ChatBotProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [query, setQuery] = useState("");
@@ -84,79 +63,21 @@ export default function ThessaAI() {
   const [isAIResponseLoading, setIsAIResponseLoading] = useState(false);
   const [conversations, setConversations] = useState<ChatSession[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
-  const [pdfContext, setPdfContext] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { selectedThesis, setSelectedThesis } = useThesis();
-  const [thesisList, setThesisList] = useState<Thesis[]>([]);
-
-  const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
-  
-  useEffect(() => {
-    const fetchActiveThesis = async () => {
-      setIsLoading(true);
-      try {
-        let query = supabase
-          .from("Thesis")
-          .select("id, title, description, pdf_url, category, author, publishing_year, isActive")
-          .eq("isActive", true);
-  
-        const { data, error } = await query;
-        if (error) throw error;
-
-        setThesisList(data || []);
-      } catch (err) {
-        console.error("Failed to fetch thesis data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchActiveThesis();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedThesis?.id) return;
-    
-    const fetchPdfContext = async () => {
-      try {
-        setIsLoading(true);
-
-        const { data, error } = await supabase
-          .from('Thesis')
-          .select('pdf_url')
-          .eq('id', selectedThesis.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data?.pdf_url) {
-          const pdfText = await extractPdfText(data.pdf_url);
-          
-          setPdfContext(pdfText);
-        } else {
-          setPdfContext(null);
-        }
-      } catch (error) {
-        console.error("Error fetching PDF context:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPdfContext();
-  }, [selectedThesis?.id, session?.user?.id]);
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    if(pdfContext && selectedThesis && !currentConversationId) {
-      setQuery(`"${selectedThesis.title}", I have a question regarding this specific thesis.`);
+    if(pdfContext && pdfUrl && !currentConversationId) {
+      // Extract title from URL or use a default
+      const thesisTitle = thesisData.find(t => t.pdf_url === pdfUrl)?.title || "This thesis";
+      setQuery(`"${thesisTitle}", I have a question regarding this specific thesis.`);
     }
-  }, [pdfContext, selectedThesis, currentConversationId]);
+  }, [pdfContext, pdfUrl, currentConversationId, thesisData]);
 
   useEffect(() => {
     if(query !== '' && !isAIResponseLoading) {
@@ -176,7 +97,7 @@ export default function ThessaAI() {
       const { data, error } = await supabase
         .from('conversation')
         .select('*')
-        .eq('user_id', session?.user?.id)
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false });
       
       if (error) throw error;
@@ -196,7 +117,7 @@ export default function ThessaAI() {
         .from('conversation')
         .select('*')
         .eq('id', conversationId)
-        .eq('user_id', session?.user?.id)
+        .eq('user_id', userId)
         .single();
       
       if (conversationError) throw conversationError;
@@ -204,16 +125,6 @@ export default function ThessaAI() {
       if (!conversationData) {
         console.error("Unauthorized access to conversation");
         return;
-      }
-
-      if (conversationData?.context_pdf_url) {
-        // Extract text from PDF
-        const pdfText = await extractPdfText(conversationData?.context_pdf_url);
-        
-        // Set PDF context for the conversation
-        setPdfContext(pdfText);
-      } else {
-        setPdfContext(null);
       }
       
       const { data, error } = await supabase
@@ -272,8 +183,8 @@ export default function ThessaAI() {
         .insert([
           { 
             title: uniqueTitle,
-            user_id: session?.user?.id,
-            context_pdf_url: selectedThesis?.pdf_url || null
+            user_id: userId,
+            context_pdf_url: pdfUrl || null
           }
         ])
         .select();
@@ -292,8 +203,6 @@ export default function ThessaAI() {
         });
         
         fetchConversations();
-        
-        setSelectedThesis(null);
         return newConversationId;
       }
     } catch (error) {
@@ -330,7 +239,6 @@ export default function ThessaAI() {
   // Fetch response from API
   const fetchResponse = async () => {
     if (isAIResponseLoading) return;
-
 
     try {
       setIsAIResponseLoading(true);
@@ -382,7 +290,7 @@ export default function ThessaAI() {
       apiMessages.unshift({
         role: 'system',
         content: `Here is all the active theses in the database, if anyone asked anything about general theses, refer to this:
-                  ${JSON.stringify(thesisList)}`
+                  ${JSON.stringify(thesisData)}`
       });
         
       // Add PDF context if available
@@ -403,7 +311,7 @@ export default function ThessaAI() {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${OPEN_ROUTER_KEY}`,
+          "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -478,23 +386,21 @@ export default function ThessaAI() {
   };
 
   return (
-    <div className="bot-gpt-container">
+    <Box className="chatbot-container">
       {/* Background layers */}
-      <div className="bot-background-gradient"></div>
-      <div className="bot-background-blur"></div>
-      <div className="bot-background-radial"></div>
+      <div className="chatbot-background-gradient"></div>
+      <div className="chatbot-background-blur"></div>
+      <div className="chatbot-background-radial"></div>
       
-      <Header />
-      
-      {/* Full-width layout with collapsible sidebar */}
-      <Box className="bot-gpt-layout">
+      {/* Layout with collapsible sidebar */}
+      <Box className="chatbot-layout">
         {/* Collapsible sidebar for desktop */}
-        <Box className={`bot-sidebar bot-sidebar-hidden ${sidebarOpen ? 'bot-sidebar-expanded' : 'bot-sidebar-collapsed'}`}>
-          <Box className="bot-sidebar-header">
-            <Typography className="bot-sidebar-title">Chat History</Typography>
+        <Box className={`chatbot-sidebar ${sidebarOpen ? 'chatbot-sidebar-expanded' : 'chatbot-sidebar-collapsed'}`}>
+          <Box className="chatbot-sidebar-header">
+            <Typography className="chatbot-sidebar-title">Chat History</Typography>
             
             {/* Close sidebar button */}
-            <IconButton onClick={toggleSidebar} size="small" className="bot-sidebar-toggle">
+            <IconButton onClick={toggleSidebar} size="small" className="chatbot-sidebar-toggle">
               <ChevronLeft size={20} />
             </IconButton>
           </Box>
@@ -502,27 +408,27 @@ export default function ThessaAI() {
           <Divider />
           
           {/* New chat button */}
-          <Box onClick={startNewConversation} className="bot-new-chat">
-            <Typography className="bot-new-chat-text">+ New Chat</Typography>
+          <Box onClick={startNewConversation} className="chatbot-new-chat">
+            <Typography className="chatbot-new-chat-text">+ New Chat</Typography>
           </Box>
           
           <Divider />
           
           {/* Chat history items */}
-          <List className="bot-chat-list">
+          <List className="chatbot-chat-list">
             {conversations.map((chat) => (
               <ListItem 
                 key={chat.id} 
                 disablePadding 
                 onClick={() => fetchMessages(chat.id)}
-                className={`bot-chat-item ${currentConversationId === chat.id ? 'bot-chat-item-active' : ''}`}
+                className={`chatbot-chat-item ${currentConversationId === chat.id ? 'chatbot-chat-item-active' : ''}`}
               >
-                <Box className="bot-chat-item-content">
-                  <Typography className="bot-chat-item-title">
+                <Box className="chatbot-chat-item-content">
+                  <Typography className="chatbot-chat-item-title">
                     {chat.title}
                   </Typography>
                   
-                  <Typography variant="caption" className="bot-chat-item-date">
+                  <Typography variant="caption" className="chatbot-chat-item-date">
                     {new Date(chat.updated_at).toLocaleDateString()}
                   </Typography>
                 </Box>
@@ -535,16 +441,16 @@ export default function ThessaAI() {
         {!sidebarOpen && (
           <IconButton
             onClick={toggleSidebar}
-            className="bot-desktop-toggle"
+            className="chatbot-desktop-toggle"
           >
-            <Menu size={2} />
+            <Menu size={20} />
           </IconButton>
         )}
 
         {/* Mobile toggle button */}
         <IconButton
           onClick={() => setDrawerOpen(true)}
-          className="bot-mobile-toggle"
+          className="chatbot-mobile-toggle"
         >
           <History size={24} />
         </IconButton>
@@ -554,66 +460,68 @@ export default function ThessaAI() {
           anchor="left"
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
-          className="bot-mobile-drawer"
+          className="chatbot-mobile-drawer"
         >
-          <Box className="bot-sidebar-header">
-            <Typography className="bot-sidebar-title">Chat History</Typography>
+          <Box className="chatbot-drawer-content">
+            <Box className="chatbot-sidebar-header">
+              <Typography className="chatbot-sidebar-title">Chat History</Typography>
+              
+              <IconButton onClick={() => setDrawerOpen(false)} size="small" className="chatbot-sidebar-toggle">
+                <ChevronLeft size={20} />
+              </IconButton>
+            </Box>
             
-            <IconButton onClick={() => setDrawerOpen(false)} size="small" className="bot-sidebar-toggle">
-              <ChevronLeft size={20} />
-            </IconButton>
+            <Divider />
+            
+            {/* New chat button in mobile drawer */}
+            <Box
+              onClick={() => {
+                startNewConversation();
+                setDrawerOpen(false);
+              }}
+              className="chatbot-new-chat"
+            >
+              <Typography className="chatbot-new-chat-text">+ New Chat</Typography>
+            </Box>
+            
+            <Divider />
+            
+            <List className="chatbot-chat-list">
+              {conversations.map((chat) => (
+                <ListItem 
+                  key={chat.id} 
+                  disablePadding 
+                  onClick={() => {
+                    fetchMessages(chat.id);
+                    setDrawerOpen(false);
+                  }}
+                  className={`chatbot-chat-item ${currentConversationId === chat.id ? 'chatbot-chat-item-active' : ''}`}
+                >
+                  <Box className="chatbot-chat-item-content">
+                    <Typography className="chatbot-chat-item-title">
+                      {chat.title}
+                    </Typography>
+                    
+                    <Typography variant="caption" className="chatbot-chat-item-date">
+                      {new Date(chat.updated_at).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
           </Box>
-          
-          <Divider />
-          
-          {/* New chat button in mobile drawer */}
-          <Box
-            onClick={() => {
-              startNewConversation();
-              setDrawerOpen(false);
-            }}
-            className="bot-new-chat"
-          >
-            <Typography className="bot-new-chat-text">+ New Chat</Typography>
-          </Box>
-          
-          <Divider />
-          
-          <List className="bot-chat-list">
-            {conversations.map((chat) => (
-              <ListItem 
-                key={chat.id} 
-                disablePadding 
-                onClick={() => {
-                  fetchMessages(chat.id);
-                  setDrawerOpen(false);
-                }}
-                className={`bot-chat-item ${currentConversationId === chat.id ? 'bot-chat-item-active' : ''}`}
-              >
-                <Box className="bot-chat-item-content">
-                  <Typography className="bot-chat-item-title">
-                    {chat.title}
-                  </Typography>
-                  
-                  <Typography variant="caption" className="bot-chat-item-date">
-                    {new Date(chat.updated_at).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </ListItem>
-            ))}
-          </List>
         </Drawer>
 
         {/* Main content area */}
-        <Box className="bot-content">
-          <Typography variant="h2" className="bot-title">ThessaAI</Typography>
+        <Box className="chatbot-content">
+          <Typography variant="h4" className="chatbot-title">ThessaAI</Typography>
           
           {/* Messages area */}
-          <Box className="bot-messages-container">
+          <Box className="chatbot-messages-container">
             {messages.length === 0 ? (
-              <Box className="empty-state">
-                <Glasses size={45} className="empty-state-icon" />
-                <Typography variant="h6" className="empty-state-title">Ask ThessaAI anything about the Theses</Typography>
+              <Box className="chatbot-empty-state">
+                <Glasses size={40} className="chatbot-empty-state-icon" />
+                <Typography variant="h6" className="chatbot-empty-state-title">Ask ThessaAI anything about the Theses</Typography>
                 <Typography variant="body2">Your thesis assistant is ready to help</Typography>
               </Box>
             ) : (
@@ -621,7 +529,7 @@ export default function ThessaAI() {
                 {messages.map((msg, index) => (
                   <Box 
                     key={index} 
-                    className={msg.role === 'user' ? 'user-message' : 'bot-message'}
+                    className={msg.role === 'user' ? 'chatbot-user-message' : 'chatbot-bot-message'}
                   >
                     {msg.role === 'user' ? (
                       <Typography>{msg.content}</Typography>
@@ -633,7 +541,7 @@ export default function ThessaAI() {
                 
                 {/* Show typing indicator while loading */}
                 {isAIResponseLoading && (
-                  <Box className="typing-indicator-container">
+                  <Box className="chatbot-typing-indicator-container">
                     <TypingIndicator />
                   </Box>
                 )}
@@ -646,7 +554,7 @@ export default function ThessaAI() {
           <Box 
             component="form" 
             onSubmit={handleSubmit}
-            className="bot-input-container"
+            className="chatbot-input-container"
           >
             <TextField
               fullWidth
@@ -655,18 +563,18 @@ export default function ThessaAI() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               size="small"
-              className="bot-input-field"
+              className="chatbot-input-field"
             />
             <IconButton 
               type="submit" 
               disabled={!inputValue.trim() || isLoading}
-              className={`bot-send-button ${inputValue.trim() && !isLoading ? 'bot-send-button-enabled' : 'bot-send-button-disabled'}`}
+              className={`chatbot-send-button ${inputValue.trim() && !isLoading ? 'chatbot-send-button-enabled' : 'chatbot-send-button-disabled'}`}
             >
               <Send size={18} />
             </IconButton>
           </Box>
         </Box>
       </Box>
-    </div>
+    </Box>
   );
-}
+};

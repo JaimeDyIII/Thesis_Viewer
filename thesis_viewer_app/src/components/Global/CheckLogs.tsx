@@ -22,7 +22,7 @@ import {
   InputLabel,
   TextField,
 } from "@mui/material";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export enum Subsystem{
   THESIS_REPOSITORY = "ThesisRepository",

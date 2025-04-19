@@ -19,7 +19,7 @@ import {
 import { Edit, Trash2, Plus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { addLogEntry, Subsystem, ActionType } from '../../components/CheckLogs';
+import { addLogEntry, Subsystem, ActionType } from '../Global/CheckLogs';
 
 interface Category {
   id: number;

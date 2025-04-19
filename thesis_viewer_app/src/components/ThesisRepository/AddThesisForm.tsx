@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { Upload, X } from "lucide-react";
 import "../../styles/Manage.css";
-import { addLogEntry, Subsystem, ActionType } from '../CheckLogs';
+import { addLogEntry, Subsystem, ActionType } from '../Global/CheckLogs';
 import { useAuth } from "../../context/AuthContext";
 import { ThesisNotificationService } from "../../services/ThesisNotificationService";
 

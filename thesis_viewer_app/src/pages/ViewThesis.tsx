@@ -4,7 +4,7 @@ import {
   Grid, Card, CardContent, CardHeader, CircularProgress, IconButton,
   Button,  FormControl
 } from "@mui/material";
-import { Header } from "../components/Header";
+import { Header } from "../components/Global/Header";
 import ThesisSidebar from "../components/ThesisRepository/ThesisSidebar";
 import { Search, ArrowUpDown, Bookmark } from "lucide-react";
 import "../styles/View.css";

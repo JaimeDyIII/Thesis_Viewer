@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { supabase } from "../../lib/supabase";
-import { addLogEntry, ActionType, Subsystem } from "../CheckLogs";
+import { addLogEntry, ActionType, Subsystem } from "../Global/CheckLogs";
 import { useAuth } from "../../context/AuthContext";
 
 interface Thesis {

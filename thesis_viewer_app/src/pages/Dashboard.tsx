@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, Typography, Box, Container, Grid } from "@mui/material";
 import { Eye, Glasses, User, BarChart2 } from "lucide-react";
-import { Header } from "../components/Header";
+import { Header } from "../components/Global/Header";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../context/PermissionsContext";
 import "../styles/View.css";

@@ -20,12 +20,12 @@ import {
 } from "@mui/material";
 import AddThesisForm from "../components/ThesisRepository/AddThesisForm";
 import EditThesisForm from "../components/ThesisRepository/EditThesisForm";
-import DeletionAlert from "../components/DeletionAlert";
-import CheckLogs from "../components/CheckLogs";
+import DeletionAlert from "../components/Global/DeletionAlert";
+import CheckLogs from "../components/Global/CheckLogs";
 import { DeleteThesis } from "../components/ThesisRepository/DeleteThesis";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { Header } from "../components/Header";
+import { Header } from "../components/Global/Header";
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Manage.css";

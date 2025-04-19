@@ -374,3 +374,75 @@
   background-color: #f3e5f5 !important;
   color: #bdbdbd !important;
 }
+
+/* Improved Message Bubbles for Mobile */
+@media (max-width: 599px) {
+  .user-message, .bot-message {
+    max-width: 85% !important; /* Wider messages on very small screens */
+  }
+}
+
+/* Better Input Area for Mobile */
+@media (max-width: 599px) {
+  .bot-input-container {
+    padding: 8px !important;
+    border-radius: 16px !important;
+  }
+  
+  .bot-input-field .MuiOutlinedInput-root {
+    font-size: 14px !important;
+  }
+  
+  .bot-send-button {
+    min-width: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* More compact empty state for mobile */
+@media (max-width: 599px) {
+  .empty-state {
+    padding: 16px !important;
+  }
+  
+  .empty-state-title {
+    font-size: 1rem !important;
+  }
+}
+
+/* Fix header spacing on mobile */
+@media (max-width: 599px) {
+  .bot-title {
+    margin-top: 30px !important; /* Add space from the top to avoid overlap with the toggle button */
+    margin-bottom: 12px !important;
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Improved messages container on mobile */
+@media (max-width: 599px) {
+  .bot-messages-container {
+    height: calc(100vh - 170px) !important; /* Slightly adjusted height for mobile */
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* Better mobile drawer positioning */
+.bot-mobile-toggle {
+  top: 74px !important; /* Slightly adjusted for better visibility */
+}
+
+/* Improved typing indicator for mobile */
+@media (max-width: 599px) {
+  .typing-indicator {
+    min-height: 32px !important;
+    padding: 6px 12px !important;
+  }
+  
+  .typing-indicator-dot {
+    width: 6px !important;
+    height: 6px !important;
+  }
+}

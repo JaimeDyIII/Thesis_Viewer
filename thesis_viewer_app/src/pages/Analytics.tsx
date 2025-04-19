@@ -1,5 +1,5 @@
 import { Container, Grid, Box, Typography, Button } from "@mui/material";
-import { Header } from "../components/Header";
+import { Header } from "../components/Global/Header";
 import ThesisAnalyticsChart from "../components/Analytics/ThesisAnalyticsChart";
 import CategoryChart from "../components/Analytics/CategoryChart";
 import { useState, useEffect } from 'react';

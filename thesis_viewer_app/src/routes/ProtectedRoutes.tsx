@@ -1,7 +1,9 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { usePermissions } from "../context/PermissionsContext";
-import { useEffect } from "react";
+import { Box } from "@mui/material";
+
+import { Footer } from "../components/Global/Footer";
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -46,5 +48,27 @@ export function ProtectedRoute({ allowedRoles, requiredPermissions = [], childre
     }
   }
 
-  return children ? <>{children}</> : <Outlet />;
+  // Wrap the children or Outlet with Header and Footer
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+      }}
+    >
+    
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {children ? children : <Outlet />}
+      </Box>
+      <Footer />
+    </Box>
+  );
 }

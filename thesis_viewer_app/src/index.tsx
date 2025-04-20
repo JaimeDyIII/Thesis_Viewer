@@ -7,6 +7,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import "@fontsource/poppins";
 import "@fontsource/poppins/600.css";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,7 +16,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-    <App /> 
+      <QueryClientProvider client={queryClient}>
+        <App /> 
+      </QueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

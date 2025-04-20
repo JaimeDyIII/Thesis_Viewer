@@ -5,7 +5,7 @@ import {
   Button,  FormControl
 } from "@mui/material";
 import { Header } from "../components/Global/Header";
-import ThesisSidebar from "../components/ThesisRepository/ThesisSidebar";
+import ThesisSidebar from "../components/ThesisRepository/ViewThesis/ThesisSidebar";
 import { Search, ArrowUpDown, Bookmark } from "lucide-react";
 import "../styles/View.css";
 import { supabase } from "../lib/supabase";
@@ -291,7 +291,11 @@ export default function ViewThesis() {
         )}
 
         {/* Sidebar */}
-        <ThesisSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} thesis={selectedThesis} onBookmarkToggle={() => setIsBookmarkUpdated(prev => !prev)} />
-      </Container>
+        <ThesisSidebar 
+          open={sidebarOpen} 
+          onClose={() => setSidebarOpen(false)} 
+          thesisId={selectedThesis?.id || 0}  // Changed from thesis to thesisId
+          onBookmarkToggle={() => setIsBookmarkUpdated(prev => !prev)} 
+        />      </Container>
     </div>
   );}

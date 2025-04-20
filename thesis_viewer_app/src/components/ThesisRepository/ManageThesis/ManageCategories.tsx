@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,20 +6,22 @@ import {
   DialogActions,
   Button,
   TextField,
-  Table,
-  TableBody,
+  Snackbar,
+  Alert,
+  Box,
+  IconButton,
+  Typography,
   TableCell,
+  Paper,
+  TableBody,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  IconButton,
-  Typography
 } from '@mui/material';
-import { Edit, Trash2, Plus } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
-import { addLogEntry, Subsystem, ActionType } from '../Global/CheckLogs';
+import { Edit, Trash2, Plus, Table } from 'lucide-react';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../context/AuthContext';
+import { addLogEntry, Subsystem, ActionType } from '../../Global/CheckLogs';
 
 interface Category {
   id: number;

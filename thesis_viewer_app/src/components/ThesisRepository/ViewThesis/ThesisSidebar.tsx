@@ -1,89 +1,107 @@
-import { Drawer, Typography, Box, Button, Switch, Checkbox } from "@mui/material";
+import { useState, useEffect } from 'react';
+import { Drawer, Typography, Box, Button, CircularProgress, Alert } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Bookmark, FileText, Glasses } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useThesis } from "../../context/ThesisContext";
-import { useView } from "../../context/ViewContext";
-import { useAuth } from "../../context/AuthContext";
-import { useBookmark } from "../../context/BookmarkContext";
-import { useEffect, useState } from "react";
-
-type Thesis = {
-  id: number;
-  title: string;
-  description: string | null;
-  author: string;
-  category: string | null;
-  pdf_url: string | null;
-  publishing_year: number | null;
-};
+import { useQuery } from '@tanstack/react-query';
+import { getThesisById } from '../../../api/thesis/queries';
+import { useView } from '../../../hooks/useView';
+import { useBookmark } from '../../../hooks/useBookmark';
+import { Thesis } from '../../../api/thesis/types';
+import { useAuth } from '../../../context/AuthContext';
 
 type ThesisSidebarProps = {
   open: boolean;
   onClose: () => void;
-  thesis: Thesis | null;
+  thesisId: number;
   onBookmarkToggle?: () => void;
 };
 
-export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle  }: ThesisSidebarProps) {
+export default function ThesisSidebar({ open, onClose, thesisId, onBookmarkToggle }: ThesisSidebarProps) {
   const navigate = useNavigate();
-  const { setSelectedThesis } = useThesis();
-  const { recordView } = useView();
-  const { session } = useAuth();
-  const { getViewCount } = useView();
-  const { checkBookmark, toggleBookmark } = useBookmark();
-  const [viewCount, setViewCount] = useState<number>(0);
+  const { data: thesis, isLoading, error } = useQuery({
+    queryKey: ['thesis', thesisId],
+    queryFn: () => getThesisById(thesisId),
+    enabled: !!thesisId
+  });
+  
+  const { recordView, getViewCount } = useView();
+  const { toggleBookmark, checkBookmark } = useBookmark();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
-  
-  useEffect(() => {
-    const fetchViews = async () => {
-      if(!thesis || !thesis.id) return console.error('Thesis not found!');
-
-      const count = await getViewCount(thesis?.id);
-      setViewCount(count);
-    }
-
-    fetchViews();
-  }, [thesis?.id])
+  const [viewCount, setViewCount] = useState<number>(0);
+  const { session } = useAuth();
 
   useEffect(() => {
-    if (!thesis?.id || !session?.user?.id) return;
-    
-    checkBookmark(session.user.id, thesis.id).then(setIsBookmarked);
-  }, [thesis?.id, session?.user?.id]);
+    const checkBookmarkStatus = async () => {
+      if (!thesisId) return;
+      try {
+        const bookmarked = await checkBookmark(thesisId);
+        setIsBookmarked(bookmarked);
+      } catch (error) {
+        console.error('Error checking bookmark status:', error);
+      }
+    };
+    checkBookmarkStatus();
+  }, [thesisId, checkBookmark]);
 
+  useEffect(() => {
+    const fetchViewCount = async () => {
+      if (!thesisId) return;
+      try {
+        const count = await getViewCount(thesisId);
+        setViewCount(count);
+      } catch (error) {
+        console.error('Error fetching view count:', error);
+      }
+    };
+    fetchViewCount();
+  }, [thesisId, getViewCount]);
 
   const handleToggleBookmark = async () => {
-    if (!thesis?.id || !session?.user?.id) return;
-  
+    if (!thesisId) return;
     setBookmarkLoading(true);
-    await toggleBookmark(session.user.id, thesis.id, isBookmarked);
-    const updated = await checkBookmark(session.user.id, thesis.id);
-    setIsBookmarked(updated);
-    setBookmarkLoading(false);
-  
-    if (onBookmarkToggle) {
-      onBookmarkToggle();
+    try {
+      await toggleBookmark(thesisId);
+      setIsBookmarked(!isBookmarked);
+      onBookmarkToggle?.();
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+    } finally {
+      setBookmarkLoading(false);
     }
   };
 
-  
   const handleAskThessa = () => {
-    if (thesis) {
-      setSelectedThesis(thesis);
-      navigate("/thessaAI");
-    }
+    if (!thesis) return;
+    navigate(`/chatbot?thesisId=${thesis.id}`);
   };
-  
-  const handleViewPDF = (thesis: Thesis) => {
+
+  const handleViewPDF = () => {
     if(!session) return console.error("no session found!");
-    if(!thesis.id) return console.error("no thesis id found");
+    if(!thesis?.id) return console.error("no thesis id found");
 
     window.open(`/pdf-viewer/${encodeURIComponent(thesis.title)}`);
-    recordView(session?.user.id, thesis?.id);
+    recordView(thesis.id);
   }
-  
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 2 }}>
+        <CircularProgress sx={{ color: 'white' }} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert severity="error" sx={{ backgroundColor: 'rgba(255,255,255,0.9)' }}>
+          Error loading thesis: {(error as Error).message}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Drawer
@@ -206,7 +224,7 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
               "&:hover": { backgroundColor: "#6828e9", color: "white" },
               mb: 1,
             }}
-            onClick={() => handleViewPDF(thesis)}
+            onClick={handleViewPDF}
             startIcon={<FileText size={16} />}
           >
             View PDF
@@ -229,6 +247,7 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
               mb: 1,
             }}
             onClick={handleToggleBookmark}
+            disabled={bookmarkLoading}
             startIcon={<Bookmark fill={'white'} size={16} />}
           >
             Bookmarked
@@ -248,6 +267,7 @@ export default function ThesisSidebar({ open, onClose, thesis, onBookmarkToggle 
               mb: 1,
             }}
             onClick={handleToggleBookmark}
+            disabled={bookmarkLoading}
             startIcon={<Bookmark size={16} />}
           >
             Bookmark

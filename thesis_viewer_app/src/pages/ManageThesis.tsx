@@ -18,18 +18,18 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import AddThesisForm from "../components/ThesisRepository/AddThesisForm";
-import EditThesisForm from "../components/ThesisRepository/EditThesisForm";
+import AddThesisForm from "../components/ThesisRepository/ManageThesis/AddThesisForm";
+import EditThesisForm from "../components/ThesisRepository/ManageThesis/EditThesisForm";
 import DeletionAlert from "../components/Global/DeletionAlert";
 import CheckLogs from "../components/Global/CheckLogs";
-import { DeleteThesis } from "../components/ThesisRepository/DeleteThesis";
+import { DeleteThesis } from "../components/ThesisRepository/ManageThesis/DeleteThesis";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Global/Header";
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Manage.css";
-import ManageCategories from "../components/ThesisRepository/ManageCategories";
+import ManageCategories from "../components/ThesisRepository/ManageThesis/ManageCategories";
 
 interface Thesis {
   id: number;

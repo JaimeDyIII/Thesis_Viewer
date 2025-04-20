@@ -94,7 +94,7 @@
     max-width: 100%;
     border-radius: 4px;
     margin-bottom: 0.5rem;
-    max-height: calc(100vh - 100px); /* Slightly smaller for mobile */
+    max-height: calc(100vh - 100px);
   }
 
   .pdf-page {
@@ -130,7 +130,7 @@
 
 @media (max-width: 480px) {
   .pdf-document-wrapper {
-    max-height: calc(100vh - 80px); /* Adjust for smaller screens */
+    max-height: calc(100vh - 80px);
   }
 
   .pdf-button {

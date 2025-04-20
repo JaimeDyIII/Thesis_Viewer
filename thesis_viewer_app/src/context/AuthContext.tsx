@@ -42,29 +42,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
     const initializeSession = async () => {
       try {
-        // Fetch the session once during mount
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) throw error;
 
-        // Check if the email domain is valid
-        if (session?.user?.email?.endsWith("@neu.edu.ph")) {
-          setSession(session);
-        } else {
+        if (!session?.user?.email?.endsWith("@neu.edu.ph") && location.pathname !== "/" && location.pathname !== "/home" && !location.pathname.match(/\/.*/)) {
           await signOutUser();
           navigate("/login");
         }
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching session:", error);
-        setLoading(false);
+      } finally {
+        setLoading(false)
       }
     };
 
     initializeSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      // Update session when auth state changes
       setSession(session);
       setLoading(false);
       console.log("Auth state changed:", session?.user?.id);
@@ -73,9 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate]); 
 
-  // Fetch user profile when session is set
+
   useEffect(() => {
     if (session?.user) {
       const loadProfile = async () => {
@@ -87,13 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
     }
   }, [session]);
-
-  // Role-based redirection
-  useEffect(() => {
-    if (session && profile && location.pathname === "/login") {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [session, profile, location.pathname, navigate]);
 
   const handleGoogleLogin = async () => {
     try {

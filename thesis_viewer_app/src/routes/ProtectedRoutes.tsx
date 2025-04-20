@@ -1,15 +1,14 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { usePermissions } from "../context/PermissionsContext";
-import { useEffect } from "react";
-
+import NoPage from '../pages/NoPage';
 interface ProtectedRouteProps {
   allowedRoles: string[];
   requiredPermissions?: string[] | null;
   children?: React.ReactNode;
 }
 
-export function ProtectedRoute({ allowedRoles, requiredPermissions = [], children }: ProtectedRouteProps) {
+export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], children }: ProtectedRouteProps) {
   const { session, profile, loading } = useAuth();
   const { permissions, permissionLoading } = usePermissions();
   const location = useLocation();
@@ -19,7 +18,13 @@ export function ProtectedRoute({ allowedRoles, requiredPermissions = [], childre
   }
 
   if (!session) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    if (location.pathname === "/" || location.pathname === '/homepage') {
+      return <>{children}</>;
+    }
+
+    if(location.pathname !== '/login'){
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
   }
 
   if (!profile) {
@@ -29,12 +34,12 @@ export function ProtectedRoute({ allowedRoles, requiredPermissions = [], childre
   const userRole = profile.role;
 
   if (!allowedRoles.includes(userRole)) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/*" replace />;
   }
 
   if (requiredPermissions && requiredPermissions.length > 0) {
     if (!permissions) {
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/*" replace />;
     }
 
     const hasPermission = requiredPermissions.some(
@@ -42,7 +47,7 @@ export function ProtectedRoute({ allowedRoles, requiredPermissions = [], childre
     );
     
     if (!hasPermission) {
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/*" replace />;
     }
   }
 

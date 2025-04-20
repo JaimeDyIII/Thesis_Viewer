@@ -17,9 +17,9 @@ import ThessaAI from '../pages/ThessaAI';
 import PDFViewerWrapper from '../pages/PDFViewerWrapper';
 import Analytics from '../pages/Analytics';
 import HomePage from '../pages/HomePage';
+import { PublicRoute } from './PubilcRoute';
 
-// Doesn't matter what page we throw in the / path, protected routes throw them back to their page based on their role.
-const AppRoutes: React.FC = () => (
+    const AppRoutes: React.FC = () => (
     <BrowserRouter>
         <AuthProvider>
             <PermissionsProvider>
@@ -27,7 +27,7 @@ const AppRoutes: React.FC = () => (
                     <BookmarkProvider>
                         <AnalyticsProvider>
                             <Routes>
-                                <Route path="/" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
+                                <Route path="/" element={ <PublicRoute redirectIfAuthenticated><HomePage /></PublicRoute> } />
                                 <Route path="/dashboard" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><Dashboard /></ProtectedRoute> } />
                                 <Route path="/thesis-repository" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} 
                                                                                         requiredPermissions={['ThesisRepository_view', 
@@ -74,9 +74,9 @@ const AppRoutes: React.FC = () => (
                                         </ProtectedRoute>
                                     } />
 
-                                <Route path="/login" element={ <Login /> } />
-                                <Route path="/homepage" element={ <HomePage /> } />
-                                <Route path="/*" element={ <NoPage /> } />
+                                <Route path="/login" element={ <PublicRoute redirectIfAuthenticated = {true}><Login /></PublicRoute> } />
+                                <Route path="/home" element={ <PublicRoute><HomePage /></PublicRoute> } />
+                                <Route path="/*" element={ <PublicRoute><NoPage /></PublicRoute> } />
                             </Routes>
                         </AnalyticsProvider>
                     </BookmarkProvider>

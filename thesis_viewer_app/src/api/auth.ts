@@ -22,7 +22,7 @@ export const signInWithGoogle = async () => {
                     access_type: 'offline',
                     prompt: 'consent',
                 },
-                redirectTo: window.location.origin + '/login',
+                redirectTo: window.location.origin + '/dashboard',
             }
         });
 

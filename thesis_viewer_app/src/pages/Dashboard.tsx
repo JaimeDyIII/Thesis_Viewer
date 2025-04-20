@@ -24,7 +24,7 @@ export default function Dashboard() {
   useEffect(() => {
     const checkTermsAndConditions = async () => {
       if (profile) {
-        // Fetch the user's terms_and_condition status from the database using profile.id
+        
         const { data, error } = await supabase
           .from('users')
           .select('terms_and_condition')
@@ -37,7 +37,7 @@ export default function Dashboard() {
         }
 
         if (data && !data.terms_and_condition) {
-          setShowTerms(true); // Show overlay if terms_and_condition is false
+          setShowTerms(true); 
         }
       }
     };
@@ -46,12 +46,12 @@ export default function Dashboard() {
   }, [profile]);
 
   const handleTermsAgreed = () => {
-    setShowTerms(false); // Hide the overlay when terms are accepted
+    setShowTerms(false); 
   };
 
   return (
     <div className="admin-dashboard">
-      {/* Background Layers */}
+     
       <div className="admin-background-gradient"></div>
       <div className="admin-background-blur"></div>
       <div className="admin-background-radial"></div>

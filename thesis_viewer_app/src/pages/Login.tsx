@@ -3,11 +3,19 @@ import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import EmailErrorPopup from "../components/Authentication/EmailErrorPopup";
+import TermsAndConditionsDialog from "../pages/TermsAndConditionsDialog";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Login.css";
 
 const Login: React.FC = () => {
-  const { handleGoogleLogin, showError, setShowError } = useAuth();
+  const { 
+    handleGoogleLogin, 
+    showError, 
+    setShowError, 
+    showTerms, 
+    handleAcceptTerms, 
+    handleDeclineTerms 
+  } = useAuth();
 
   return (
     <div className="login-container">
@@ -15,7 +23,6 @@ const Login: React.FC = () => {
       <div className="login-background-gradient"></div>
       <div className="login-background-blur"></div>
       <div className="login-background-radial"></div>
-
 
       {/* Login Card */}
       <motion.div
@@ -64,6 +71,13 @@ const Login: React.FC = () => {
 
       {/* Alert Pop-up */}
       <EmailErrorPopup open={showError} onClose={() => setShowError(false)} />
+      
+      {/* Terms & Conditions Dialog */}
+      <TermsAndConditionsDialog
+        open={showTerms}
+        onAccept={handleAcceptTerms}
+        onDecline={handleDeclineTerms}
+      />
     </div>
   );
 };

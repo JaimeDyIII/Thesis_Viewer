@@ -1,22 +1,22 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { supabase } from "../lib/supabase";
-import Logo from "../components/Logo"; // Import the Logo component
+import { supabase } from "../../lib/supabase";
+import Logo from "../Logo"; 
 
 interface TermsAndConditionsOverlayProps {
   userId: string;
-  onAgree: () => void; // Callback to notify Dashboard when terms are accepted
+  onAgree: () => void; 
 }
 
 const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ userId, onAgree }) => {
   const [hasRead, setHasRead] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
-  // Track scroll position to enable the agree button when user has scrolled to bottom
+ 
   useEffect(() => {
     const handleScroll = () => {
       if (contentRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
-        // Consider content read when scrolled to 90% of content
+        
         if (scrollTop + clientHeight >= scrollHeight * 0.9) {
           setHasRead(true);
         }
@@ -31,7 +31,7 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
   }, []);
 
   const handleAgree = async () => {
-    // Update the terms_and_condition to true in the database
+    
     const { error } = await supabase
       .from('users')
       .update({ terms_and_condition: true })
@@ -42,7 +42,7 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
       return;
     }
 
-    onAgree(); // Notify Dashboard to hide the overlay
+    onAgree(); 
   };
 
   return (
@@ -97,7 +97,7 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
             backgroundColor: '#ffffff',
           }}
         >
-          {/* Logo centered at the top */}
+        
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -128,7 +128,6 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
             <li>Student or Faculty ID Number</li>
             <li>NEU Email Address</li>
             <li>Program/Department</li>
-            <li>IP Address and Device Information (when accessing the repository)</li>
             <li>Uploaded Thesis Files and Metadata (title, abstract, keywords, adviser, etc.)</li>
           </ul>
 

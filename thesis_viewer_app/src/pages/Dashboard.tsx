@@ -7,7 +7,7 @@ import { usePermissions } from "../context/PermissionsContext";
 import "../styles/View.css";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from '../lib/supabase';
-import TermsAndConditionsOverlay from './TermsAndConditionsOverlay';
+import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOverlay';
 
 export default function Dashboard() {
   const navigate = useNavigate();

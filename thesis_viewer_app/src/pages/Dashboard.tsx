@@ -131,7 +131,7 @@ export default function Dashboard() {
               </Card>
             ) : null}
 
-            {/* Analytics Card */}
+         
             {!(userRole === 'User' || userRole === 'Librarian') ? (
               <Card className="card-hover" onClick={() => navigate("/analytics")}>
                 <CardHeader
@@ -156,7 +156,7 @@ export default function Dashboard() {
         </main>
       </Container>
 
-      {/* Terms and Conditions Overlay */}
+      
       {showTerms && (
         <TermsAndConditionsOverlay
           userId={profile.id}

@@ -44,7 +44,7 @@ export function Footer() {
                 mb: 1,
               }}
             >
-              Thesis Management System
+              Thesis Viewer
             </Typography>
             <Typography
               variant="body2"

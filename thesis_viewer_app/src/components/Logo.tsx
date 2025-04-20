@@ -4,12 +4,12 @@ import logoImage from '../styles/New_Era_University.svg.png'; // Adjust the path
 type LogoSize = 'small' | 'medium' | 'large';
 
 interface LogoProps {
-  size?: LogoSize; // Optional size prop, defaults to 'medium'
-  className?: string; // Optional className for additional styling
+  size?: LogoSize; 
+  className?: string; 
 }
 
 const Logo: React.FC<LogoProps> = ({ size = 'medium', className = '' }) => {
-  // Define size styles using a style object
+
   const sizeStyles = {
     small: {
       width: '50px',

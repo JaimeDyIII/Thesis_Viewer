@@ -47,11 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
 
         // Check if the email domain is valid
-        if (session?.user?.email?.endsWith("@neu.edu.ph")) {
-          setSession(session);
-        } else {
+        if (!session?.user?.email?.endsWith("@neu.edu.ph") && location.pathname !== "/" && location.pathname !== "/home" && !location.pathname.match(/\/.*/)) {          
           await signOutUser();
           navigate("/login");
+        } else {
+          setSession(session);
         }
       } catch (error) {
         console.error("Error fetching session:", error);

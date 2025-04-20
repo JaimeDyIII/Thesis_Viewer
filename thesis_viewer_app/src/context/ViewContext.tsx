@@ -25,7 +25,7 @@ export const ViewProvider = ({ children }: { children: React.ReactNode }) => {
         .eq("thesis_id", thesisId);
 
     return count || 0;
-  };
+  };  
 
   return <ViewContext.Provider value={{ recordView, getViewCount }}>{children}</ViewContext.Provider>;
 };

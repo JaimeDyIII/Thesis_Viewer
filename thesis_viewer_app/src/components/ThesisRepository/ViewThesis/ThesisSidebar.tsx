@@ -7,7 +7,6 @@ import { useQuery } from '@tanstack/react-query';
 import { getThesisById } from '../../../api/thesis/queries';
 import { useView } from '../../../hooks/useView';
 import { useBookmark } from '../../../hooks/useBookmark';
-import { Thesis } from '../../../api/thesis/types';
 import { useAuth } from '../../../context/AuthContext';
 
 type ThesisSidebarProps = {

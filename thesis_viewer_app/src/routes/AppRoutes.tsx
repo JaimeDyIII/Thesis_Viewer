@@ -18,6 +18,7 @@ import PDFViewerWrapper from '../pages/PDFViewerWrapper';
 import Analytics from '../pages/Analytics';
 import HomePage from '../pages/HomePage';
 import { PublicRoute } from './PubilcRoute';
+import PrivacyPolicy from '../components/Global/privacypolicy';
 
     const AppRoutes: React.FC = () => (
     <BrowserRouter>
@@ -68,15 +69,17 @@ import { PublicRoute } from './PubilcRoute';
                                     </ProtectedRoute>
                                 } />
 
-                                    <Route path="/analytics" element={
-                                        <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']}>
-                                            <Analytics />
-                                        </ProtectedRoute>
-                                    } />
+                                <Route path="/analytics" element={
+                                    <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']}>
+                                        <Analytics />
+                                    </ProtectedRoute>
+                                } />
 
                                 <Route path="/login" element={ <PublicRoute redirectIfAuthenticated = {true}><Login /></PublicRoute> } />
                                 <Route path="/home" element={ <PublicRoute><HomePage /></PublicRoute> } />
                                 <Route path="/*" element={ <PublicRoute><NoPage /></PublicRoute> } />
+                                {/* Privacy Policy - Accessible to everyone */}
+                                <Route path="/Global/privacypolicy" element={<PrivacyPolicy />} />
                             </Routes>
                         </AnalyticsProvider>
                     </BookmarkProvider>

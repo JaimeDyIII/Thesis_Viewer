@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/HomePage.css';
 import { ShieldCheck, Glasses, ChartNoAxesCombined } from 'lucide-react';
 import GoogleIcon from "@mui/icons-material/Google";
+import { Footer } from "../components/Global/Footer";
 
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
@@ -55,19 +56,7 @@ const HomePage: React.FC = () => {
             </section>
       </main>
 
-      <footer className="footer">
-      <div className="footer-logo">
-        <div className="logo-row">
-            <img src="favicon.ico" alt="logo" className="favicon" />
-            <span>ThesisViewer</span>
-        </div>
-        <div className="footer-links">
-            <a href="/privacy-policy">Privacy Policy</a>
-            <a href="/terms-of-service">Terms of Service</a>
-        </div>
-        </div>
-        <div>© 2025 NEU Thesis Viewer. All rights reserved.</div>
-      </footer>
+      <Footer />
     </div>
   );
 };

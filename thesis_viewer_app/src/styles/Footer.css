@@ -1,0 +1,137 @@
+.site-footer {
+    background-color: #1e293b !important;
+    color: #fff !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    padding: 16px 0 !important;
+    margin-top: auto !important;
+  }
+  
+  .footer-container {
+    padding: 0 24px !important;
+  }
+  
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .footer-logo-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+  }
+  
+  .footer-favicon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .footer-title {
+    font-weight: 600 !important;
+    font-size: 18px !important;
+    color: #f6f4eb !important;
+  }
+  
+  .footer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 200px;
+  }
+  
+  .footer-heading {
+    color: #f6f4eb !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+  }
+  
+  .footer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 13px !important;
+  }
+  
+  .footer-icon {
+    color: #fff !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: 2px;
+  }
+  
+  .footer-text {
+    color: #fff !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+  
+  .footer-link {
+    color: #fff !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+  }
+  
+  .footer-bottom {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .footer-bottom .footer-copyright {
+    font-size: 12px !important;
+    color: #fff !important;
+  }
+  
+  /* Responsive */
+  @media (max-width: 600px) {
+    .footer-top {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .footer-logo-title {
+      justify-content: center;
+    }
+  
+    .footer-section {
+      align-items: center;
+      min-width: unset;
+    }
+  
+    .footer-item {
+      justify-content: center;
+      font-size: 12px !important;
+    }
+  
+    .footer-icon {
+      width: 14px !important;
+      height: 14px !important;
+    }
+  
+    .footer-title {
+      font-size: 16px !important;
+    }
+  
+    .footer-heading {
+      font-size: 13px !important;
+    }
+  
+    .footer-link,
+    .footer-text {
+      font-size: 12px !important;
+    }
+  
+    .footer-favicon {
+      width: 18px;
+      height: 18px;
+    }
+  }  

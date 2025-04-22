@@ -128,3 +128,16 @@ export const getInactiveTheses = async (): Promise<Thesis[]> => {
   
   return (data || []) as Thesis[];
 };
+
+export const getLatestUploads = async (): Promise<Thesis[]> => {
+  const { data, error } = await supabase
+    .from('Thesis')
+    .select(THESIS_SELECT)
+    .eq('isActive', true)
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  if (error) throw new Error(`Failed to fetch latest uploads: ${error.message}`);
+  
+  return (data || []) as Thesis[];
+};

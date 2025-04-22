@@ -1,0 +1,130 @@
+/* Header Container */
+.header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    padding: 0.75rem 3rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1100 !important;
+    transition: top 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  }
+  
+  .header.hidden {
+    top: -80px !important;
+  }
+  
+  /* Logo Section */
+  .logo-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+  
+  .logo-icon {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  
+  .logo-text {
+    font-weight: 700 !important;
+    color: #4682A9 !important;
+    font-size: 1.25rem !important;
+  }
+  
+  /* Navigation Links */
+  .nav-links {
+    display: flex !important;
+    gap: 2.5rem !important;
+    align-items: center !important;
+    margin-left: 4rem !important;
+  }
+  
+  .nav-link {
+    cursor: pointer !important;
+    color: #4682A9 !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    position: relative !important;
+    text-transform: none !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .nav-link:hover {
+    color: #2a5a7a !important;
+  }
+  
+  .nav-link.active {
+    color: #2a5a7a !important;
+  }
+  
+  .nav-link::after {
+    content: "" !important;
+    position: absolute !important;
+    bottom: -4px !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 2px !important;
+    background-color: #2a5a7a !important;
+    transition: width 0.3s ease !important;
+  }
+  
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    width: 100% !important;
+  }
+  
+  /* Avatar Section */
+  .avatar-container {
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .avatar-button {
+    padding: 0 !important;
+  }
+  
+  .user-avatar {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  /* User Menu */
+  .user-menu .MuiPaper-root {
+    border-radius: 8px !important;
+    margin-top: 0.75rem !important;
+    min-width: 180px !important;
+    padding: 0.75rem 1rem !important;
+    background-color: #fff !important;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .menu-name {
+    font-weight: 600 !important;
+    color: #4682A9 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  .menu-role {
+    color: #777 !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .menu-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    color: #b81919 !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+  }

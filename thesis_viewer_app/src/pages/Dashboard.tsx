@@ -1,4 +1,3 @@
-// Dashboard.tsx
 import { useState, useEffect } from 'react';
 import { Box, Container } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +7,7 @@ import { supabase } from '../lib/supabase';
 import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOverlay';
 import { Header } from "../components/Global/Header";
 import HeroSection from "../components/Dashboard/HeroSection";
-import ThesisCarousel from "../components/Dashboard/ThesisCarousel";
+import FeaturedThesis from "../components/Dashboard/FeaturedThesis";
 import LatestUploads from "../components/Dashboard/LatestUploads";
 import AIAssistant from "../components/Dashboard/AIAssistant";
 import '../styles/Dashboard.css';
@@ -51,9 +50,11 @@ export default function Dashboard() {
     <Box className="dashboard-root">
       <Header />
       <Box className="dashboard-patterned-background">
-        <HeroSection />
+        <Box sx={{ pt: 5 }}>
+          <HeroSection />
+        </Box>
         <Container maxWidth="lg" className="dashboard-white-container">
-          <ThesisCarousel permissions={permissions} navigate={navigate} userRole={userRole} />
+          <FeaturedThesis permissions={permissions} navigate={navigate} userRole={userRole} />
           <LatestUploads permissions={permissions} navigate={navigate} userRole={userRole} />
         </Container>
         <AIAssistant />

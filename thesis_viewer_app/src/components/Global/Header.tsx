@@ -1,16 +1,23 @@
-import { Avatar, Typography, Box, IconButton, Menu, MenuItem, Button } from "@mui/material";
+import { Avatar, Typography, Box, IconButton, Menu, MenuItem } from "@mui/material";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
-import "../../styles/View.css";
+import { useNavigate, useLocation } from "react-router-dom";
+import { BookOpenText, BarChart2, UserCog, LayoutDashboard, Compass, Bookmark, LogOut } from "lucide-react";
+import { usePermissions } from "../../context/PermissionsContext";
+import { useAuth } from "../../context/AuthContext";
+import "../../styles/Header.css";
 
 export function Header() {
   const [googleProfilePic, setGoogleProfilePic] = useState("https://lh3.googleusercontent.com/a/default-user");
   const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { permissions } = usePermissions();
+  const { profile } = useAuth();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -22,19 +29,27 @@ export function Header() {
 
         const name = session.user.user_metadata.full_name || session.user.email;
         setDisplayName(name);
-
-        const { data: userData } = await supabase
-          .from("users")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-
-        if (userData) setRole(userData.role);
       }
     };
 
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') { 
+        if (window.scrollY > lastScrollY) {
+          setVisible(false);
+        } else {
+          setVisible(true);
+        }
+        setLastScrollY(window.scrollY);
+      }
+    };
+
+    window.addEventListener('scroll', controlNavbar);
+    return () => window.removeEventListener('scroll', controlNavbar);
+  }, [lastScrollY]);
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -49,110 +64,98 @@ export function Header() {
     navigate("/login");
   };
 
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <Box
-      component="header"
-      className="admin-header"
-      sx={{
-        backgroundColor: "rgba(255, 255, 255, 0.5)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
-        px: { xs: 2, sm: 6 },
-        py: 1.5,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      {/* Left - Logo */}
-      <Box 
-        className="logo" 
-        display="flex" 
-        alignItems="center" 
-        gap={1} 
-        onClick={() => navigate("/dashboard")}
-        sx={{ 
-          fontWeight: 700, 
-          color: "#4682A9", 
-          cursor: "pointer", 
-          "&:hover": {
-            opacity: 0.85
-          }
-        }}
-      >
-        <img 
-          src="/favicon.ico" 
-          alt="logo" 
-          className="favicon" 
-          style={{ width: 30, height: 30 }} 
-        />
-        <Typography 
-          variant="h6" 
-          sx={{ fontWeight: 700, color: "#4682A9" }}
-        >
+    <Box component="header" className={`header ${visible ? 'visible' : 'hidden'}`}>
+      <Box className="logo-container">
+        <img src="/favicon.ico" alt="logo" className="logo-icon" />
+        <Typography variant="h6" className="logo-text">
           ThesisViewer
         </Typography>
       </Box>
 
-      {/* Middle - Discover & Bookmarks */}
-      <Box display="flex" gap={4}>
+      <Box className="nav-links">
+        <Typography
+          variant="button"
+          onClick={() => navigate("/dashboard")}
+          className={`nav-link ${isActive("/dashboard") ? 'active' : ''}`}
+        >
+          <LayoutDashboard size={18} /> Dashboard
+        </Typography>
+
         <Typography
           variant="button"
           onClick={() => navigate("/view-thesis")}
-          sx={{
-            cursor: "pointer",
-            color: "#4682A9",
-            fontWeight: 600,
-            "&:hover": { color: "#749BC2" },
-          }}
+          className={`nav-link ${isActive("/view-thesis") ? 'active' : ''}`}
         >
-          Discover
+          <Compass size={18} /> Discover
         </Typography>
+
         <Typography
           variant="button"
           onClick={() => navigate("/bookmarks")}
-          sx={{
-            cursor: "pointer",
-            color: "#4682A9",
-            fontWeight: 600,
-            "&:hover": { color: "#749BC2" },
-          }}
+          className={`nav-link ${isActive("/bookmarks") ? 'active' : ''}`}
         >
-          Bookmarks
+          <Bookmark size={18} /> Bookmarks
         </Typography>
+
+        {(permissions?.ThesisRepository_add ||
+          permissions?.ThesisRepository_view ||
+          permissions?.ThesisRepository_edit ||
+          permissions?.ThesisRepository_delete) ? (
+          <Typography
+            variant="button"
+            onClick={() => navigate("/thesis-repository")}
+            className={`nav-link ${isActive("/thesis-repository") ? 'active' : ''}`}
+          >
+            <BookOpenText size={18} /> Manage Thesis
+          </Typography>
+        ) : null}
+
+        {!(profile?.role === 'User' || profile?.role === 'Librarian') ? (
+          <Typography
+            variant="button"
+            onClick={() => navigate("/analytics")}
+            className={`nav-link ${isActive("/analytics") ? 'active' : ''}`}
+          >
+            <BarChart2 size={18} /> Analytics
+          </Typography>
+        ) : null}
+
+        {((profile?.role === 'Admin' || profile?.role === 'SuperAdmin') &&
+          (permissions?.UserManagement_view ||
+            permissions?.UserManagement_add ||
+            permissions?.UserManagement_edit ||
+            permissions?.UserManagement_delete)) ? (
+          <Typography
+            variant="button"
+            onClick={() => navigate("/user-management")}
+            className={`nav-link ${isActive("/user-management") ? 'active' : ''}`}
+          >
+            <UserCog size={18} /> Manage Users
+          </Typography>
+        ) : null}
       </Box>
 
-      {/* Right - Avatar with Dropdown */}
-      <Box display="flex" alignItems="center">
-        <IconButton onClick={handleAvatarClick}>
-          <Avatar src={googleProfilePic} sx={{ width: 44, height: 44 }} />
+      <Box className="avatar-container">
+        <IconButton onClick={handleAvatarClick} className="avatar-button">
+          <Avatar src={googleProfilePic} className="user-avatar" />
         </IconButton>
         <Menu
           anchorEl={anchorEl}
           open={open}
           onClose={handleClose}
-          PaperProps={{
-            elevation: 3,
-            sx: {
-              borderRadius: 2,
-              mt: 1.5,
-              minWidth: 180,
-              px: 2,
-              py: 1.5,
-              backgroundColor: "#fff",
-            },
-          }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          className="user-menu"
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: "#4682A9" }}>
+          <Typography variant="subtitle1" className="menu-name">
             {displayName}
           </Typography>
-          <Typography variant="body2" sx={{ color: "#777", mb: 1 }}>
-            {role}
+          <Typography variant="body2" className="menu-role">
+            {profile?.role}
           </Typography>
-          <MenuItem onClick={handleLogout} sx={{ color: "#4682A9", fontWeight: 500 }}>
-            Logout
+          <MenuItem onClick={handleLogout} className="menu-item">
+              <LogOut /> Logout
           </MenuItem>
         </Menu>
       </Box>

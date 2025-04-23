@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
-import { useNavigate } from 'react-router-dom';
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from '../lib/supabase';
@@ -14,11 +13,8 @@ import AIAssistant from "../components/Dashboard/AIAssistant";
 import '../styles/Dashboard.css';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const { profile } = useAuth();
   const { permissions } = usePermissions();
-  const userRole = profile.role;
-  const userId = profile.id;
   const [showTerms, setShowTerms] = useState<boolean>(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -57,11 +53,13 @@ export default function Dashboard() {
         <Box sx={{ pt: 5 }}>
           <HeroSection />
         </Box>
+        {permissions?.ThesisRepository_view && (
         <Container maxWidth="lg" className="dashboard-white-container">
-          <FeaturedThesis permissions={permissions} navigate={navigate} userRole={userRole} />
-          <LatestUploads permissions={permissions} navigate={navigate} userRole={userRole} />
-          <RecentlyRead permissions={permissions} navigate={navigate} userRole={userRole} userId={userId} />
+          <FeaturedThesis />
+          <LatestUploads />
+          <RecentlyRead />
         </Container>
+        )}
         {!isMobile && <AIAssistant />}
       </Box>
       {showTerms && (

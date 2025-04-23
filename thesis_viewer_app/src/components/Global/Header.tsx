@@ -147,6 +147,7 @@ export function Header() {
           <LayoutDashboard size={18} /> <span>Dashboard</span>
         </Typography>
 
+        {permissions?.ThesisRepository_view && (
         <Typography
           variant="button"
           onClick={() => navigate("/view-thesis")}
@@ -154,7 +155,9 @@ export function Header() {
         >
           <Compass size={18} /> <span>Discover</span>
         </Typography>
+        )}
 
+        {permissions?.ThesisRepository_view && (
         <Typography
           variant="button"
           onClick={() => navigate("/bookmarks")}
@@ -162,6 +165,7 @@ export function Header() {
         >
           <Bookmark size={18} /> <span>Bookmarks</span>
         </Typography>
+        )}
 
         <Typography
           variant="button"
@@ -171,11 +175,8 @@ export function Header() {
           <Glasses size={18} /> <span>ThessaAI</span>
         </Typography>
 
-        {(!(profile?.role === 'User') &&
-          (permissions?.ThesisRepository_add ||
-          permissions?.ThesisRepository_view ||
-          permissions?.ThesisRepository_edit ||
-          permissions?.ThesisRepository_delete)) && (
+        {profile?.role !== 'User' && 
+         permissions?.ThesisRepository_view && (
           <Typography
             variant="button"
             onClick={() => navigate("/manage-thesis")}
@@ -195,11 +196,8 @@ export function Header() {
           </Typography>
         )}
 
-        {((profile?.role === 'Admin' || profile?.role === 'SuperAdmin') &&
-          (permissions?.UserManagement_view ||
-            permissions?.UserManagement_add ||
-            permissions?.UserManagement_edit ||
-            permissions?.UserManagement_delete)) && (
+        {(profile?.role === 'Admin' || profile?.role === 'SuperAdmin') &&
+          permissions?.UserManagement_view && (
           <Typography
             variant="button"
             onClick={() => navigate("/user-management")}

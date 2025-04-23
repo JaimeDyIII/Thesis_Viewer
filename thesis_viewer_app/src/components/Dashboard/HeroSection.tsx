@@ -1,9 +1,11 @@
 import { Box, Typography, Button, Grid, Paper, Container } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
+import { usePermissions } from "../../context/PermissionsContext";
 import "../../styles/Dashboard.css";
 
 export default function HeroSection() {
   const navigate = useNavigate();
+  const { permissions } = usePermissions();
   return (
     <Box py={6} px={2}>
       <Container maxWidth={false} sx={{ maxWidth: '1250px' }}>
@@ -25,6 +27,7 @@ export default function HeroSection() {
             <Typography variant="body1" className="text-muted" sx={{ mt: 2 }}>
               Browse featured topics, explore the latest uploads, and access student research anytime.
             </Typography>
+            {permissions?.ThesisRepository_view && (
               <Button
                 variant="contained"
                 className="button-primary"
@@ -37,6 +40,7 @@ export default function HeroSection() {
               >
                 Discover More →
               </Button>
+            )}
             </Grid>
 
             {/* IMAGE RIGHT */}

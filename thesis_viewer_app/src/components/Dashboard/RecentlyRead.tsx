@@ -6,36 +6,28 @@ import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useView } from "../../hooks/useView";
 
-type Props = {
-  userId: string;
-  userRole: string;
-  permissions: any;
-  navigate: (path: string) => void;
-};
-
-export default function RecentlyRead({ userId, userRole, permissions, navigate }: Props) {
+export default function RecentlyRead() {
   const [recentlyRead, setRecentlyRead] = useState<RecentlyRead[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
 
-  const { session } = useAuth();
-
+  const { session, profile } = useAuth();
   const { recordView } = useView();
 
   useEffect(() => {
     const fetchRecentlyRead = async () => {
+      if (!profile?.id) return;
       try {
-        if (userRole !== "guest") {
-          const data = await getRecentlyReadThesis(userId);
-          setRecentlyRead(data);
-        }
+        const data = await getRecentlyReadThesis(profile.id);
+        setRecentlyRead(data);
       } catch (err) {
         console.error("Error fetching recently read theses:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchRecentlyRead();
-  }, [userId, userRole]);
+  }, [profile?.id]);
 
   const handleViewPDF = (thesis: RecentlyRead) => {
     if (!session) return console.error("No session found!");
@@ -44,19 +36,6 @@ export default function RecentlyRead({ userId, userRole, permissions, navigate }
     window.open(`/pdf-viewer/${encodeURIComponent(thesis.Thesis.title)}`);
     recordView(thesis.Thesis.id);
   };
-
-  if (userRole === "guest") {
-    return (
-      <Box className="dashboard-display-section">
-        <Typography variant="h5" className="text-heading">
-          Recently Read
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, color: "#888" }}>
-          You don't have permission to view this section.
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
     <Box className="dashboard-display-section">

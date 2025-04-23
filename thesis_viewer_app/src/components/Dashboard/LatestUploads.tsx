@@ -6,13 +6,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useView } from "../../hooks/useView";
 
-type Props = {
-  permissions: any;
-  navigate: (path: string) => void;
-  userRole: string;
-};
-
-export default function LatestUploads({ navigate }: Props) {
+export default function LatestUploads() {
   const [latestTheses, setLatestTheses] = useState<Thesis[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

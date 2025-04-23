@@ -6,13 +6,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useView } from "../../hooks/useView";
 
-type Props = {
-  permissions: any;
-  navigate: (path: string) => void;
-  userRole: string;
-};
-
-export default function FeaturedThesis({ navigate }: Props) {
+export default function FeaturedThesis() {
   const [featured, setFeatured] = useState<FeaturedThesis[]>([]);
   const { session } = useAuth();
   const { recordView } = useView();

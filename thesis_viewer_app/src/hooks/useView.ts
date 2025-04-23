@@ -1,4 +1,3 @@
-// src/hooks/views/useView.ts
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -10,11 +9,17 @@ export const useView = () => {
   const recordViewMutation = useMutation({
     mutationFn: async (thesisId: number) => {
       if (!userId) throw new Error('User not authenticated');
-      
+
       const { error } = await supabase
         .from('views')
-        .insert([{ thesis_id: thesisId, user_id: userId }]);
-      
+        .upsert({
+          thesis_id: thesisId,
+          user_id: userId,
+          viewed_at: new Date().toISOString()
+        }, {
+          onConflict: 'thesis_id,user_id'
+        });
+
       if (error) throw error;
     }
   });

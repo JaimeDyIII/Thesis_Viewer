@@ -135,7 +135,7 @@ export const getLatestUploads = async (): Promise<Thesis[]> => {
     .select(THESIS_SELECT)
     .eq('isActive', true)
     .order('created_at', { ascending: false })
-    .limit(6);
+    .limit(4);
 
   if (error) throw new Error(`Failed to fetch latest uploads: ${error.message}`);
   

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { getFeaturedThesis } from "../../api/bookmarks/queries";
-import type { FeaturedThesis } from "../../api/bookmarks/types"; 
+import type { FeaturedThesis } from "../../api/bookmarks/types";
 import { motion } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
+import { useView } from "../../hooks/useView";
 
 type Props = {
   permissions: any;
@@ -10,8 +12,10 @@ type Props = {
   userRole: string;
 };
 
-export default function FeaturedThesis({ permissions, navigate }: Props) {
+export default function FeaturedThesis({ navigate }: Props) {
   const [featured, setFeatured] = useState<FeaturedThesis[]>([]);
+  const { session } = useAuth();
+  const { recordView } = useView();
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -25,43 +29,39 @@ export default function FeaturedThesis({ permissions, navigate }: Props) {
     fetchFeatured();
   }, []);
 
+  const handleViewPDF = (thesis: { id: number; title: string }) => {
+    if (!session) return console.error("No session found!");
+    if (!thesis?.id) return console.error("No thesis ID found");
+
+    window.open(`/pdf-viewer/${encodeURIComponent(thesis.title)}`);
+    recordView(thesis.id);
+  };
+
   return (
-    <Box mt={5} px={5}>
-      <Typography variant="h5" sx={{ mb: 2, color: "#4682A9", fontWeight: 600, fontSize: '1.25rem' }}>
+    <Box className="dashboard-display-section">
+      <Typography variant="h5" className="text-heading">
         Featured Theses
       </Typography>
-      <Grid container spacing={3}>
+      <Box className="dashboard-display-grid">
         {featured.map((item) => {
-          const thesis = Array.isArray(item.Thesis) ? item.Thesis[0] : item.Thesis; // Handle case when Thesis is an array
+          const thesis = Array.isArray(item.Thesis) ? item.Thesis[0] : item.Thesis;
+          if (!thesis) return null;
 
           return (
-            <Grid item xs={12} sm={6} md={3} key={`${item.thesis_id}-${item.bookmarked_at}`}>
+            <Box key={`${item.thesis_id}`} className="dashboard-display-card-wrapper">
               <motion.div
                 whileHover={{
-                  y: -8,  // Moves the card up slightly
-                  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",  // Applies shadow on hover
+                  y: -5,
+                  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)",
                 }}
-                transition={{ duration: 0.3 }} // Smooth transition for hover effect
-                style={{
-                  cursor: "pointer",
-                  borderRadius: 12,
-                  padding: 8,
-                  textAlign: "center",
-                  height: "auto", // Keeps container height flexible
-                  maxHeight: 300, // Set a maximum height for each card
-                }}
-                onClick={() => navigate(`/thesis/${item.thesis_id}`)}
+                transition={{ duration: 0.3 }}
+                className="dashboard-display-card"
+                onClick={() => handleViewPDF(thesis)}
               >
                 <img
-                  src="/bookcover.png" // Placeholder for book cover image
+                  src="/bookcover.png"
                   alt="Thesis Cover"
-                  style={{
-                    width: "100%",
-                    height: 180, // Reduced height for book cover
-                    objectFit: "contain",
-                    borderRadius: 8,
-                    marginBottom: 8,
-                  }}
+                  className="dashboard-display-cover"
                 />
                 <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.9rem' }}>
                   {thesis?.title || "Untitled Thesis"}
@@ -70,10 +70,10 @@ export default function FeaturedThesis({ permissions, navigate }: Props) {
                   {thesis?.author?.substring(0, 100) || "No author available."}
                 </Typography>
               </motion.div>
-            </Grid>
+            </Box>
           );
         })}
-      </Grid>
+      </Box>
     </Box>
   );
 }

@@ -1,5 +1,6 @@
 import { Box, Typography, Button, Grid, Paper, Container } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
+import "../../styles/Dashboard.css";
 
 export default function HeroSection() {
   const navigate = useNavigate();

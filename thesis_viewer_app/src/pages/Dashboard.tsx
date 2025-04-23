@@ -9,6 +9,7 @@ import { Header } from "../components/Global/Header";
 import HeroSection from "../components/Dashboard/HeroSection";
 import FeaturedThesis from "../components/Dashboard/FeaturedThesis";
 import LatestUploads from "../components/Dashboard/LatestUploads";
+import RecentlyRead from "../components/Dashboard/RecentlyRead";
 import AIAssistant from "../components/Dashboard/AIAssistant";
 import '../styles/Dashboard.css';
 
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const { profile } = useAuth();
   const { permissions } = usePermissions();
   const userRole = profile.role;
+  const userId = profile.id;
   const [showTerms, setShowTerms] = useState<boolean>(false);
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export default function Dashboard() {
         <Container maxWidth="lg" className="dashboard-white-container">
           <FeaturedThesis permissions={permissions} navigate={navigate} userRole={userRole} />
           <LatestUploads permissions={permissions} navigate={navigate} userRole={userRole} />
+          <RecentlyRead permissions={permissions} navigate={navigate} userRole={userRole} userId={userId} />
         </Container>
         <AIAssistant />
       </Box>

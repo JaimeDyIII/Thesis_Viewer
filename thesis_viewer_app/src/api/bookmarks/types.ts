@@ -6,7 +6,6 @@ export interface Bookmarks {
 
   export interface FeaturedThesis {
     thesis_id: number;
-    bookmarked_at: string;
     Thesis: {
       id: number;
       title: string;

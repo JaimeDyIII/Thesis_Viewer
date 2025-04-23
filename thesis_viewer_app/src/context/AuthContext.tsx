@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, ReactNode, useState } from "react";
+import { createContext, useContext, useEffect, ReactNode, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Session } from "@supabase/supabase-js";
-import { signInWithGoogle, signOutUser, fetchUserProfile } from "../api/auth";
+import { signInWithGoogle, signOutUser } from "../api/auth/mutation";
+import { fetchUserProfile } from "../api/auth/queries";
 import { supabase } from "../lib/supabase";
 
 type AuthContextType = {
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const isRedirecting = useRef(false);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -36,9 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setShowError(true);
       navigate("/login", { replace: true });
     }
-  }, [location]);
+  }, [location, navigate]);
 
-  // Set session and listen to auth changes
     useEffect(() => {
     const initializeSession = async () => {
       try {
@@ -46,34 +47,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (error) throw error;
 
-        // Check if the email domain is valid
-        if (!session?.user?.email?.endsWith("@neu.edu.ph") && location.pathname !== "/" && location.pathname !== "/home" && !location.pathname.match(/\/.*/)) {          
+        // Check if the email domain is valid - only for protected routes
+        if (
+          session?.user &&
+          !session.user.email?.endsWith("@neu.edu.ph") && 
+          !isRedirecting.current &&
+          !location.pathname.match(/^\/(login|home|$)/) 
+        ) {          
+          isRedirecting.current = true;
           await signOutUser();
           navigate("/login");
-        } else {
-          setSession(session);
+          return;
         }
+        
+        setSession(session);
       } catch (error) {
         console.error("Error fetching session:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
+        setTimeout(() => {
+          isRedirecting.current = false;
+        }, 1000);
       }
     };
 
     initializeSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      // Update session when auth state changes
+      console.log("Auth state changed:", session?.user?.id);
       setSession(session);
       setLoading(false);
-      console.log("Auth state changed:", session?.user?.id);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]); 
-
+  }, []);
 
   useEffect(() => {
     if (session?.user) {
@@ -97,10 +106,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     try {
+      isRedirecting.current = true;
       await signOutUser();
       navigate("/login", { replace: true });
     } catch (e) {
       console.error("Error signing out:", e);
+    } finally {
+      setTimeout(() => {
+        isRedirecting.current = false;
+      }, 1000);
     }
   };
 

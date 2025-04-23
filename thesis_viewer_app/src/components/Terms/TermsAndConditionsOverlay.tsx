@@ -5,9 +5,10 @@ import Logo from "../Logo";
 interface TermsAndConditionsOverlayProps {
   userId: string;
   onAgree: () => void; 
+  isLoading: boolean;
 }
 
-const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ userId, onAgree }) => {
+const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ userId, onAgree, isLoading }) => {
   const [hasRead, setHasRead] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
@@ -251,7 +252,7 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
           
           <button
             onClick={handleAgree}
-            disabled={!hasRead}
+            disabled={!hasRead || isLoading}
             className="agree-button"
             style={{
               padding: '12px 28px',
@@ -267,7 +268,7 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
               boxShadow: hasRead ? '0 2px 4px rgba(103, 58, 183, 0.3)' : 'none',
             }}
           >
-            I Agree to the Terms
+            {isLoading ? 'Accepting Terms...' : 'I Agree to the Terms'}
           </button>
         </div>
       </div>

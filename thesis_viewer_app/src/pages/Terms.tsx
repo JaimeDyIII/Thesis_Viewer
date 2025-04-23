@@ -5,13 +5,16 @@ import { supabase } from '../lib/supabase';
 import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOverlay';
 import { checkUserExists } from '../api/auth/queries';
 import { insertUserAfterAcceptingTermsAndCondition } from '../api/auth/mutation';
+import { useAuth } from '../context/AuthContext';
 
 export default function Terms() {
   const [loading, setLoading] = useState(true);
+  const [insertLoading, setInsertLoading] = useState(false);
   const [userSession, setUserSession] = useState<any>(null);
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const hasCheckedRef = useRef(false);
+  const { setUserProfile, profile } = useAuth();
 
   useEffect(() => {
     const getSession = async () => {
@@ -29,12 +32,12 @@ export default function Terms() {
 
             const exists = await checkUserExists(session.user.id);
                     
-            if (exists === true) {
-                console.log("User exists in public.users, redirecting to dashboard");
+            if (exists === true && profile?.terms_and_condition === true) {
+                console.log("User exists in public.users and has accepted terms, redirecting to dashboard");
                 setIsRedirecting(true);
                 hasCheckedRef.current = true;
                 navigate('/dashboard');
-            } else if (exists === false) {
+            } else {
                 setLoading(false); 
                 setIsRedirecting(false);
             }
@@ -49,21 +52,27 @@ export default function Terms() {
     };
 
     getSession();
-  }, []);
+  }, [profile]);
 
   const handleTermsAgreed = async () => {
     if (!userSession) return;
     
     try {
-      await insertUserAfterAcceptingTermsAndCondition(
-        userSession.user.id,
-        userSession.user.email,
-        userSession.user.user_metadata?.name || userSession.user.email.split('@')[0]
-      );
-      
-      navigate('/dashboard');
+        setInsertLoading(true);
+
+        const data = await insertUserAfterAcceptingTermsAndCondition(
+            userSession.user.id,
+            userSession.user.email,
+            userSession.user.user_metadata?.name || userSession.user.email.split('@')[0]
+        );
+
+        setUserProfile(data);
+        
+        navigate('/dashboard');
     } catch (error) {
-      console.error('Error creating user after terms acceptance:', error);
+        console.error('Error creating user after terms acceptance:', error);
+    } finally {
+        setInsertLoading(false);
     }
   };
 
@@ -86,6 +95,7 @@ export default function Terms() {
       <TermsAndConditionsOverlay
         userId={userSession?.user?.id}
         onAgree={handleTermsAgreed}
+        isLoading={insertLoading}
       />
     </Box>
   );

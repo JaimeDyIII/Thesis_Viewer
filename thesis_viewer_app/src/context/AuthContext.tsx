@@ -13,6 +13,7 @@ type AuthContextType = {
   handleGoogleLogin: () => Promise<void>;
   handleSignOut: () => Promise<void>;
   setShowError: (show: boolean) => void;
+  setUserProfile: (profile: any) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (error) throw error;
 
-        // Check if the email domain is valid - only for protected routes
         if (
           session?.user &&
           !session.user.email?.endsWith("@neu.edu.ph") && 
@@ -118,6 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setUserProfile = (profile: any) => {
+    setProfile(profile);
+  }
+
   const value = {
     session,
     profile,
@@ -126,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleGoogleLogin,
     handleSignOut,
     setShowError,
+    setUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

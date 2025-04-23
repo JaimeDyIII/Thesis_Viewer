@@ -34,10 +34,16 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
 
   if (loading || permissionLoading || userExists === null) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignContent: "center", height: "100vh", p: 4 }}>
-        <CircularProgress />
-      </Box>    
-    )
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: '#f7f2ff'
+      }}>
+        <CircularProgress color="secondary" />
+      </Box>
+    );
   }
 
   if (!session) {
@@ -50,16 +56,22 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
     }
   }
 
-  // If user doesn't exist in database, redirect to terms
-  if (session && !userExists) {
+  // If user doesn't exist in database or hasn't accepted terms, redirect to terms
+  if (session && (!userExists || (profile && profile.terms_and_condition === false))) {
     return <Navigate to="/terms" replace />;
   }
 
   // If no profile yet, show loading
   if (!profile) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignContent: "center", height: "100vh", p: 4 }}>
-        <CircularProgress />
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: '#f7f2ff'
+      }}>
+        <CircularProgress color="secondary" />
       </Box>
     );
   }

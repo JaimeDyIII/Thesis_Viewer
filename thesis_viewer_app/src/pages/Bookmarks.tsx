@@ -18,7 +18,7 @@ type Thesis = {
   publishing_year: number;
 };
 
-export default function ViewThesis() {
+export default function Bookmarks() {
   const [searchQuery, setSearchQuery] = useState("");
   const [thesisList, setThesisList] = useState<Thesis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,15 +33,32 @@ export default function ViewThesis() {
   const [viewedStatus, setViewedStatus] = useState<Record<number, boolean>>({});
   const { getViewCount, hasUserViewed } = useView();
 
-  // Fetch all theses based on filters      
+  // Fetch only bookmarked theses based on filters
   useEffect(() => {
-    const fetchThesis = async () => {
+    const fetchBookmarkedTheses = async () => {
       setIsLoading(true);
       try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // First get all bookmarks for this user
+        const { data: bookmarks, error: bookmarkError } = await supabase
+          .from("bookmarks")
+          .select("thesis_id")
+          .eq("user_id", user.id);
+
+        if (bookmarkError) throw bookmarkError;
+        
+        const bookmarkIds = bookmarks.map(b => b.thesis_id);
+        setBookmarkedThesisIds(bookmarkIds);
+
+        // Then get thesis data for these bookmarks
         let query = supabase
           .from("Thesis")
           .select("id, title, description, pdf_url, category, author, publishing_year, isActive")
-          .eq("isActive", true);
+          .eq("isActive", true)
+          .in("id", bookmarkIds);
 
         if (selectedCategory) query = query.eq("category", selectedCategory);
         
@@ -52,21 +69,21 @@ export default function ViewThesis() {
             query = query.eq("publishing_year", parseInt(selectedYear));
           }
         }
-  
-        const { data, error } = await query;
-        if (error) throw error;
 
-        setThesisList(data || []);
+        const { data: theses, error: thesisError } = await query;
+        if (thesisError) throw thesisError;
+
+        setThesisList(theses || []);
       } catch (err) {
-        console.error("Failed to fetch thesis data:", err);
+        console.error("Failed to fetch bookmarked theses:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchThesis();
+    fetchBookmarkedTheses();
   }, [selectedCategory, selectedYear]);
-  
+
   const handleSortToggle = () => {
     setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
@@ -77,6 +94,7 @@ export default function ViewThesis() {
       : b.title.localeCompare(a.title);
   });
 
+  // Filter theses based on search
   const filteredThesis = sortedThesis.filter((thesis) => {
     return thesis.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
            thesis.author.toLowerCase().includes(searchQuery.toLowerCase());
@@ -89,13 +107,13 @@ export default function ViewThesis() {
 
   const fetchBookmarks = async () => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       const { data, error } = await supabase
         .from("bookmarks")
         .select("thesis_id")
-        .eq("user_id", userData.user.id);
+        .eq("user_id", user.id);
 
       if (error) throw error;
       setBookmarkedThesisIds(data?.map(item => item.thesis_id) || []);
@@ -105,10 +123,14 @@ export default function ViewThesis() {
     }
   };
 
+  // Refresh bookmarks when sidebar closes
   useEffect(() => {
-    fetchBookmarks();
+    if (sidebarOpen === false) {
+      fetchBookmarks();
+    }
   }, [sidebarOpen]);
 
+  // Fetch view data for bookmarked theses
   useEffect(() => {
     const fetchViewData = async () => {
       const counts: Record<number, number> = {};
@@ -144,7 +166,7 @@ export default function ViewThesis() {
       <Header />
       <Box className="content-container">
         <Typography variant="h5" fontWeight="bold" gutterBottom>
-          View Thesis
+          My Bookmarked Theses
         </Typography>
 
         <ThesisFilters
@@ -172,8 +194,8 @@ export default function ViewThesis() {
           fetchBookmarks={fetchBookmarks}
           emptyMessage={
             thesisList.length === 0 
-              ? "No available thesis." 
-              : "No thesis found matching your search."
+              ? "You haven't bookmarked any theses yet." 
+              : "No bookmarks match your search."
           }
         />
       </Box>

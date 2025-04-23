@@ -10,6 +10,7 @@ import Login from '../pages/Login';
 import Dashboard from "../pages/Dashboard";
 import NoPage from '../pages/NoPage';
 import ViewThesis from "../pages/ViewThesis";
+import Bookmarks from "../pages/Bookmarks";
 import ThesisRepository from '../pages/ThesisRepository';
 import ManageThesis from '../pages/ManageThesis';
 import UserManagement from '../pages/UserManagement';
@@ -42,6 +43,7 @@ import Terms from '../pages/Terms';
                                 </Route>
 
                                 <Route path="/view-thesis" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}><ViewThesis /></ProtectedRoute> } />
+                                <Route path="/bookmarks" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} requiredPermissions={['ThesisRepository_view']}><Bookmarks /></ProtectedRoute> } />
                                 <Route path="/manage-thesis" element={ <ProtectedRoute allowedRoles={['Librarian', 'Admin', 'SuperAdmin']} 
                                                                                     requiredPermissions={['ThesisRepository_add',
                                                                                                             'ThesisRepository_edit', 

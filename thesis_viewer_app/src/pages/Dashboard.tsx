@@ -1,9 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Box, Paper, Container, useMediaQuery, useTheme } from "@mui/material";
 import { usePermissions } from "../context/PermissionsContext";
-import { useAuth } from "../context/AuthContext";
-import { supabase } from '../lib/supabase';
-import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOverlay';
 import { Header } from "../components/Global/Header";
 import HeroSection from "../components/Dashboard/HeroSection";
 import FeaturedThesis from "../components/Dashboard/FeaturedThesis";

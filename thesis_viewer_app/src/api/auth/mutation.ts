@@ -51,3 +51,17 @@ export const signOutUser = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
 };
+
+export const updateTermsAndConditions = async (userId: string, terms_and_condition_status: boolean) => {
+    try {
+        const { error } = await supabase
+            .from('users')
+            .update({ terms_and_condition: terms_and_condition_status })
+            .eq('id', userId);
+            
+        if (error) throw error;
+    } catch (error) {
+        console.error("Error updating terms and conditions:", error);
+        throw error;
+    }
+}

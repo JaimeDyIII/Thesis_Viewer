@@ -1,11 +1,11 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { usePermissions } from "../context/PermissionsContext";
-import NoPage from '../pages/NoPage';
 import { useEffect, useState, useRef } from "react";
 import { checkUserExists } from "../api/auth/queries";
 import { Footer } from "../components/Global/Footer";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
+import LoadingOverlay from '../components/Global/LoadingOverlay';
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -34,15 +34,7 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
 
   if (loading || permissionLoading || userExists === null) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        backgroundColor: '#f7f2ff'
-      }}>
-        <CircularProgress color="secondary" />
-      </Box>
+      <LoadingOverlay />
     );
   }
 
@@ -64,15 +56,7 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
   // If no profile yet, show loading
   if (!profile) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        backgroundColor: '#f7f2ff'
-      }}>
-        <CircularProgress color="secondary" />
-      </Box>
+      <LoadingOverlay />
     );
   }
 

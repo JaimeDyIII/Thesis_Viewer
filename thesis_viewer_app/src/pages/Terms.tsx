@@ -6,10 +6,10 @@ import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOve
 import { checkUserExists } from '../api/auth/queries';
 import { insertUserAfterAcceptingTermsAndCondition } from '../api/auth/mutation';
 import { useAuth } from '../context/AuthContext';
+import LoadingOverlay from '../components/Global/LoadingOverlay';
 
 export default function Terms() {
   const [loading, setLoading] = useState(true);
-  const [insertLoading, setInsertLoading] = useState(false);
   const [userSession, setUserSession] = useState<any>(null);
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -58,35 +58,27 @@ export default function Terms() {
     if (!userSession) return;
     
     try {
-        setInsertLoading(true);
+      setLoading(true);
 
-        const data = await insertUserAfterAcceptingTermsAndCondition(
-            userSession.user.id,
-            userSession.user.email,
-            userSession.user.user_metadata?.name || userSession.user.email.split('@')[0]
-        );
+      const data = await insertUserAfterAcceptingTermsAndCondition(
+        userSession.user.id,
+        userSession.user.email,
+        userSession.user.user_metadata?.name || userSession.user.email.split('@')[0]
+      );
 
-        setUserProfile(data);
-        
-        navigate('/dashboard');
+      setUserProfile(data);
+      
+      navigate('/dashboard');
     } catch (error) {
-        console.error('Error creating user after terms acceptance:', error);
+      console.error('Error creating user after terms acceptance:', error);
     } finally {
-        setInsertLoading(false);
+      setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        backgroundColor: '#f7f2ff'
-      }}>
-        <CircularProgress color="secondary" />
-      </Box>
+        <LoadingOverlay />
     );
   }
 
@@ -95,7 +87,7 @@ export default function Terms() {
       <TermsAndConditionsOverlay
         userId={userSession?.user?.id}
         onAgree={handleTermsAgreed}
-        isLoading={insertLoading}
+        isLoading={loading}
       />
     </Box>
   );

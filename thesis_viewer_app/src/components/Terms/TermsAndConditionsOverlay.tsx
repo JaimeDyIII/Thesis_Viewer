@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { supabase } from "../../lib/supabase";
 import Logo from "../Logo"; 
+import { updateTermsAndConditions } from '../../api/auth/mutation';
 
 interface TermsAndConditionsOverlayProps {
   userId: string;
@@ -32,18 +32,12 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
   }, []);
 
   const handleAgree = async () => {
-    
-    const { error } = await supabase
-      .from('users')
-      .update({ terms_and_condition: true })
-      .eq('id', userId);
-
-    if (error) {
+    try {
+      await updateTermsAndConditions(userId, true);
+      onAgree(); 
+    } catch (error) {
       console.error('Error updating terms and conditions:', error);
-      return;
     }
-
-    onAgree(); 
   };
 
   return (

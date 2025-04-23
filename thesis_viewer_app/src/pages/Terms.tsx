@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOverlay';
@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import LoadingOverlay from '../components/Global/LoadingOverlay';
 
 export default function Terms() {
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [userSession, setUserSession] = useState<any>(null);
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -38,7 +38,7 @@ export default function Terms() {
                 hasCheckedRef.current = true;
                 navigate('/dashboard');
             } else {
-                setLoading(false); 
+                setInitialLoading(false); 
                 setIsRedirecting(false);
             }
 
@@ -46,7 +46,7 @@ export default function Terms() {
             console.error('Error checking session:', error);
             navigate('/login');
         } finally {
-            setLoading(false);
+            setInitialLoading(false);
             setIsRedirecting(false);
         }
     };
@@ -58,8 +58,6 @@ export default function Terms() {
     if (!userSession) return;
     
     try {
-      setLoading(true);
-
       const data = await insertUserAfterAcceptingTermsAndCondition(
         userSession.user.id,
         userSession.user.email,
@@ -67,19 +65,14 @@ export default function Terms() {
       );
 
       setUserProfile(data);
-      
       navigate('/dashboard');
     } catch (error) {
       console.error('Error creating user after terms acceptance:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-        <LoadingOverlay />
-    );
+  if (initialLoading) {
+    return <LoadingOverlay />;
   }
 
   return (
@@ -87,7 +80,7 @@ export default function Terms() {
       <TermsAndConditionsOverlay
         userId={userSession?.user?.id}
         onAgree={handleTermsAgreed}
-        isLoading={loading}
+        isLoading={false}
       />
     </Box>
   );

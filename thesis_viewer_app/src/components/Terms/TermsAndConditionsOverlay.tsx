@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Logo from "../Logo"; 
 import { updateTermsAndConditions } from '../../api/auth/mutation';
+import { supabase } from '../../lib/supabase';
 
 interface TermsAndConditionsOverlayProps {
   userId: string;
@@ -10,9 +11,9 @@ interface TermsAndConditionsOverlayProps {
 
 const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ userId, onAgree, isLoading }) => {
   const [hasRead, setHasRead] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
- 
   useEffect(() => {
     const handleScroll = () => {
       if (contentRef.current) {
@@ -32,11 +33,24 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
   }, []);
 
   const handleAgree = async () => {
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
       await updateTermsAndConditions(userId, true);
       onAgree(); 
     } catch (error) {
       console.error('Error updating terms and conditions:', error);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    try {
+      await supabase.auth.signOut();
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
@@ -71,10 +85,21 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
           borderTopLeftRadius: '10px',
           borderTopRightRadius: '10px',
         }}>
-          <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '600' }}>
+          <h2 style={{ 
+            margin: 0, 
+            fontSize: '22px', 
+            fontWeight: '600',
+            color: '#ffffff',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+          }}>
             Terms and Conditions
           </h2>
-          <p style={{ margin: '8px 0 0', fontSize: '14px', opacity: 0.9 }}>
+          <p style={{ 
+            margin: '8px 0 0', 
+            fontSize: '14px', 
+            opacity: 0.9,
+            color: '#ffffff'
+          }}>
             Please read carefully and accept to continue
           </p>
         </div>
@@ -232,38 +257,69 @@ const TermsAndConditionsOverlay: React.FC<TermsAndConditionsOverlayProps> = ({ u
           padding: '16px 24px',
           borderTop: '1px solid #e0d8f0',
           display: 'flex',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
           alignItems: 'center',
+          gap: '12px',
           backgroundColor: '#f7f2ff',
           borderBottomLeftRadius: '10px',
           borderBottomRightRadius: '10px',
         }}>
           {!hasRead && (
-            <div style={{ color: '#9c27b0', fontSize: '14px', fontWeight: '500' }}>
+            <div style={{ 
+              color: '#9c27b0', 
+              fontSize: '14px', 
+              fontWeight: '500',
+              textAlign: 'center'
+            }}>
               Please scroll through the entire document to continue
             </div>
           )}
           
-          <button
-            onClick={handleAgree}
-            disabled={!hasRead || isLoading}
-            className="agree-button"
-            style={{
-              padding: '12px 28px',
-              backgroundColor: hasRead ? '#673AB7' : '#d8d0e8',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: hasRead ? 'pointer' : 'not-allowed',
-              fontSize: '16px',
-              fontWeight: '500',
-              marginLeft: 'auto',
-              transition: 'all 0.2s ease',
-              boxShadow: hasRead ? '0 2px 4px rgba(103, 58, 183, 0.3)' : 'none',
-            }}
-          >
-            {isLoading ? 'Accepting Terms...' : 'I Agree to the Terms'}
-          </button>
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px',
+            justifyContent: 'center',
+            width: '100%'
+          }}>
+            <button
+              onClick={handleDecline}
+              disabled={isSubmitting}
+              className="decline-button"
+              style={{
+                padding: '12px 28px',
+                backgroundColor: '#f5f5f5',
+                color: '#666',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Decline
+            </button>
+            
+            <button
+              onClick={handleAgree}
+              disabled={!hasRead || isLoading || isSubmitting}
+              className="agree-button"
+              style={{
+                padding: '12px 28px',
+                backgroundColor: hasRead ? (isSubmitting ? '#4a2d7f' : '#673AB7') : '#d8d0e8',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: hasRead && !isSubmitting ? 'pointer' : 'not-allowed',
+                fontSize: '16px',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
+                boxShadow: hasRead ? '0 2px 4px rgba(103, 58, 183, 0.3)' : 'none',
+              }}
+            >
+              {isSubmitting ? 'Accepting Terms...' : 'I Agree to the Terms'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

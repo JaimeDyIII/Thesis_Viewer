@@ -17,8 +17,6 @@ export default function Dashboard() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-
-
   return (
     <Box className="root">
       <Header />

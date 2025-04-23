@@ -5,6 +5,7 @@ import type { FeaturedThesis } from "../../api/bookmarks/types";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useView } from "../../hooks/useView";
+import "../../styles/Dashboard.css";
 
 export default function FeaturedThesis() {
   const [featured, setFeatured] = useState<FeaturedThesis[]>([]);
@@ -57,7 +58,7 @@ export default function FeaturedThesis() {
                   alt="Thesis Cover"
                   className="dashboard-display-cover"
                 />
-                <Typography variant="subtitle2" fontWeight={500} sx={{ fontSize: '0.9rem' }}>
+                <Typography variant="subtitle2" className="truncate-title" fontWeight={500} sx={{ fontSize: '0.9rem' }}>
                   {thesis?.title || "Untitled Thesis"}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1, color: "#444", fontSize: '0.75rem' }}>

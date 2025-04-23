@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Paper, Container, useMediaQuery, useTheme } from "@mui/material";
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from '../lib/supabase';
@@ -50,16 +50,23 @@ export default function Dashboard() {
     <Box className="root">
       <Header />
       <Box className="patterned-background">
-        <Box sx={{ pt: 5 }}>
+      <Box className="content-container">
           <HeroSection />
+        
+        {permissions?.ThesisRepository_view && ( 
+            <Paper
+              elevation={3}
+              className="white-container"
+              sx={{
+                borderRadius: 4
+              }}
+            >
+              <FeaturedThesis />
+              <LatestUploads />
+              <RecentlyRead />
+            </Paper>
+          )}
         </Box>
-        {permissions?.ThesisRepository_view && (
-        <Container maxWidth="lg" className="white-container">
-          <FeaturedThesis />
-          <LatestUploads />
-          <RecentlyRead />
-        </Container>
-        )}
         {!isMobile && <AIAssistant />}
       </Box>
       {showTerms && (

@@ -51,6 +51,22 @@
   margin-bottom: 8px;
 }
 
+.truncate-title {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+@media (max-width: 600px) {
+  .truncate-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 220px;
+  }
+}
+
 /* Responsive Layout */
 @media (max-width: 899px) {
   .dashboard-display-card-wrapper {

@@ -34,8 +34,27 @@ export const useView = () => {
     return count || 0;
   };
 
+  const hasUserViewed = async (thesisId: number): Promise<boolean> => {
+    if (!userId) return false;
+
+    const { data, error } = await supabase
+      .from('views')
+      .select('*')
+      .eq('thesis_id', thesisId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return false;
+      throw error;
+    }
+
+    return !!data;
+  };
+
   return {
     recordView: recordViewMutation.mutate,
-    getViewCount
+    getViewCount,
+    hasUserViewed
   };
 };

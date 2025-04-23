@@ -19,6 +19,7 @@ import Analytics from '../pages/Analytics';
 import HomePage from '../pages/HomePage';
 import { PublicRoute } from './PubilcRoute';
 import PrivacyPolicy from '../components/Global/privacypolicy';
+import Terms from '../pages/Terms';
 
     const AppRoutes: React.FC = () => (
     <BrowserRouter>
@@ -78,8 +79,8 @@ import PrivacyPolicy from '../components/Global/privacypolicy';
                                 <Route path="/login" element={ <PublicRoute redirectIfAuthenticated = {true}><Login /></PublicRoute> } />
                                 <Route path="/home" element={ <PublicRoute><HomePage /></PublicRoute> } />
                                 <Route path="/*" element={ <PublicRoute><NoPage /></PublicRoute> } />
-                                {/* Privacy Policy - Accessible to everyone */}
                                 <Route path="/Global/privacypolicy" element={<PrivacyPolicy />} />
+                                <Route path="/terms" element={<Terms />} />
                             </Routes>
                         </AnalyticsProvider>
                     </BookmarkProvider>

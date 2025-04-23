@@ -1,12 +1,18 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const NoPage: React.FC = () => {
     const navigate = useNavigate();
-
+    const { session } = useAuth();
+    
     const handleGoHome = () => {
-        navigate('/');
+        if(session){
+            navigate('/dashboard');
+        } else {
+            navigate('/');
+        }
     };
 
     return (

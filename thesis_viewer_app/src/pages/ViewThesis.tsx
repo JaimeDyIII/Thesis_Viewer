@@ -129,15 +129,10 @@ export default function ViewThesis() {
   };
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-background-gradient"></div>
-      <div className="admin-background-blur"></div>
-      <div className="admin-background-radial"></div>
-
+    <Box className="patterned-background">
       <Header />
-
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h5" color="var(--primary)" fontWeight="bold" gutterBottom>
+      <Container maxWidth="lg" sx={{ mt: 13, py: 4 }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
           View Thesis
         </Typography>
 
@@ -297,5 +292,5 @@ export default function ViewThesis() {
           thesisId={selectedThesis?.id || 0}  // Changed from thesis to thesisId
           onBookmarkToggle={() => setIsBookmarkUpdated(prev => !prev)} 
         />      </Container>
-    </div>
+    </Box>
   );}

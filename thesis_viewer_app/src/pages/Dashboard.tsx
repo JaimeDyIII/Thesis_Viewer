@@ -47,14 +47,14 @@ export default function Dashboard() {
   };
 
   return (
-    <Box className="dashboard-root">
+    <Box className="root">
       <Header />
-      <Box className="dashboard-patterned-background">
+      <Box className="patterned-background">
         <Box sx={{ pt: 5 }}>
           <HeroSection />
         </Box>
         {permissions?.ThesisRepository_view && (
-        <Container maxWidth="lg" className="dashboard-white-container">
+        <Container maxWidth="lg" className="white-container">
           <FeaturedThesis />
           <LatestUploads />
           <RecentlyRead />

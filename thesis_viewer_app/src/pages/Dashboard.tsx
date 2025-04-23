@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Container } from "@mui/material";
+import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
@@ -20,6 +20,8 @@ export default function Dashboard() {
   const userRole = profile.role;
   const userId = profile.id;
   const [showTerms, setShowTerms] = useState<boolean>(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const checkTermsAndConditions = async () => {
@@ -60,7 +62,7 @@ export default function Dashboard() {
           <LatestUploads permissions={permissions} navigate={navigate} userRole={userRole} />
           <RecentlyRead permissions={permissions} navigate={navigate} userRole={userRole} userId={userId} />
         </Container>
-        <AIAssistant />
+        {!isMobile && <AIAssistant />}
       </Box>
       {showTerms && (
         <TermsAndConditionsOverlay

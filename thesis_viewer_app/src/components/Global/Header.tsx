@@ -1,10 +1,11 @@
-import { Avatar, Typography, Box, IconButton, Menu, MenuItem } from "@mui/material";
+import { Avatar, Typography, Box, IconButton, Menu, MenuItem, Popover } from "@mui/material";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpenText, BarChart2, UserCog, LayoutDashboard, Compass, Bookmark, Glasses, LogOut } from "lucide-react";
+import { BookOpenText, BarChart2, UserCog, LayoutDashboard, Compass, Bookmark, Glasses, LogOut, ChevronDown } from "lucide-react";
 import { usePermissions } from "../../context/PermissionsContext";
 import { useAuth } from "../../context/AuthContext";
+import Notifications from "../Notifications/Notifications";
 import "../../styles/Header.css";
 
 export function Header() {
@@ -13,6 +14,8 @@ export function Header() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [visible, setVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [thesisRepoAnchor, setThesisRepoAnchor] = useState<null | HTMLElement>(null);
+  const [manageAnchor, setManageAnchor] = useState<null | HTMLElement>(null);
   const lastScrollY = useRef(0);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
@@ -66,8 +69,18 @@ export function Header() {
     setAnchorEl(event.currentTarget);
   };
 
+  const handleThesisRepoClick = (event: React.MouseEvent<HTMLElement>) => {
+    setThesisRepoAnchor(event.currentTarget);
+  };
+
+  const handleManageClick = (event: React.MouseEvent<HTMLElement>) => {
+    setManageAnchor(event.currentTarget);
+  };
+
   const handleClose = () => {
     setAnchorEl(null);
+    setThesisRepoAnchor(null);
+    setManageAnchor(null);
   };
 
   const handleLogout = async () => {
@@ -76,6 +89,161 @@ export function Header() {
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  const renderThesisRepoDropdown = () => (
+    <Menu
+      anchorEl={thesisRepoAnchor}
+      open={Boolean(thesisRepoAnchor)}
+      onClose={handleClose}
+      className="dropdown-menu"
+    >
+      <MenuItem onClick={() => { navigate("/view-thesis"); handleClose(); }}>
+        <Compass size={18} /> <span>Discover</span>
+      </MenuItem>
+      <MenuItem onClick={() => { navigate("/bookmarks"); handleClose(); }}>
+        <Bookmark size={18} /> <span>Bookmarks</span>
+      </MenuItem>
+    </Menu>
+  );
+
+  const renderManageDropdown = () => {
+    const hasUserManagement = permissions?.UserManagement_view;
+    const hasThesisRepository = permissions?.ThesisRepository_view;
+
+    // Only show Manage dropdown if user has at least one permission
+    if (!hasUserManagement && !hasThesisRepository) return null;
+
+    return (
+      <Menu
+        anchorEl={manageAnchor}
+        open={Boolean(manageAnchor)}
+        onClose={handleClose}
+        className="dropdown-menu"
+      >
+        {hasUserManagement && (
+          <MenuItem onClick={() => { navigate("/user-management"); handleClose(); }}>
+            <UserCog size={18} /> <span>Manage Users</span>
+          </MenuItem>
+        )}
+        {hasThesisRepository && (
+          <MenuItem onClick={() => { navigate("/manage-thesis"); handleClose(); }}>
+            <BookOpenText size={18} /> <span>Manage Thesis</span>
+          </MenuItem>
+        )}
+      </Menu>
+    );
+  };
+
+  const renderNavLinks = () => {
+    if (!profile) return null;
+
+    const baseLinks = [
+      <Typography
+        key="dashboard"
+        variant="button"
+        onClick={() => navigate("/dashboard")}
+        className={`nav-link ${isActive("/dashboard") ? 'active' : ''}`}
+      >
+        <LayoutDashboard size={18} /> <span>Dashboard</span>
+      </Typography>,
+      <Typography
+        key="thessa"
+        variant="button"
+        onClick={() => navigate("/thessaAI")}
+        className={`nav-link ${isActive("/thessaAI") ? 'active' : ''}`}
+      >
+        <Glasses size={18} /> <span>ThessaAI</span>
+      </Typography>
+    ];
+
+    if (profile.role === 'User') {
+      return [
+        ...baseLinks,
+        <Typography
+          key="discover"
+          variant="button"
+          onClick={() => navigate("/view-thesis")}
+          className={`nav-link ${isActive("/view-thesis") ? 'active' : ''}`}
+        >
+          <Compass size={18} /> <span>Discover</span>
+        </Typography>,
+        <Typography
+          key="bookmarks"
+          variant="button"
+          onClick={() => navigate("/bookmarks")}
+          className={`nav-link ${isActive("/bookmarks") ? 'active' : ''}`}
+        >
+          <Bookmark size={18} /> <span>Bookmarks</span>
+        </Typography>
+      ];
+    }
+
+    if (profile.role === 'Librarian') {
+      return [
+        ...baseLinks,
+        permissions?.ThesisRepository_view && (
+          <Typography
+            key="manage-thesis"
+            variant="button"
+            onClick={() => navigate("/manage-thesis")}
+            className={`nav-link ${isActive("/manage-thesis") ? 'active' : ''}`}
+          >
+            <BookOpenText size={18} /> <span>Manage Thesis</span>
+          </Typography>
+        ),
+        permissions?.ThesisRepository_view && (
+          <Typography
+            key="thesis-repo"
+            variant="button"
+            onClick={handleThesisRepoClick}
+            className={`nav-link dropdown-trigger ${Boolean(thesisRepoAnchor) ? 'active' : ''}`}
+          >
+            <Compass size={18} /> <span>Thesis Repository</span> <ChevronDown size={16} />
+          </Typography>
+        )
+      ];
+    }
+
+    if (profile.role === 'Admin' || profile.role === 'SuperAdmin') {
+      const hasUserManagement = permissions?.UserManagement_view;
+      const hasThesisRepository = permissions?.ThesisRepository_view;
+      const showManageDropdown = hasUserManagement || hasThesisRepository;
+
+      return [
+        ...baseLinks,
+        showManageDropdown && (
+          <Typography
+            key="manage"
+            variant="button"
+            onClick={handleManageClick}
+            className={`nav-link dropdown-trigger ${Boolean(manageAnchor) ? 'active' : ''}`}
+          >
+            <UserCog size={18} /> <span>Manage</span> <ChevronDown size={16} />
+          </Typography>
+        ),
+        <Typography
+          key="analytics"
+          variant="button"
+          onClick={() => navigate("/analytics")}
+          className={`nav-link ${isActive("/analytics") ? 'active' : ''}`}
+        >
+          <BarChart2 size={18} /> <span>Analytics</span>
+        </Typography>,
+        permissions?.ThesisRepository_view && (
+          <Typography
+            key="thesis-repo"
+            variant="button"
+            onClick={handleThesisRepoClick}
+            className={`nav-link dropdown-trigger ${Boolean(thesisRepoAnchor) ? 'active' : ''}`}
+          >
+            <Compass size={18} /> <span>Thesis Repository</span> <ChevronDown size={16} />
+          </Typography>
+        )
+      ];
+    }
+
+    return baseLinks;
+  };
 
   return (
     <Box component="header" className={`header ${visible ? '' : 'hide'} ${isMobile && !visible ? 'scrolled' : ''}`}>
@@ -89,6 +257,7 @@ export function Header() {
               </Typography>
             </Box>
             <Box className="avatar-container">
+              <Notifications />
               <IconButton onClick={handleAvatarClick} className="avatar-button">
                 <Avatar src={googleProfilePic} className="user-avatar" />
               </IconButton>
@@ -110,12 +279,16 @@ export function Header() {
             {renderNavLinks()}
           </Box>
           <Box className="avatar-container">
+            <Notifications />
             <IconButton onClick={handleAvatarClick} className="avatar-button">
               <Avatar src={googleProfilePic} className="user-avatar" />
             </IconButton>
           </Box>
         </>
       )}
+
+      {renderThesisRepoDropdown()}
+      {renderManageDropdown()}
 
       <Menu
         anchorEl={anchorEl}
@@ -130,83 +303,9 @@ export function Header() {
           {profile?.role}
         </Typography>
         <MenuItem onClick={handleLogout} className="menu-item">
-            <LogOut /> Logout
+          <LogOut /> Logout
         </MenuItem>
       </Menu>
     </Box>
   );
-
-  function renderNavLinks() {
-    return (
-      <>
-        <Typography
-          variant="button"
-          onClick={() => navigate("/dashboard")}
-          className={`nav-link ${isActive("/dashboard") ? 'active' : ''}`}
-        >
-          <LayoutDashboard size={18} /> <span>Dashboard</span>
-        </Typography>
-
-        {permissions?.ThesisRepository_view && (
-        <Typography
-          variant="button"
-          onClick={() => navigate("/view-thesis")}
-          className={`nav-link ${isActive("/view-thesis") ? 'active' : ''}`}
-        >
-          <Compass size={18} /> <span>Discover</span>
-        </Typography>
-        )}
-
-        {permissions?.ThesisRepository_view && (
-        <Typography
-          variant="button"
-          onClick={() => navigate("/bookmarks")}
-          className={`nav-link ${isActive("/bookmarks") ? 'active' : ''}`}
-        >
-          <Bookmark size={18} /> <span>Bookmarks</span>
-        </Typography>
-        )}
-
-        <Typography
-          variant="button"
-          onClick={() => navigate("/thessaAI")}
-          className={`nav-link ${isActive("/thessaAI") ? 'active' : ''}`}
-        >
-          <Glasses size={18} /> <span>ThessaAI</span>
-        </Typography>
-
-        {profile?.role !== 'User' && 
-         permissions?.ThesisRepository_view && (
-          <Typography
-            variant="button"
-            onClick={() => navigate("/manage-thesis")}
-            className={`nav-link ${isActive("/manage-thesis") ? 'active' : ''}`}
-          >
-            <BookOpenText size={18} /> <span>Manage Thesis</span>
-          </Typography>
-        )}
-
-        {!(profile?.role === 'User' || profile?.role === 'Librarian') && (
-          <Typography
-            variant="button"
-            onClick={() => navigate("/analytics")}
-            className={`nav-link ${isActive("/analytics") ? 'active' : ''}`}
-          >
-            <BarChart2 size={18} /> <span>Analytics</span>
-          </Typography>
-        )}
-
-        {(profile?.role === 'Admin' || profile?.role === 'SuperAdmin') &&
-          permissions?.UserManagement_view && (
-          <Typography
-            variant="button"
-            onClick={() => navigate("/user-management")}
-            className={`nav-link ${isActive("/user-management") ? 'active' : ''}`}
-          >
-            <UserCog size={18} /> <span>Manage Users</span>
-          </Typography>
-        )}
-      </>
-    );
-  }
 }

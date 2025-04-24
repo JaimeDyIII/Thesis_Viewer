@@ -288,3 +288,15 @@
         max-width: 100%;
     }
 }
+.white-container {
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow-x: auto; /* Enables horizontal scroll on small screens */
+  }
+  
+  .admin-dashboard {
+    overflow-x: hidden;
+  }
+  

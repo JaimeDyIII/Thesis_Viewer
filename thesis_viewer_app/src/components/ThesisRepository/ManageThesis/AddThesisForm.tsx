@@ -11,7 +11,6 @@ import {
   Box,
   MenuItem,
 } from "@mui/material";
-import "../../../styles/Manage.css";
 import { useThesisForm } from "../../../hooks/useThesisForm";
 import { useCategories } from "../../../hooks/useCategories";
 import { FileUpload } from "./FileUpload";
@@ -47,9 +46,9 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
   return (
     <>
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle className="dialog-title">Add New Thesis</DialogTitle>
+        <DialogTitle sx={{ color: '#4682A9', fontWeight: '600' }}>Add New Thesis</DialogTitle>
         <DialogContent>
-          <Box className="form-container">
+          <Box sx={{ backgroundColor: '#F6F4EB', borderRadius: '16px', padding: '2rem', marginBottom: '3rem' }}>
             <TextField
               fullWidth
               margin="dense"
@@ -57,7 +56,11 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="custom-input"
+              sx={{
+                backgroundColor: 'white', 
+                marginBottom: '1rem',
+                '& .MuiInputBase-root': { borderRadius: '8px' },
+              }}
             />
             <TextField
               fullWidth
@@ -68,7 +71,11 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
               rows={3}
               value={formData.description}
               onChange={handleChange}
-              className="custom-input"
+              sx={{
+                backgroundColor: 'white', 
+                marginBottom: '1rem',
+                '& .MuiInputBase-root': { borderRadius: '8px' },
+              }}
             />
             <TextField
               select
@@ -78,7 +85,11 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
               onChange={handleChange}
               fullWidth
               margin="dense"
-              className="custom-input"
+              sx={{
+                backgroundColor: 'white', 
+                marginBottom: '1rem',
+                '& .MuiInputBase-root': { borderRadius: '8px' },
+              }}
               disabled={categoriesLoading}
             >
               {categories.map((category) => (
@@ -94,7 +105,11 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
               name="author"
               value={formData.author}
               onChange={handleChange}
-              className="custom-input"
+              sx={{
+                backgroundColor: 'white', 
+                marginBottom: '1rem',
+                '& .MuiInputBase-root': { borderRadius: '8px' },
+              }}
             />
             <TextField
               fullWidth
@@ -104,18 +119,31 @@ const AddThesisForm: React.FC<AddThesisFormProps> = ({ open, setOpen, refreshThe
               type="number"
               value={formData.publishing_year || ""}
               onChange={handleChange}
-              className="custom-input"
+              sx={{
+                backgroundColor: 'white', 
+                marginBottom: '1rem',
+                '& .MuiInputBase-root': { borderRadius: '8px' },
+              }}
               inputProps={{ min: 1900, max: new Date().getFullYear() }}
             />
-
             <FileUpload selectedFile={selectedFile} onFileChange={setSelectedFile} />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} className="cancel-btn">
+        <DialogActions sx={{ justifyContent: 'space-between', padding: '1rem' }}>
+          <Button onClick={handleClose} sx={{ backgroundColor: 'transparent', color: '#4682A9', fontWeight: 'normal' }}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} variant="contained" className="submit-btn" disabled={isLoading}>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            sx={{
+              backgroundColor: '#4682A9', 
+              color: '#fff', 
+              fontWeight: 'bold',
+              '&:hover': { backgroundColor: '#749BC2' }
+            }} 
+            disabled={isLoading}
+          >
             Submit
           </Button>
         </DialogActions>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@mui/material';
+import { Button, Box } from '@mui/material';
 import { Download } from 'lucide-react';
 import { useAnalytics } from '../../context/AnalyticsContext';
 import { generateAnalyticsPDF } from '../../services/AnalyticsPDFService';
@@ -25,15 +25,11 @@ const AnalyticsPDFExport: React.FC = () => {
       document.body.appendChild(loadingElement);
 
       const data = await fetchAnalyticsData();
-      
       await generateAnalyticsPDF(data);
-      
       document.body.removeChild(loadingElement);
-      
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('An error occurred while generating the PDF. Please try again.');
-      
       const loadingElement = document.querySelector('[data-testid="loading-indicator"]');
       if (loadingElement && loadingElement.parentNode) {
         loadingElement.parentNode.removeChild(loadingElement);
@@ -42,20 +38,33 @@ const AnalyticsPDFExport: React.FC = () => {
   };
 
   return (
-    <Button
-      variant="contained"
-      color="primary"
-      startIcon={<Download />}
-      onClick={handleGeneratePDF}
-      data-testid="download-button"
-      sx={{ 
-        borderRadius: 2,
-        textTransform: 'none',
-        boxShadow: 2
+    <Box
+      sx={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'flex-end',
+        mt: 2,
+        mb: 2,
+        px: 1
       }}
     >
-      Download Analytics Report
-    </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<Download />}
+        onClick={handleGeneratePDF}
+        sx={{
+          borderRadius: 2,
+          textTransform: 'none',
+          boxShadow: 3,
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap'
+        }}
+        data-testid="download-button"
+      >
+        Download Analytics Report
+      </Button>
+    </Box>
   );
 };
 

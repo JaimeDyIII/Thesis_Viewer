@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from 'react'; 
 import { useState, useEffect } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
@@ -21,7 +21,7 @@ type ThesisAnalyticsChartProps = {
 
 const chartSetting = {
   yAxis: [{ label: 'Count' }],
-  height: 400,
+  height: 350,
   sx: {
     [`.${axisClasses.left} .${axisClasses.label}`]: {
       transform: 'translate(-20px, 0)',
@@ -36,7 +36,7 @@ const chartSetting = {
       stroke: 'rgba(0,0,0,0.3)',
     },
   },
-  margin: { left: 50, right: 30, top: 70, bottom: 70 },
+  margin: { left: 80, right: 80, top: 50, bottom: 100 },
 };
 
 const valueFormatter = (value: number | null) => value !== null ? `${value}` : '0';
@@ -152,10 +152,11 @@ const ThesisAnalyticsChart = ({ selectedCategory }: ThesisAnalyticsChartProps) =
       borderRadius: 2, 
       bgcolor: 'white', 
       color: 'purple',
-      height: 450,
+      height: 500,
       width: '100%',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflowX: 'auto'
     }}>
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h5" component="h2">
@@ -173,65 +174,70 @@ const ThesisAnalyticsChart = ({ selectedCategory }: ThesisAnalyticsChartProps) =
           <ToggleButton value="bookmarks">Bookmarks</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-      
-      <Box sx={{ flex: 1, width: '100%', overflow: 'visible' }}>
-        {sortedData.length > 0 ? (
-          <BarChart
-            dataset={chartDataset}
-            xAxis={[{ 
-              scaleType: 'band', 
-              dataKey: 'thesis',
-              tickLabelStyle: {
-                angle: 45,
-                textAnchor: 'start',
-                fontSize: 12,
-              }
-            }]}
-            series={[
-              { 
-                dataKey: 'selectedViews',
-                label: 'Views',
-                valueFormatter,
-                color: '#4C9AFF',
-                stack: 'views',
-              },
-              {
-                dataKey: 'selectedBookmarks',
-                label: 'Bookmarks',
-                valueFormatter,
-                color: '#FAAD14',
-                stack: 'bookmarks',
-              },
-              { 
-                dataKey: 'nonSelectedViews',
-                label: 'External Views',
-                valueFormatter,
-                color: '#888888',
-                stack: 'views',
-              },
-              {
-                dataKey: 'nonSelectedBookmarks',
-                label: 'External Bookmarks',
-                valueFormatter,
-                color: '#555555',
-                stack: 'bookmarks',
-              }
-            ]}
-            {...chartSetting}
-            sx={{
-              height: '100%',
-              width: '100%',
-              '& .MuiChartsAxis-root': {
-                overflow: 'visible',
-              },
-            }}
-          />
-        ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <Typography variant="h6">No thesis data available</Typography>
+
+      {sortedData.length > 0 ? (
+        <Box sx={{ overflowX: 'auto' }}>
+          <Box sx={{
+            minWidth: '700px',
+            height: 400,
+          }}>
+            <BarChart
+              dataset={chartDataset}
+              xAxis={[{
+                scaleType: 'band',
+                dataKey: 'thesis',
+                tickLabelStyle: {
+                  angle: 45,
+                  textAnchor: 'start',
+                  fontSize: 12,
+                }
+              }]}
+              series={[
+                {
+                  dataKey: 'selectedViews',
+                  label: 'Views',
+                  valueFormatter,
+                  color: '#8E44AD',
+                  stack: 'views',
+                },
+                {
+                  dataKey: 'selectedBookmarks',
+                  label: 'Bookmarks',
+                  valueFormatter,
+                  color: '#1ABC9C',
+                  stack: 'bookmarks',
+                },
+                {
+                  dataKey: 'nonSelectedViews',
+                  label: 'External Views',
+                  valueFormatter,
+                  color: '#888888',
+                  stack: 'views',
+                },
+                {
+                  dataKey: 'nonSelectedBookmarks',
+                  label: 'External Bookmarks',
+                  valueFormatter,
+                  color: '#555555',
+                  stack: 'bookmarks',
+                }
+              ]}
+              {...chartSetting}
+              sx={{
+                height: '100%',
+                width: '100%',
+                '& .MuiChartsAxis-root': {
+                  overflow: 'visible',
+                },
+              }}
+            />
           </Box>
-        )}
-      </Box>
+        </Box>
+      ) : (
+        <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          <Typography variant="h6">No thesis data available</Typography>
+        </Box>
+      )}
     </Paper>
   );
 };

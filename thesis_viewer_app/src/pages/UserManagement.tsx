@@ -17,7 +17,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   SelectChangeEvent,
   Typography,
   Avatar,
@@ -62,14 +61,12 @@ const UserManagement: React.FC = () => {
     fetchUsers();
   }, [selectedRole]);
 
-  
   useEffect(() => {
     const fetchUserProfiles = async () => {
       if (users.length > 0) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return;
 
-        
         const { data: authUsers, error } = await supabase.auth.admin.listUsers();
         
         if (error || !authUsers) {
@@ -77,15 +74,12 @@ const UserManagement: React.FC = () => {
           return;
         }
 
-      
         const profileMap: Record<string, string> = {};
-        
         
         const currentUserMeta = session.user.user_metadata;
         if (currentUserMeta?.avatar_url) {
           profileMap[session.user.id] = currentUserMeta.avatar_url;
         }
-        
         
         authUsers.users.forEach(authUser => {
           if (authUser.user_metadata?.avatar_url) {
@@ -130,14 +124,12 @@ const UserManagement: React.FC = () => {
       } else {
         setUsers(data || []);
         
-       
         if (data && data.length > 0) {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session?.user) return;
 
           const profiles: Record<string, string> = {};
           
-        
           if (session.user.user_metadata?.avatar_url) {
             profiles[session.user.id] = session.user.user_metadata.avatar_url;
           }
@@ -274,14 +266,12 @@ const UserManagement: React.FC = () => {
        user.email?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
- 
   const getInitials = (name: string): string => {
     if (!name) return '?';
     const parts = name.split(' ');
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
-
 
   const getRoleBadgeStyle = (role: string | null) => {
     switch(role) {
@@ -300,7 +290,6 @@ const UserManagement: React.FC = () => {
     <>
       <Header />
       <div className="manage-thesis patterned-background">
-
         <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: '20px', position: 'relative', zIndex: 2 }}>
           <Typography variant="h4" component="h1" sx={{ 
             fontSize: { xs: '1.75rem', md: '2.125rem' },
@@ -323,63 +312,11 @@ const UserManagement: React.FC = () => {
           <Box 
             sx={{
               display: "flex", 
-              justifyContent: "space-between", 
-              mb: 3,
-              gap: 2,
-              '@media (max-width: 600px)': {
-                flexDirection: 'column',
-              }
-            }}
-          >
-            <Button
-              onClick={() => setAddUserDialogOpen(true)}
-              variant="contained"
-              sx={{
-                backgroundColor: "#1e4d87", 
-                color: "white",
-                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
-                '&:hover': {
-                  backgroundColor: "#11325b"
-                },
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontWeight: "600",
-                textTransform: "none"
-              }}
-              startIcon={<UserPlus size={18} />}
-            >
-              Add User
-            </Button>
-            
-            <Button
-              onClick={() => setLogsOpen(true)}
-              variant="outlined"
-              sx={{
-                borderColor: "#1e4d87",
-                color: "#1e4d87",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontWeight: "600",
-                textTransform: "none",
-                '&:hover': {
-                  borderColor: "#11325b",
-                  backgroundColor: "rgba(255, 255, 255, 0.04)"
-                }
-              }}
-              startIcon={<FileText size={18} />}
-            >
-              View Activity Logs
-            </Button>
-          </Box>
-
-          <Box 
-            sx={{
-              display: "flex", 
               alignItems: "center", 
               mb: 3,
               flexWrap: "wrap",
               gap: 2,
-              '@media (max-width: 600px)': {
+              '@media (max-width: 768px)': {
                 flexDirection: 'column',
                 alignItems: 'stretch'
               }
@@ -388,6 +325,7 @@ const UserManagement: React.FC = () => {
             <Box 
               sx={{
                 flex: 1,
+                minWidth: "200px",
                 display: "flex",
                 alignItems: "center",
                 backgroundColor: "white",
@@ -410,30 +348,106 @@ const UserManagement: React.FC = () => {
               />
             </Box>
 
-            <FormControl 
-              variant="outlined" 
-              size="small" 
-              sx={{ 
-                minWidth: 180,
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "8px",
-                  backgroundColor: "white",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)"
+            <Box
+              sx={{
+                backgroundColor: "#1e4d87",
+                color: "white",
+                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
+                borderRadius: "8px",
+                padding: "2px 4px",
+                fontWeight: "600",
+                textTransform: "none",
+                whiteSpace: "nowrap",
+                minWidth: 150,
+                "&:hover": {
+                  backgroundColor: "#11325b"
                 }
               }}
             >
-              <InputLabel>Filter by Role</InputLabel>
-              <Select
-                value={selectedRole || ""}
-                onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
-                label="Filter by Role"
+              <FormControl 
+                variant="outlined" 
+                size="small" 
+                fullWidth
+                sx={{ 
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "6px",
+                    backgroundColor: "transparent",
+                    color: "white",
+                    "& fieldset": {
+                      border: "none"
+                    },
+                    "&:hover fieldset": {
+                      border: "none"
+                    },
+                    "&.Mui-focused fieldset": {
+                      border: "none"
+                    },
+                    "& .MuiSelect-select": {
+                      padding: "8px 32px 8px 12px",
+                      fontWeight: 500,
+                      fontSize: "14px"
+                    },
+                    "& .MuiSvgIcon-root": {
+                      color: "white"
+                    }
+                  }
+                }}
               >
-                <MenuItem value="">All Roles</MenuItem>
-                <MenuItem value="Admin">Admin</MenuItem>
-                <MenuItem value="Librarian">Librarian</MenuItem>
-                <MenuItem value="User">User</MenuItem>
-              </Select>
-            </FormControl>
+                <Select
+                  value={selectedRole || ""}
+                  onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
+                  displayEmpty
+                  renderValue={(value) => value ? value : "Filter by Role"}
+                >
+                  <MenuItem value="">All Roles</MenuItem>
+                  <MenuItem value="Admin">Admin</MenuItem>
+                  <MenuItem value="Librarian">Librarian</MenuItem>
+                  <MenuItem value="User">User</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Button
+              onClick={() => setLogsOpen(true)}
+              variant="contained"
+              sx={{
+                backgroundColor: "#1e4d87", 
+                color: "white",
+                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
+                '&:hover': {
+                  backgroundColor: "#11325b"
+                },
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontWeight: "600",
+                textTransform: "none",
+                whiteSpace: "nowrap"
+              }}
+              startIcon={<FileText size={18} />}
+            >
+              View Activity Logs
+            </Button>
+            
+            <Button
+              onClick={() => setAddUserDialogOpen(true)}
+              variant="contained"
+              sx={{
+                backgroundColor: "#1e4d87", 
+                color: "white",
+                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
+                '&:hover': {
+                  backgroundColor: "#11325b"
+                },
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontWeight: "600",
+                textTransform: "none",
+                whiteSpace: "nowrap"
+              }}
+              startIcon={<UserPlus size={18} />}
+            >
+              Add User
+            </Button>
           </Box>
 
           <Box sx={{ 

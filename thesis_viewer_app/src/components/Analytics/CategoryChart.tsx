@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
-import { supabase } from "../../lib/supabase";
+import { supabase } from '../../lib/supabase';
 
 type PieChartData = {
   id: number;
@@ -19,8 +19,17 @@ const CategoryChart = ({ onCategorySelect, selectedCategory }: CategoryChartProp
   const [chartData, setChartData] = useState<PieChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Color palette for the pie chart
-  const colors = ['#4C9AFF', '#FF5630', '#36B37E', '#FFAB00', '#6554C0', '#00B8D9', '#FF7452', '#57D9A3'];
+  // Match the bar-chart accents: purple, teal, then gray tones
+  const colors = [
+    '#8E44AD', // slice 1
+    '#1ABC9C', // slice 2
+    '#888888', // slice 3
+    '#555555', // slice 4
+    '#8E44AD', // cycle if more slices
+    '#1ABC9C',
+    '#888888',
+    '#555555',
+  ];
 
   const valueFormatter = (item: any) => `Theses: ${item.value}`;
 
@@ -28,114 +37,104 @@ const CategoryChart = ({ onCategorySelect, selectedCategory }: CategoryChartProp
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Get only active theses and their categories
-        const { data: thesesData, error: thesesError } = await supabase
-          .from("Thesis")
-          .select("category")
-          .eq("isActive", true)
-          .not("category", "is", null);
-          
-        if (thesesError) throw thesesError;
-        
-        const categoryCounts: Record<string, number> = {};
-        
-        thesesData.forEach((thesis: {category: string}) => {
-          if (thesis.category) {
-            categoryCounts[thesis.category] = (categoryCounts[thesis.category] || 0) + 1;
-          }
+        const { data: thesesData, error } = await supabase
+          .from('Thesis')
+          .select('category')
+          .eq('isActive', true)
+          .not('category', 'is', null);
+        if (error) throw error;
+
+        const counts: Record<string, number> = {};
+        thesesData.forEach((t: any) => {
+          counts[t.category] = (counts[t.category] || 0) + 1;
         });
-        
-        const pieData: PieChartData[] = Object.entries(categoryCounts).map(([category, count], index) => ({
-          id: index,
-          label: category,
-          value: count
-        }));
-        
+
+        const pieData: PieChartData[] = Object.entries(counts).map(
+          ([label, value], i) => ({ id: i, label, value })
+        );
         setChartData(pieData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchData();
   }, []);
 
-  const getChartData = () => {
-    return chartData.map((item, index) => ({
+  const getChartData = () =>
+    chartData.map((item, i) => ({
       ...item,
-      color: selectedCategory 
-        ? selectedCategory === item.label 
-          ? colors[index % colors.length]
-          : '#888888'
-        : colors[index % colors.length]
+      color: selectedCategory
+        ? item.label === selectedCategory
+          ? colors[i % colors.length]
+          : '#DDDDDD'
+        : colors[i % colors.length],
     }));
-  };
 
-  const handlePieClick = (event: React.MouseEvent, pieItemIdentifier: any) => {
-    const clickedIndex = pieItemIdentifier.dataIndex;
-    if (clickedIndex >= 0 && clickedIndex < chartData.length) {
-      const clickedCategory = chartData[clickedIndex].label;
-      onCategorySelect(clickedCategory === selectedCategory ? null : clickedCategory);
+  const handlePieClick = (_: any, pieItem: any) => {
+    const idx = pieItem.dataIndex;
+    if (idx >= 0 && idx < chartData.length) {
+      const clicked = chartData[idx].label;
+      onCategorySelect(clicked === selectedCategory ? null : clicked);
     }
   };
 
   if (loading) {
-    return <Box display="flex" justifyContent="center" alignItems="center" height={300}>
-      <CircularProgress />
-    </Box>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height={300}>
+        <CircularProgress />
+      </Box>
+    );
   }
-
-  if (chartData.length === 0) {
-    return <Paper elevation={3} sx={{ p: 3, borderRadius: 2, bgcolor: 'white', color: '#6a1b9a', textAlign: 'center' }}>
-      <Typography variant="h6">No active theses with categories found</Typography>
-    </Paper>;
+  if (!chartData.length) {
+    return (
+      <Paper sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
+        <Typography>No active theses with categories found</Typography>
+      </Paper>
+    );
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 3, borderRadius: 2, bgcolor: 'white', color: '#6a1b9a', minHeight: '500' }}>
-      <Typography variant="h5" component="h2" sx={{ color: '#6a1b9a', mb: 2 }}>
+    <Paper sx={{ p: 3, borderRadius: 2, minHeight: 500 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
         Thesis Distribution by Category
       </Typography>
-      
-      <Box sx={{ 
-        height: 400,
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'visible'
-      }}>
+      <Box
+        sx={{
+          height: 400,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
         <PieChart
-          series={[{
-            data: getChartData(),
-            highlightScope: { fade: 'global', highlight: 'item' },
-            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
-            valueFormatter,
-            arcLabelMinAngle: 10,
-            outerRadius: 200,
-            paddingAngle: 1
-          }]}
+          series={[
+            {
+              data: getChartData(),
+              highlightScope: { fade: 'global', highlight: 'item' },
+              faded: { innerRadius: 30, additionalRadius: -30, color: '#F0F0F0' },
+              arcLabel: (i) => `${i.label}: ${i.value}`,
+              arcLabelMinAngle: 15,
+              valueFormatter,
+              innerRadius: 0,   // full pie
+              outerRadius: 140,
+              paddingAngle: 2,
+            },
+          ]}
           height={400}
-          width={550}
-          margin={{ 
-            top: 40,
-            bottom: 120,
-            left: 40, 
-            right: 40 
-          }}
+          width={500}
+          margin={{ top: 20, bottom: 80, left: 20, right: 20 }}
           onItemClick={handlePieClick}
           slotProps={{
             legend: {
               direction: 'row',
               position: { vertical: 'bottom', horizontal: 'middle' },
-              padding: { top: 20 },
-              labelStyle: { 
-                fill: '#36454F'
-              },
-              itemMarkWidth: 10,
-              itemMarkHeight: 10
+              labelStyle: { fill: '#333', fontWeight: 500 },
+              itemMarkWidth: 12,
+              itemMarkHeight: 12,
+              markGap: 6,
             },
           }}
         />

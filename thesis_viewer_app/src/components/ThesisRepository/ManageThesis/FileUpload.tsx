@@ -35,7 +35,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ selectedFile, onFileChan
         </Button>
       </label>
       {selectedFile && (
-        <Box className="file-preview">
+        <Box className="file-preview" sx={{ display: 'flex', alignItems: 'center', gap: 1, marginTop: 1 }}>
           <Typography>{selectedFile.name}</Typography>
           <IconButton onClick={() => onFileChange(null)}>
             <X size={18} />
@@ -44,4 +44,4 @@ export const FileUpload: React.FC<FileUploadProps> = ({ selectedFile, onFileChan
       )}
     </Box>
   );
-}; 
+};

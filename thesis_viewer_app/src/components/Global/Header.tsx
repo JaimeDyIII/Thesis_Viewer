@@ -1,4 +1,4 @@
-import { Avatar, Typography, Box, IconButton, Menu, MenuItem, Popover } from "@mui/material";
+import { Avatar, Typography, Box, IconButton, Menu, MenuItem } from "@mui/material";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -107,8 +107,8 @@ export function Header() {
   );
 
   const renderManageDropdown = () => {
-    const hasUserManagement = permissions?.UserManagement_view;
-    const hasThesisRepository = permissions?.ThesisRepository_view;
+    const hasUserManagement = permissions?.UserManagement_add || permissions?.UserManagement_edit || permissions?.UserManagement_delete;
+    const hasThesisRepository = permissions?.ThesisRepository_add || permissions?.ThesisRepository_edit || permissions?.ThesisRepository_delete;
 
     // Only show Manage dropdown if user has at least one permission
     if (!hasUserManagement && !hasThesisRepository) return null;
@@ -179,9 +179,10 @@ export function Header() {
     }
 
     if (profile.role === 'Librarian') {
+      const hasThesisRepository = permissions?.ThesisRepository_add || permissions?.ThesisRepository_edit || permissions?.ThesisRepository_delete;
       return [
         ...baseLinks,
-        permissions?.ThesisRepository_view && (
+        hasThesisRepository && (
           <Typography
             key="manage-thesis"
             variant="button"
@@ -205,8 +206,8 @@ export function Header() {
     }
 
     if (profile.role === 'Admin' || profile.role === 'SuperAdmin') {
-      const hasUserManagement = permissions?.UserManagement_view;
-      const hasThesisRepository = permissions?.ThesisRepository_view;
+      const hasUserManagement = permissions?.UserManagement_add || permissions?.UserManagement_edit || permissions?.UserManagement_delete;
+      const hasThesisRepository = permissions?.ThesisRepository_add || permissions?.ThesisRepository_edit || permissions?.ThesisRepository_delete;
       const showManageDropdown = hasUserManagement || hasThesisRepository;
 
       return [

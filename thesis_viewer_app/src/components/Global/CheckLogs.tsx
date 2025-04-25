@@ -24,12 +24,11 @@ import {
 } from "@mui/material";
 import { supabase } from "../../lib/supabase";
 
-export enum Subsystem{
+export enum Subsystem {
   THESIS_REPOSITORY = "ThesisRepository",
   USER_MANAGEMENT = "UserManagement"
 }
 
-// Define action types enum
 export enum ActionType {
   ADD_THESIS = "add_thesis",
   EDIT_THESIS = "edit_thesis",
@@ -68,7 +67,6 @@ export const addLogEntry = async (
   details: any = {}
 ) => {
   try {
-    // Fetch user full name from the Users table
     const { error: userError } = await supabase
       .from("users")
       .select("name")
@@ -79,7 +77,6 @@ export const addLogEntry = async (
       console.error("Error fetching user name:", userError);
     }
   
-    // Fetch affected user name (if applicable)
     if (affected_user_id) {
       const { error: affectedUserError } = await supabase
         .from("users")
@@ -92,7 +89,7 @@ export const addLogEntry = async (
       }
     }
   
-    // Fetch thesis title (if applicable)
+ 
     if (thesis_id) {
       const { error: thesisError } = await supabase
         .from("Thesis")
@@ -105,7 +102,7 @@ export const addLogEntry = async (
       }
     }
   
-    // Insert log entry with resolved names
+  
     const { error } = await supabase.from("system_logs").insert([
       {
         subsystem,
@@ -136,6 +133,7 @@ export const addLogEntry = async (
 const getActionColor = (action: ActionType) => {
   switch (action) {
     case ActionType.ADD_THESIS:
+    case ActionType.ADD_USER:
       return "success";
     case ActionType.EDIT_THESIS:
       return "info";
@@ -143,13 +141,34 @@ const getActionColor = (action: ActionType) => {
       return "warning";
     case ActionType.DELETE_THESIS:
       return "error";
-    case ActionType.ADD_USER:
     case ActionType.CHANGE_USER_ROLE:
       return "secondary";
     case ActionType.CHANGE_USER_PERMISSION:
-    return "secondary";
+      return "info"; 
     default:
       return "default";
+  }
+};
+
+
+const getActionDisplayName = (action: ActionType) => {
+  switch (action) {
+    case ActionType.ADD_THESIS:
+      return "Add Thesis";
+    case ActionType.EDIT_THESIS:
+      return "Edit Thesis";
+    case ActionType.EDIT_CATEGORIES:
+      return "Edit Categories";
+    case ActionType.DELETE_THESIS:
+      return "Delete Thesis";
+    case ActionType.ADD_USER:
+      return "Add User";
+    case ActionType.CHANGE_USER_ROLE:
+      return "Change Role";
+    case ActionType.CHANGE_USER_PERMISSION:
+      return "Change Permission";
+    default:
+      return action;
   }
 };
 
@@ -165,7 +184,17 @@ const formatDetails = (details: any) => {
   }
 
   return (
-    <Box sx={{ maxHeight: "120px", overflow: "auto", fontSize: "0.9rem", p: 1 }}>
+    <Box 
+      sx={{ 
+        maxHeight: "120px", 
+        overflow: "auto", 
+        fontSize: "0.9rem", 
+        p: 1,
+        border: "1px solid #e0e0e0",
+        borderRadius: "10px",
+        bgcolor: "#f9f9f9"
+      }}
+    >
       <ul style={{ margin: 0, paddingLeft: "16px" }}>
         {Object.entries(details).map(([key, value]) => {
           if (typeof value === "object" && value !== null && "old" in value && "new" in value) {
@@ -174,7 +203,19 @@ const formatDetails = (details: any) => {
 
             return (
               <li key={key}>
-                <strong>{key}:</strong> {formatValue(value.old)} → {formatValue(value.new)}
+                <Typography component="span" fontWeight="medium">{key.replace(/_/g, " ")}:</Typography>{" "}
+                <Chip 
+                  size="small" 
+                  label={formatValue(value.old)} 
+                  sx={{ mr: 1, fontSize: "0.75rem" }}
+                /> 
+                →{" "}
+                <Chip 
+                  size="small" 
+                  label={formatValue(value.new)} 
+                  color="primary" 
+                  sx={{ fontSize: "0.75rem" }}
+                />
               </li>
             );
           } else {
@@ -182,7 +223,8 @@ const formatDetails = (details: any) => {
 
             return (
               <li key={key}>
-                <strong>{key}:</strong> {displayValue}
+                <Typography component="span" fontWeight="medium">{key.replace(/_/g, " ")}:</Typography>{" "}
+                <span>{displayValue}</span>
               </li>
             );
           }
@@ -199,8 +241,22 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
   const [actionFilter, setActionFilter] = useState<string>("");
   const [usernameFilter, setUsernameFilter] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<string>("");
+  
 
-  // Define context-specific actions
+  const getContextDisplayName = () => {
+    switch (context) {
+      case 'thesis':
+        return 'Thesis Repository';
+      case 'user':
+        return 'User Management';
+      case 'category':
+        return 'Category Management';
+      default:
+        return 'System';
+    }
+  };
+
+
   const thesisActions = [
     ActionType.ADD_THESIS,
     ActionType.EDIT_THESIS,
@@ -226,14 +282,14 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
   
       let query = supabase.from("system_logs").select("*");
       
-      // Filter by subsystem based on context
+   
       if (context === 'thesis') {
         query = query.eq("subsystem", Subsystem.THESIS_REPOSITORY);
       } else if (context === 'user') {
         query = query.eq("subsystem", Subsystem.USER_MANAGEMENT);
       }
       
-      // Execute query and order by timestamp
+
       const { data: logsData, error: logsError } = await query.order("timestamp", { ascending: false });
   
       if (logsError) {
@@ -244,7 +300,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
         return;
       }
   
-      // Fetch user data
+  
       const userIds = Array.from(new Set(logsData.flatMap(log => [log.user_id, log.affected_user_id].filter(Boolean))));
       const { data: usersData, error: usersError } = await supabase
         .from("users")
@@ -290,7 +346,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
         categoryMap = categoryData ? Object.fromEntries(categoryData.map(category => [category.id, category.name])) : {};
       }
 
-      // Replace IDs with names/titles
+
       const processedLogs = logsData.map(log => ({
         ...log,
         user_id: userMap[log.user_id] || "Unknown User",
@@ -307,7 +363,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
     fetchLogs();
   }, [open, context]);  
 
-  // Apply filters whenever filter state changes
+
   useEffect(() => {
     let result = [...logs];
 
@@ -338,7 +394,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
     setDateFilter("");
   };
 
-  // Get the appropriate actions list based on context
+  
   const getContextActions = () => {
     if (context === 'thesis') return thesisActions;
     if (context === 'user') return userActions;
@@ -346,7 +402,7 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
     return Object.values(ActionType);
   };
 
-  // Function to determine if an action is related to roles or permissions
+
   const determineActionType = (detailsObject: any) => {
     if (!detailsObject) return ActionType.CHANGE_USER_PERMISSION;
     
@@ -363,100 +419,199 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="lg" 
+      fullWidth
+      PaperProps={{ sx: { maxHeight: "90vh" } }}
+    >
+      <DialogTitle
+        sx={{
+          bgcolor: 'background.paper',
+          color: 'primary.contrastText',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          p: 2
+        }}
+      >
         <Typography variant="h6" fontWeight="bold">
-          {context === 'thesis' ? 'Thesis Repository Logs' : 'User Management Logs'}
+          {getContextDisplayName()} Activity Logs
         </Typography>
       </DialogTitle>
-      <DialogContent>
-        {/* Filters Section */}
-        <Box sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Action Type</InputLabel>
-            <Select
-              value={actionFilter}
-              label="Action Type"
-              onChange={(e) => setActionFilter(e.target.value)}
-              className="action-type-select"
-            >
-              <MenuItem value="">All Actions</MenuItem>
-              {getContextActions().map((action) => (
-                <MenuItem key={action} value={action}>
-                  {action}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          
-          <TextField
-            label="Username"
-            variant="outlined"
-            size="small"
-            value={usernameFilter}
-            onChange={(e) => setUsernameFilter(e.target.value)}
-          />
-          
-          <TextField
-            label="Date"
-            variant="outlined"
-            type="date"
-            size="small"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-          
-          <Button 
-            variant="outlined" 
-            size="small" 
-            onClick={resetFilters}
-            sx={{ height: "40px" }}
-          >
-            Reset Filters
+      <DialogContent sx={{ p: 3 }}>
+    
+        
+
+      <Paper 
+  elevation={3}
+  sx={{ 
+    mb: 3, 
+    p: 2.5, 
+    bgcolor: '#ebebed', 
+    display: "flex", 
+    flexWrap: "wrap", 
+    gap: 2,
+    alignItems: "center",
+    borderRadius: 2,
+    boxShadow: '0 3px 5px rgba(0,0,0,0.1)'
+  }}
+>
+  <Typography variant="h6" sx={{ width: '100%', mb: 1.5, color: 'primary.main', fontWeight: 'medium' }}>
+    Filters
+  </Typography>
+  
+  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, width: '100%', alignItems: 'flex-end' }}>
+    <FormControl size="small" sx={{ minWidth: 180, flexGrow: 1 }}>
+      <InputLabel id="action-type-label">Action Type</InputLabel>
+      <Select
+        labelId="action-type-label"
+        value={actionFilter}
+        label="Action Type"
+        onChange={(e) => setActionFilter(e.target.value)}
+        className="action-type-select"
+        sx={{ bgcolor: 'background.paper' }}
+      >
+        <MenuItem value="">All Actions</MenuItem>
+        {getContextActions().map((action) => (
+          <MenuItem key={action} value={action}>
+            <Chip 
+              size="small" 
+              label={getActionDisplayName(action)} 
+              color={getActionColor(action) as any}
+              sx={{ fontWeight: 500 }}
+            />
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+    
+    <TextField
+      label="Username"
+      variant="outlined"
+      size="small"
+      value={usernameFilter}
+      onChange={(e) => setUsernameFilter(e.target.value)}
+      placeholder="Filter by username"
+      sx={{ minWidth: 180, flexGrow: 1, bgcolor: 'background.paper' }}
+      InputProps={{
+        endAdornment: usernameFilter && (
+          <Button size="small" sx={{ minWidth: 'auto', p: 0.5 }} onClick={() => setUsernameFilter("")}>
+            <Typography variant="caption">✕</Typography>
           </Button>
-        </Box>
+        )
+      }}
+    />
+    
+    <TextField
+      label="Date"
+      variant="outlined"
+      type="date"
+      size="small"
+      value={dateFilter}
+      onChange={(e) => setDateFilter(e.target.value)}
+      InputLabelProps={{ shrink: true }}
+      sx={{ minWidth: 180, flexGrow: 1, bgcolor: 'background.paper' }}
+    />
+    
+    <Button 
+      variant="contained" 
+      size="medium" 
+      onClick={resetFilters}
+      startIcon={<Box component="span" sx={{ fontSize: '18px' }}>↺</Box>}
+      sx={{ 
+        height: "40px", 
+        bgcolor: 'primary.light', 
+        '&:hover': { bgcolor: 'primary.main' },
+        ml: 'auto'
+      }}
+    >
+     
+    </Button>
+  </Box>
+</Paper>
 
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <CircularProgress />
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", p: 8 }}>
+            <CircularProgress size={40} />
+            <Typography sx={{ ml: 2 }}>Loading logs...</Typography>
           </Box>
         ) : filteredLogs.length === 0 ? (
-          <Typography align="center" sx={{ py: 4 }}>No logs found matching your criteria.</Typography>
+          <Paper 
+            sx={{ 
+              py: 8, 
+              px: 3,
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              bgcolor: "#FFFFFF",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="h6" color="text.secondary" gutterBottom>No logs found</Typography>
+            <Typography color="text.secondary" align="center">
+              No activity logs match your current filter criteria. Try adjusting your filters or check back later.
+            </Typography>
+          </Paper>
         ) : (
-          <TableContainer component={Paper} sx={{ maxHeight: "500px" }}>
-            <Table stickyHeader>
+          <TableContainer 
+            component={Paper} 
+            sx={{ 
+              maxHeight: "500px",
+              borderRadius: 3,
+              boxShadow: '0 2px 4px rgba(91, 88, 240, 0.98)'
+            }}
+          >
+            <Table stickyHeader size="small">
               <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Action</TableCell>
-                  <TableCell>User</TableCell>
-                  {context === 'thesis' && <TableCell>Thesis Title</TableCell>}
-                  {context === 'user' && <TableCell>Affected User</TableCell>}
-                  {context === 'category' && <TableCell>Affected Category</TableCell>}
-                  <TableCell>Details</TableCell>
-                  <TableCell>Timestamp</TableCell>
+                <TableRow sx={{ backgroundColor: "#1e4d87" }}>
+                  <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "red"}}>ID</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "#4682A9"}}>Action</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "#4682A9"}}>User</TableCell>
+                  {context === 'thesis' && <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "#4682A9"}}>Thesis Title</TableCell>}
+                  {context === 'user' && <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "#4682A9"}}>Affected User</TableCell>}
+                  {context === 'category' && <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "#4682A9"}}>Affected Category</TableCell>}
+                  <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "#4682A9"}}>Details</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", py: 1.5 ,color: "green"}}>Timestamp</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredLogs.map((log) => {
-                  // Determine the correct action type based on details
+                  
                   const displayAction = context === 'user' && log.action === ActionType.CHANGE_USER_PERMISSION
                     ? determineActionType(log.details)
                     : log.action;
                     
                   return (
-                    <TableRow key={log.id} hover>
+                    <TableRow 
+                      key={log.id} 
+                      hover
+                      sx={{
+                        '&:nth-of-type(odd)': { bgcolor: 'rgba(0, 0, 0, 0.01)' },
+                      }}
+                    >
                       <TableCell>{log.id}</TableCell>
                       <TableCell>
-                        <Chip label={displayAction} size="small" color={getActionColor(displayAction) as any} variant="outlined" />
+                        <Chip 
+                          label={getActionDisplayName(displayAction)} 
+                          size="small" 
+                          color={getActionColor(displayAction) as any} 
+                          sx={{ fontWeight: 500 }}
+                        />
                       </TableCell>
                       <TableCell>{log.user_id}</TableCell>
                       {context === 'thesis' && <TableCell>{log.thesis_id}</TableCell>}
                       {context === 'user' && <TableCell>{log.affected_user_id}</TableCell>}
                       {context === 'category' && <TableCell>{log.affected_category}</TableCell>}
-                      <TableCell>{formatDetails(log.details)}</TableCell>
-                      <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                      <TableCell width="30%">{formatDetails(log.details)}</TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2">{new Date(log.timestamp).toLocaleDateString()}</Typography>
+                          <Typography variant="caption" color="text.secondary">{new Date(log.timestamp).toLocaleTimeString()}</Typography>
+                        </Box>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -465,10 +620,16 @@ const CheckLogs: React.FC<CheckLogsProps> = ({ open, onClose, context = 'thesis'
           </TableContainer>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary" variant="contained">
+      <DialogActions sx={{ p: 2, borderTop: '1px solid #e0e0e0' }}>
+        <Button 
+          onClick={onClose} 
+          color="primary" 
+          variant="outlined"
+          sx={{ mr: 1 }}
+        >
           Close
         </Button>
+        
       </DialogActions>
     </Dialog>
   );

@@ -7,6 +7,7 @@ import LatestUploads from "../components/Dashboard/LatestUploads";
 import RecentlyRead from "../components/Dashboard/RecentlyRead";
 import AIAssistant from "../components/Dashboard/AIAssistant";
 import '../styles/Dashboard.css';
+import { supabase } from "../lib/supabase";
 
 export default function Dashboard() {
   const { permissions } = usePermissions();

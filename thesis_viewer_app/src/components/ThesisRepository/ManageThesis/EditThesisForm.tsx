@@ -141,7 +141,143 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
   const user_id = session?.user?.id;
 
   const handleSave = async () => {
-    // ...existing logic unchanged...
+    if (!user_id) {
+      console.error("User is not authenticated, cannot log action.");
+      setSnackbar({ open: true, message: "User not authenticated", severity: "error" });
+      return;
+    }
+
+    let pdfUrl = formData.pdf_url;
+    
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${thesis.id}_${Date.now()}.${fileExt}`;
+      const filePath = `theses/${fileName}`;
+      
+      console.log("Uploading file:", filePath);
+      
+      try {
+        const { data, error } = await supabase.storage
+          .from("thesis_pdfs")
+          .upload(filePath, file, { 
+            upsert: true,
+            cacheControl: '3600'
+          });
+
+        if (data) {
+          console.log("Upload successful:", data);
+        }
+          
+        if (error) {
+          console.error("Upload error details:", error);
+          setUploadError(`Error uploading file: ${error.message}`);
+          setSnackbar({
+            open: true,
+            message: `Error uploading file: ${error.message}`,
+            severity: "error",
+          });
+          return;
+        }
+        
+        const { data: urlData } = supabase.storage
+          .from("thesis_pdfs")
+          .getPublicUrl(filePath);
+          
+        pdfUrl = urlData?.publicUrl || null;
+        console.log("Generated PDF URL:", pdfUrl);
+      } catch (uploadErr) {
+        console.error("Unexpected upload error:", uploadErr);
+        setUploadError("An unexpected error occurred during upload");
+        setSnackbar({
+          open: true,
+          message: "An unexpected error occurred during upload",
+          severity: "error",
+        });
+        return;
+      }
+    }
+    
+    try {
+      const updateData = {
+        title: formData.title,
+        description: formData.description,
+        author: formData.author,
+        category: formData.category,
+        pdf_url: pdfUrl,
+        isActive: isLibrarian ? thesis.isActive : formData.isActive,
+        publishing_year: formData.publishing_year,
+      };
+
+      const changes: any = {};
+
+      if (thesis.title !== updateData.title) {
+        changes.title = { old: thesis.title, new: updateData.title };
+      }
+      if (thesis.description !== updateData.description) {
+        changes.description = { old: thesis.description, new: updateData.description };
+      }
+      if (thesis.author !== updateData.author) {
+        changes.author = { old: thesis.author, new: updateData.author };
+      }
+      if (thesis.category !== updateData.category) {
+        changes.category = { old: thesis.category, new: updateData.category };
+      }
+      if (thesis.pdf_url !== pdfUrl) {
+        changes.pdf_url = { old: thesis.pdf_url, new: pdfUrl };
+      }
+
+      const statusChanged = thesis.isActive !== updateData.isActive;
+      const fileUpdated = !!file;
+
+      if (statusChanged) {
+        changes.status = { old: thesis.isActive, new: updateData.isActive };
+      }
+
+      if (fileUpdated) {
+        changes.file_updated = true;
+      }
+
+      const { error } = await supabase
+        .from("Thesis")
+        .update(updateData)
+        .eq("id", thesis.id);
+
+      if (error) {
+        console.error("Database update error:", error);
+        setUploadError(`Error updating thesis: ${error.message}`);
+        setSnackbar({
+          open: true,
+          message: `Error updating thesis: ${error.message}`,
+          severity: "error",
+        });
+      } else {
+        await addLogEntry(
+          Subsystem.THESIS_REPOSITORY,
+          ActionType.EDIT_THESIS,
+          user_id,
+          thesis.id,
+          null,
+          null,
+          changes
+        );
+
+        setSnackbar({
+          open: true,
+          message: "Thesis updated successfully!",
+          severity: "success",
+        });
+        onUpdate();
+        handleClose();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setUploadError("An unexpected error occurred");
+      setSnackbar({
+        open: true,
+        message: "An unexpected error occurred",
+        severity: "error",
+      });
+    }
   };
 
   return (

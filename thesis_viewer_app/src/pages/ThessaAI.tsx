@@ -258,7 +258,32 @@ export default function ThessaAI() {
       // Calculate the next number
       const nextNumber = (numberedMatches?.length || 0) + 1;
       return `${title} (${nextNumber})`;
-  } 
+  }
+
+  // Clear History functionality
+  const clearHistory = async () => {
+    if (window.confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
+      try {
+        // Only delete conversations belonging to this user
+        const { error } = await supabase
+          .from('conversation')
+          .delete()
+          .eq('user_id', session?.user?.id);
+        
+        if (error) throw error;
+        
+        // Reset the UI state
+        setMessages([]);
+        setConversations([]);
+        setCurrentConversationId(null);
+        
+        // Close the mobile drawer if open
+        setDrawerOpen(false);
+      } catch (error) {
+        console.error("Error clearing history:", error);
+      }
+    }
+  };
 
   // Create a new conversation
   const createNewConversation = async (firstMessage: string) => {
@@ -493,10 +518,21 @@ export default function ThessaAI() {
           <Box className="bot-sidebar-header">
             <Typography className="bot-sidebar-title">Chat History</Typography>
             
-            {/* Close sidebar button */}
-            <IconButton onClick={toggleSidebar} size="small" className="bot-sidebar-toggle">
-              <ChevronLeft size={20} />
-            </IconButton>
+            <Box display="flex">
+              {/* Clear history button */}
+              <IconButton onClick={clearHistory} size="small" className="bot-sidebar-action" title="Clear History">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+              </IconButton>
+              
+              {/* Close sidebar button */}
+              <IconButton onClick={toggleSidebar} size="small" className="bot-sidebar-toggle">
+                <ChevronLeft size={20} />
+              </IconButton>
+            </Box>
           </Box>
           
           <Divider />
@@ -536,8 +572,9 @@ export default function ThessaAI() {
           <IconButton
             onClick={toggleSidebar}
             className="bot-desktop-toggle"
+            style={{ visibility: 'visible', margin: '10px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
           >
-            <Menu size={2} />
+            <Menu size={24} />
           </IconButton>
         )}
 
@@ -559,9 +596,20 @@ export default function ThessaAI() {
           <Box className="bot-sidebar-header">
             <Typography className="bot-sidebar-title">Chat History</Typography>
             
-            <IconButton onClick={() => setDrawerOpen(false)} size="small" className="bot-sidebar-toggle">
-              <ChevronLeft size={20} />
-            </IconButton>
+            <Box display="flex">
+              {/* Clear history button */}
+              <IconButton onClick={clearHistory} size="small" className="bot-sidebar-action" title="Clear History">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+              </IconButton>
+              
+              <IconButton onClick={() => setDrawerOpen(false)} size="small" className="bot-sidebar-toggle">
+                <ChevronLeft size={20} />
+              </IconButton>
+            </Box>
           </Box>
           
           <Divider />

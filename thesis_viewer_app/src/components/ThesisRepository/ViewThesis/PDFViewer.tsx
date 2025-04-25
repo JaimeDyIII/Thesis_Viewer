@@ -20,9 +20,24 @@ const PDFViewer: React.FC<{ pdfUrl: string }> = ({ pdfUrl }) => {
         className="pdf-document-wrapper"
         onContextMenu={(e) => e.preventDefault()}
         onMouseDown={(e) => e.button === 2 && e.preventDefault()}
+        style={{
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none',
+          overflow: 'auto',
+          height: '100%',
+          width: '100%'
+        }}
       >
         <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
-          <Page pageNumber={pageNumber} scale={1.0} className="pdf-page" />
+          <Page 
+            pageNumber={pageNumber} 
+            scale={1.0} 
+            className="pdf-page"
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+          />
         </Document>
       </div>
       {numPages && (

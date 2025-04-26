@@ -294,9 +294,10 @@ const UserManagement: React.FC = () => {
           <Typography variant="h4" component="h1" sx={{ 
             fontSize: { xs: '1.75rem', md: '2.125rem' },
             fontWeight: 700, 
-            color: '#1e4d87',
+            color: 'white',
             marginBottom: '16px',
-            textShadow: '0 2px 4px rgba(221, 218, 218, 0.05)'
+            textShadow: '0 2px 4px rgb(0, 44, 147)',
+            marginTop: 10,
           }}>
             User Management
           </Typography>

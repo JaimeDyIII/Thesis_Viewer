@@ -288,45 +288,105 @@ const UserManagement: React.FC = () => {
               Manage users, assign roles, and control permissions for all members of the NEU Thesis Repository system.
             </Typography>
 
-            <Box display="flex" flexDirection={{ xs: "column", sm: "row" }} gap={2} justifyContent="flex-end" mb={3}>
-              <Button
-                onClick={() => setLogsOpen(true)}
-                variant="contained"
-                startIcon={<FileText size={18} />}
-                sx={{
-                  backgroundColor: "#1e4d87",
-                  '&:hover': { backgroundColor: "#11325b" }
+            <Box 
+              mt={3} 
+              display="flex" 
+              flexDirection={{ xs: "column", sm: "row" }} 
+              gap={2} 
+              alignItems={{ xs: "stretch", sm: "center" }} 
+              mb={3}
+              justifyContent="space-between"
+            >
+              {/* Fixed Search Box Width */}
+              <Box 
+                display="flex" 
+                alignItems="center" 
+                sx={{ 
+                  position: "relative",
+                  width: { xs: "200%", sm: "280px", md: "320px" }, 
+                  flexShrink: 0
                 }}
               >
-                View Activity Logs
-              </Button>
-            </Box>
-
-            <Box mt={3} display="flex" flexDirection={{ xs: "column", sm: "row" }} gap={2} alignItems={{ xs: "stretch", sm: "center" }} mb={3}>
-              <Box display="flex" flex={1} alignItems="center" gap={1}>
                 <TextField
                   fullWidth
-                  placeholder="Search users by name or email..."
+                  placeholder="Search users..."
                   variant="outlined"
                   size="small"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{ pr: 2 }}
                 />
-                <Search size={20} />
+                <Search size={18} style={{ position: "absolute", right: "20px", color: "#5a92c9" }} />
               </Box>
-
-              <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
-                <Select
-                  value={selectedRole || ""}
-                  onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
-                  displayEmpty
+              
+             
+              <Box 
+                display="flex" 
+                gap={2} 
+                flexWrap={{ xs: "wrap", sm: "nowrap" }} 
+                sx={{ 
+                  justifyContent: { xs: "stretch", sm: "flex-end" },
+                  width: { xs: "100%", sm: "auto" }
+                }}
+              >
+                {/* Role Dropdown with Matching Style */}
+                <FormControl 
+                  size="small" 
+                  sx={{ 
+                    width: { xs: "100%", sm: "150px" },
+                    "& .MuiOutlinedInput-root": {
+                      height: "40px",
+                      backgroundColor: "#1e4d87",
+                      color: "white",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#1e4d87"
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#11325b"
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#11325b"
+                      },
+                      "& .MuiSvgIcon-root": {
+                        color: "white"
+                      }
+                    }
+                  }}
                 >
-                  <MenuItem value="">All Roles</MenuItem>
-                  <MenuItem value="Admin">Admin</MenuItem>
-                  <MenuItem value="Librarian">Librarian</MenuItem>
-                  <MenuItem value="User">User</MenuItem>
-                </Select>
-              </FormControl>
+                  <Select
+                    value={selectedRole || ""}
+                    onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
+                    displayEmpty
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: 500
+                    }}
+                  >
+                    <MenuItem value="">All Roles</MenuItem>
+                    <MenuItem value="Admin">Admin</MenuItem>
+                    <MenuItem value="Librarian">Librarian</MenuItem>
+                    <MenuItem value="User">User</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                {/* Activity Logs Button */}
+                <Button
+                  onClick={() => setLogsOpen(true)}
+                  variant="contained"
+                  startIcon={<FileText size={18} />}
+                  sx={{
+                    backgroundColor: "#1e4d87",
+                    height: "40px",
+                    width: { xs: "100%", sm: "auto" },
+                    whiteSpace: "nowrap",
+                    '&:hover': { backgroundColor: "#11325b" },
+                    fontSize: "14px",
+                    fontWeight: 500
+                  }}
+                >
+                  View Activity Logs
+                </Button>
+              </Box>
             </Box>
 
             <TableContainer component={Paper} sx={{ mt: 3, overflowX: "auto" }}>

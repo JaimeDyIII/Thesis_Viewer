@@ -67,7 +67,7 @@ export default function ThesisSidebar({ open, onClose, thesisId, onBookmarkToggl
     if (!thesis?.id) return console.error("No thesis id found");
 
     window.open(`/pdf-viewer/${encodeURIComponent(thesis.title)}`);
-    recordView(thesis.id); // Still tracking views but not displaying count
+    recordView(thesis.id);
   };
 
   if (isLoading) {

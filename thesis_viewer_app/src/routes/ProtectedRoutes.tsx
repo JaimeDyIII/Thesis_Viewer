@@ -32,7 +32,6 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
     if (session?.user) {
       checkUser();
     } else {
-      // Reset if no session
       userCheckRef.current = false;
       setUserExists(null);
     }

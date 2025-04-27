@@ -10,49 +10,64 @@ const Login: React.FC = () => {
   const { handleGoogleLogin, showError, setShowError } = useAuth();
 
   return (
-    <div className="login-container">
-      {/* Background Layers */}
-      <div className="login-background-gradient"></div>
-      <div className="login-background-blur"></div>
-      <div className="login-background-radial"></div>
-
-
-      {/* Login Card */}
+    <div
+      className="login-container patterned-background"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="login-box"
+        className="content-container"
+        style={{ maxWidth: 400, width: "100%" }}
       >
-        <div className="glass-overlay"></div>
-
-        <Card className="login-card">
-          <div className="login-content">
-            {/* Icon Wrapper */}
-            <div className="login-icon-wrapper">
-              <MenuBookIcon sx={{ fontSize: 40, color: "#4F46E5" }} />
+        <Card className="white-container" sx={{ borderRadius: 4, p: 4 }}>
+          <div
+            className="login-content"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {/* Icon */}
+            <div style={{ marginBottom: 16 }}>
+              <MenuBookIcon
+                sx={{ fontSize: 50, color: "var(--heading-blue)" }}
+              />
             </div>
 
             {/* Title & Subtitle */}
-            <div className="text-center">
-              <h1 className="login-title">Thesis Viewer</h1>
-              <p className="login-subtitle">Sign in with your institutional email</p>
-            </div>
+            <h1
+              className="text-heading"
+              style={{ margin: 0, marginBottom: 8, color: "var(--heading-blue)" }}
+            >
+              Thesis Viewer
+            </h1>
+            <p className="text-muted" style={{ margin: 0, marginBottom: 24 }}>
+              Sign in with your institutional email
+            </p>
 
             {/* Google Sign-In Button */}
             <Button
-              variant="outlined"
+              variant="contained"
               size="large"
-              className="google-signin-button"
+              fullWidth
               onClick={handleGoogleLogin}
               sx={{
                 textTransform: "none",
-                borderColor: "#E0E7FF",
-                color: "#1E1B4B",
+                backgroundColor: "var(--heading-blue)",
+                color: "var(--white)",
                 "&:hover": {
-                  backgroundColor: "#EEF2FF",
-                  borderColor: "#E0E7FF",
+                  backgroundColor: "var(--button-hover-blue)",
                 },
+                borderRadius: 2,
+                paddingY: 1.5,
               }}
               startIcon={<GoogleIcon />}
             >
@@ -62,7 +77,7 @@ const Login: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Alert Pop-up */}
+      {/* Alert */}
       <EmailErrorPopup open={showError} onClose={() => setShowError(false)} />
     </div>
   );

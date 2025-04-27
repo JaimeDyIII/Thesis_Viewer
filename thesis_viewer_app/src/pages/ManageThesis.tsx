@@ -87,8 +87,8 @@ const ManageThesis: React.FC = () => {
       setProfile(null);
     }
   }, [session]);
-
-  const isAdmin = profile?.role === "Admin";
+  
+  const isAdmin = profile?.role === "Admin" || profile?.role === "SuperAdmin"; 
   const isLibrarian = profile?.role === "Librarian";
 
   const fetchTheses = useCallback(async () => {

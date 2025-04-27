@@ -32,6 +32,12 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
     checkUser();
   }, [session]);
 
+  if(!session){
+    if(location.pathname !== '/login'){
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+  }
+
   if (loading || permissionLoading || userExists === null) {
     return (
       <LoadingOverlay />

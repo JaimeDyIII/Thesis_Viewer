@@ -8,6 +8,7 @@ import { getThesisById } from '../../../api/thesis/queries';
 import { useView } from '../../../hooks/useView';
 import { useBookmark } from '../../../hooks/useBookmark';
 import { useAuth } from '../../../context/AuthContext';
+import { useThesis } from '../../../context/ThesisContext';
 
 type ThesisSidebarProps = {
   open: boolean;
@@ -29,6 +30,7 @@ export default function ThesisSidebar({ open, onClose, thesisId, onBookmarkToggl
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const { session } = useAuth();
+  const { setSelectedThesis } = useThesis();
 
   useEffect(() => {
     const checkBookmarkStatus = async () => {
@@ -59,7 +61,8 @@ export default function ThesisSidebar({ open, onClose, thesisId, onBookmarkToggl
 
   const handleAskThessa = () => {
     if (!thesis) return;
-    navigate(`/chatbot?thesisId=${thesis.id}`);
+    setSelectedThesis(thesis);
+    navigate('/thessaAI');
   };
 
   const handleViewPDF = () => {
@@ -67,7 +70,7 @@ export default function ThesisSidebar({ open, onClose, thesisId, onBookmarkToggl
     if (!thesis?.id) return console.error("No thesis id found");
 
     window.open(`/pdf-viewer/${encodeURIComponent(thesis.title)}`);
-    recordView(thesis.id); // Still tracking views but not displaying count
+    recordView(thesis.id);
   };
 
   if (isLoading) {

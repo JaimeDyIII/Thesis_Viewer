@@ -31,6 +31,7 @@ import { usePermissions } from "../context/PermissionsContext";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Manage.css";
 import ManageCategories from "../components/ThesisRepository/ManageThesis/ManageCategories";
+import { useCategories } from '../hooks/useCategories';
 
 // Interfaces unchanged
 interface Thesis {
@@ -70,6 +71,7 @@ const ManageThesis: React.FC = () => {
   const { permissions } = usePermissions();
   const { session } = useAuth();
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const { categories, loading: categoriesLoading } = useCategories();
 
   useEffect(() => {
     if (session?.user) {
@@ -174,11 +176,14 @@ const ManageThesis: React.FC = () => {
                   displayEmpty
                   fullWidth
                   onChange={(e) => setSelectedCategory(e.target.value)}
+                  disabled={categoriesLoading}
                 >
                   <MenuItem value="">All Categories</MenuItem>
-                  <MenuItem value="Science">Science</MenuItem>
-                  <MenuItem value="Technology">Technology</MenuItem>
-                  <MenuItem value="Mathematics">Mathematics</MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category.id} value={category.name}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
                 </Select>
                 {!isLibrarian && (
                   <Select

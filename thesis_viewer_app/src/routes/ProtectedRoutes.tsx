@@ -18,58 +18,53 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
   const { permissions, permissionLoading } = usePermissions();
   const location = useLocation();
   const [userExists, setUserExists] = useState<boolean | null>(null);
-  const hasCheckedRef = useRef(false);
+  const userCheckRef = useRef(false);
 
   useEffect(() => {
     const checkUser = async () => {
-      if (session?.user && !hasCheckedRef.current) {
+      if (session?.user && !userCheckRef.current) {
+        userCheckRef.current = true;
         const exists = await checkUserExists(session.user.id);
         setUserExists(exists);
-        hasCheckedRef.current = true;
       }
     };
 
-    checkUser();
+    if (session?.user) {
+      checkUser();
+    } else {
+      // Reset if no session
+      userCheckRef.current = false;
+      setUserExists(null);
+    }
   }, [session]);
 
-  if(!session){
-    if(location.pathname !== '/login'){
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
+  // Handle loading states first
+  if (loading || permissionLoading || (session && userExists === null)) {
+    return <LoadingOverlay />;
   }
 
-  if (loading || permissionLoading || userExists === null) {
-    return (
-      <LoadingOverlay />
-    );
+  // Handle public routes that don't need authentication
+  if (location.pathname === "/" || location.pathname === '/homepage') {
+    return <>{children || <Outlet />}</>;
   }
 
+  // Handle unauthenticated users
   if (!session) {
-    if (location.pathname === "/" || location.pathname === '/homepage') {
-      return <>{children}</>;
-    }
-
-    if(location.pathname !== '/login'){
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If user doesn't exist in database or hasn't accepted terms, redirect to terms
-  if (session && (!userExists || (profile && profile.terms_and_condition === false))) {
+  // Handle terms acceptance
+  if (!userExists || (profile && profile.terms_and_condition === false)) {
     return <Navigate to="/terms" replace />;
   }
 
-  // If no profile yet, show loading
+  // Handle missing profile
   if (!profile) {
-    return (
-      <LoadingOverlay />
-    );
+    return <LoadingOverlay />;
   }
 
-  const userRole = profile.role;
-
   // Check role permissions
-  if (!allowedRoles.includes(userRole)) {
+  if (!allowedRoles.includes(profile.role)) {
     return <Navigate to="/*" replace />;
   }
 
@@ -88,6 +83,7 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
     }
   }
 
+  // All checks passed, render the route
   return (
     <Box
       sx={{
@@ -104,7 +100,7 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
           flexDirection: "column",
         }}
       >
-        {children ? children : <Outlet />}
+        {children || <Outlet />}
       </Box>
       <Footer />
     </Box>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Box, TextField, IconButton, Typography, Drawer, List, ListItem, Divider } from '@mui/material';
-import { Send, Glasses, History, ChevronLeft, Menu } from 'lucide-react';
+import { Send, Glasses, History, ChevronLeft, Menu, ChevronRight } from 'lucide-react';
 import pdfToText from 'react-pdftotext';
 import { Header } from "../components/Global/Header";
 import { marked } from 'marked';
@@ -86,12 +86,18 @@ export default function ThessaAI() {
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
   const [pdfContext, setPdfContext] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Changed to track sidebar visibility
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { selectedThesis, setSelectedThesis } = useThesis();
   const [thesisList, setThesisList] = useState<Thesis[]>([]);
 
   const OPEN_ROUTER_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+  
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
   
   useEffect(() => {
     const fetchActiveThesis = async () => {
@@ -356,7 +362,6 @@ export default function ThessaAI() {
   const fetchResponse = async () => {
     if (isAIResponseLoading) return;
 
-
     try {
       setIsAIResponseLoading(true);
       
@@ -491,11 +496,6 @@ export default function ThessaAI() {
     return { __html: sanitizedHtml };
   };
 
-  // Toggle sidebar function
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   // Start a new conversation
   const startNewConversation = () => {
     setMessages([]);
@@ -511,10 +511,19 @@ export default function ThessaAI() {
       
       <Header />
       
-      {/* Full-width layout with collapsible sidebar */}
+      {/* Full-width layout with sidebar */}
       <Box className="bot-gpt-layout">
-        {/* Collapsible sidebar for desktop */}
-        <Box className={`bot-sidebar bot-sidebar-hidden ${sidebarOpen ? 'bot-sidebar-expanded' : 'bot-sidebar-collapsed'}`}>
+        {/* Sidebar toggle button for desktop */}
+        <IconButton 
+          onClick={toggleSidebar}
+          className="bot-desktop-toggle"
+          title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+        >
+          {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        </IconButton>
+        
+        {/* Sidebar for desktop - conditionally visible */}
+        <Box className={`bot-sidebar ${sidebarOpen ? 'bot-sidebar-expanded' : 'bot-sidebar-collapsed'}`}>
           <Box className="bot-sidebar-header">
             <Typography className="bot-sidebar-title">Chat History</Typography>
             
@@ -528,7 +537,7 @@ export default function ThessaAI() {
                 </svg>
               </IconButton>
               
-              {/* Close sidebar button */}
+              {/* Sidebar toggle button inside sidebar */}
               <IconButton onClick={toggleSidebar} size="small" className="bot-sidebar-toggle">
                 <ChevronLeft size={20} />
               </IconButton>
@@ -567,23 +576,13 @@ export default function ThessaAI() {
           </List>
         </Box>
 
-        {/* Toggle sidebar button for desktop */}
-        {!sidebarOpen && (
-          <IconButton
-            onClick={toggleSidebar}
-            className="bot-desktop-toggle"
-            style={{ visibility: 'visible', margin: '10px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-          >
-            <Menu size={24} />
-          </IconButton>
-        )}
-
-        {/* Mobile toggle button */}
+        {/* Mobile burger menu button */}
         <IconButton
           onClick={() => setDrawerOpen(true)}
           className="bot-mobile-toggle"
+          sx={{ display: { md: 'none' } }}
         >
-          <History size={24} />
+          <Menu size={20} />
         </IconButton>
 
         {/* Mobile drawer */}
@@ -652,8 +651,8 @@ export default function ThessaAI() {
           </List>
         </Drawer>
 
-        {/* Main content area */}
-        <Box className="bot-content">
+        {/* Main content area - adjusted based on sidebar state */}
+        <Box className={`bot-content ${!sidebarOpen ? 'bot-content-expanded' : ''}`}>
           <Typography variant="h2" className="bot-title">ThessaAI</Typography>
           
           {/* Messages area */}

@@ -488,3 +488,61 @@
   color: #fff;
   background-color: rgba(255, 255, 255, 0.1);
 }
+/* Add these new styles to your ThessaAI.css file */
+
+/* Sidebar transition */
+.bot-sidebar {
+  height: 100% !important;
+  background-color: #f6f2f9 !important;
+  border-right: 1px solid #e9e0f0 !important;
+  transition: width 0.3s ease !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.bot-sidebar-expanded {
+  width: 255px !important;
+}
+
+.bot-sidebar-collapsed {
+  width: 0 !important;
+}
+
+/* Content area adjustment */
+.bot-content {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background-color: rgba(237, 231, 246, 0.4) !important;
+  padding-top: 16px !important;
+  transition: margin-left 0.3s ease !important;
+}
+
+.bot-content-expanded {
+  margin-left: 0 !important;
+}
+
+/* Improved desktop toggle button */
+.bot-desktop-toggle {
+  position: fixed !important;
+  top: 80px !important;
+  left: 10px !important;
+  z-index: 100 !important;
+  background-color: rgba(211, 99, 255, 0.1) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  transition: left 0.3s ease, background-color 0.2s ease !important;
+}
+
+/* Toggle button animation */
+.bot-desktop-toggle:hover {
+  background-color: rgba(211, 99, 255, 0.3) !important;
+}
+
+/* Mobile responsiveness for collapsed sidebar */
+@media (max-width: 900px) {
+  .bot-sidebar-collapsed {
+    display: none !important;
+  }
+}

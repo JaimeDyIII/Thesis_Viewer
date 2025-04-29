@@ -21,14 +21,13 @@ import {
   Typography,
   Avatar,
 } from "@mui/material";
-import { Search, ChevronDown, ChevronUp, UserPlus, FileText } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Header } from "../components/Global/Header";
 import CheckLogs from "../components/Global/CheckLogs";
 import UserPermissions from "../components/UserManagement/UserPermissions";
 import { useAuth } from "../context/AuthContext";
 import { addLogEntry, Subsystem, ActionType } from "../components/Global/CheckLogs";
-import AddUserDialog from "../components/UserManagement/AddUserDialog";
 import "../styles/Manage.css";
 
 interface User {
@@ -37,11 +36,6 @@ interface User {
   email: string;
   role: string | null;
   avatar_url?: string;
-}
-
-interface UserAddedData {
-  message: string;
-  newUser: User;
 }
 
 const UserManagement: React.FC = () => {
@@ -54,7 +48,6 @@ const UserManagement: React.FC = () => {
   const [logsOpen, setLogsOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const { session, profile } = useAuth();
-  const [addUserDialogOpen, setAddUserDialogOpen] = useState<boolean>(false);
   const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -255,11 +248,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleUserAdded = ({ message, newUser }: UserAddedData): void => {
-    handlePermissionUpdate(message);
-    fetchUsers();
-  };
-
   const filteredUsers = users.filter(
     (user) =>
       (user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,190 +277,126 @@ const UserManagement: React.FC = () => {
   return (
     <>
       <Header />
-      <div className="manage-thesis patterned-background">
-        <Box sx={{ maxWidth: 1200, margin: '0 auto', padding: '20px', position: 'relative', zIndex: 2 }}>
-          <Typography variant="h4" component="h1" sx={{ 
-            fontSize: { xs: '1.75rem', md: '2.125rem' },
-            fontWeight: 700, 
-            color: '#1e4d87',
-            marginBottom: '16px',
-            textShadow: '0 2px 4px rgba(221, 218, 218, 0.05)'
-          }}>
-            User Management
-          </Typography>
-          
-          <Typography variant="body1" sx={{ 
-            color: '#FFFFFF', 
-            marginBottom: '32px',
-            maxWidth: '700px'
-          }}>
-            Manage users, assign roles, and control permissions for all members of the NEU Thesis Repository system.
-          </Typography>
+      <div className="patterned-background">
+        <div className="content-container">
+          <div className="white-container">
+            <Typography variant="h4" component="h1" gutterBottom>
+              User Management
+            </Typography>
 
-          <Box 
-            sx={{
-              display: "flex", 
-              alignItems: "center", 
-              mb: 3,
-              flexWrap: "wrap",
-              gap: 2,
-              '@media (max-width: 768px)': {
-                flexDirection: 'column',
-                alignItems: 'stretch'
-              }
-            }}
-          >
+            <Typography variant="body1" sx={{ mb: 3 }}>
+              Manage users, assign roles, and control permissions for all members of the NEU Thesis Repository system.
+            </Typography>
+
             <Box 
-              sx={{
-                flex: 1,
-                minWidth: "200px",
-                display: "flex",
-                alignItems: "center",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                padding: "8px 16px",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)"
-              }}
+              mt={3} 
+              display="flex" 
+              flexDirection={{ xs: "column", sm: "row" }} 
+              gap={2} 
+              alignItems={{ xs: "stretch", sm: "center" }} 
+              mb={3}
+              justifyContent="space-between"
             >
-              <Search size={20} color="#5a6b7d" style={{ marginRight: 8 }} />
-              <TextField
-                fullWidth
-                variant="standard"
-                placeholder="Search users by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{ 
-                  disableUnderline: true,
-                  sx: { fontSize: "14px" }
-                }}
-              />
-            </Box>
-
-            <Box
-              sx={{
-                backgroundColor: "#1e4d87",
-                color: "white",
-                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
-                borderRadius: "8px",
-                padding: "2px 4px",
-                fontWeight: "600",
-                textTransform: "none",
-                whiteSpace: "nowrap",
-                minWidth: 150,
-                "&:hover": {
-                  backgroundColor: "#11325b"
-                }
-              }}
-            >
-              <FormControl 
-                variant="outlined" 
-                size="small" 
-                fullWidth
+              {/* Fixed Search Box Width */}
+              <Box 
+                display="flex" 
+                alignItems="center" 
                 sx={{ 
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "6px",
-                    backgroundColor: "transparent",
-                    color: "white",
-                    "& fieldset": {
-                      border: "none"
-                    },
-                    "&:hover fieldset": {
-                      border: "none"
-                    },
-                    "&.Mui-focused fieldset": {
-                      border: "none"
-                    },
-                    "& .MuiSelect-select": {
-                      padding: "8px 32px 8px 12px",
-                      fontWeight: 500,
-                      fontSize: "14px"
-                    },
-                    "& .MuiSvgIcon-root": {
-                      color: "white"
-                    }
-                  }
+                  position: "relative",
+                  width: { xs: "200%", sm: "280px", md: "320px" }, 
+                  flexShrink: 0
                 }}
               >
-                <Select
-                  value={selectedRole || ""}
-                  onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
-                  displayEmpty
-                  renderValue={(value) => value ? value : "Filter by Role"}
+                <TextField
+                  fullWidth
+                  placeholder="Search users..."
+                  variant="outlined"
+                  size="small"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{ pr: 2 }}
+                />
+                <Search size={18} style={{ position: "absolute", right: "20px", color: "#5a92c9" }} />
+              </Box>
+              
+             
+              <Box 
+                display="flex" 
+                gap={2} 
+                flexWrap={{ xs: "wrap", sm: "nowrap" }} 
+                sx={{ 
+                  justifyContent: { xs: "stretch", sm: "flex-end" },
+                  width: { xs: "100%", sm: "auto" }
+                }}
+              >
+                {/* Role Dropdown with Matching Style */}
+                <FormControl 
+                  size="small" 
+                  sx={{ 
+                    width: { xs: "100%", sm: "150px" },
+                    "& .MuiOutlinedInput-root": {
+                      height: "40px",
+                      backgroundColor: "#1e4d87",
+                      color: "white",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#1e4d87"
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#11325b"
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#11325b"
+                      },
+                      "& .MuiSvgIcon-root": {
+                        color: "white"
+                      }
+                    }
+                  }}
                 >
-                  <MenuItem value="">All Roles</MenuItem>
-                  <MenuItem value="Admin">Admin</MenuItem>
-                  <MenuItem value="Librarian">Librarian</MenuItem>
-                  <MenuItem value="User">User</MenuItem>
-                </Select>
-              </FormControl>
+                  <Select
+                    value={selectedRole || ""}
+                    onChange={(e: SelectChangeEvent) => setSelectedRole(e.target.value || null)}
+                    displayEmpty
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: 500
+                    }}
+                  >
+                    <MenuItem value="">All Roles</MenuItem>
+                    <MenuItem value="Admin">Admin</MenuItem>
+                    <MenuItem value="Librarian">Librarian</MenuItem>
+                    <MenuItem value="User">User</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                {/* Activity Logs Button */}
+                <Button
+                  onClick={() => setLogsOpen(true)}
+                  variant="contained"
+                  startIcon={<FileText size={18} />}
+                  sx={{
+                    backgroundColor: "#1e4d87",
+                    height: "40px",
+                    width: { xs: "100%", sm: "auto" },
+                    whiteSpace: "nowrap",
+                    '&:hover': { backgroundColor: "#11325b" },
+                    fontSize: "14px",
+                    fontWeight: 500
+                  }}
+                >
+                  View Activity Logs
+                </Button>
+              </Box>
             </Box>
 
-            <Button
-              onClick={() => setLogsOpen(true)}
-              variant="contained"
-              sx={{
-                backgroundColor: "#1e4d87", 
-                color: "white",
-                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
-                '&:hover': {
-                  backgroundColor: "#11325b"
-                },
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontWeight: "600",
-                textTransform: "none",
-                whiteSpace: "nowrap"
-              }}
-              startIcon={<FileText size={18} />}
-            >
-              View Activity Logs
-            </Button>
-            
-            <Button
-              onClick={() => setAddUserDialogOpen(true)}
-              variant="contained"
-              sx={{
-                backgroundColor: "#1e4d87", 
-                color: "white",
-                boxShadow: "0 4px 12px rgba(30, 77, 135, 0.3)",
-                '&:hover': {
-                  backgroundColor: "#11325b"
-                },
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontWeight: "600",
-                textTransform: "none",
-                whiteSpace: "nowrap"
-              }}
-              startIcon={<UserPlus size={18} />}
-            >
-              Add User
-            </Button>
-          </Box>
-
-          <Box sx={{ 
-            backgroundColor: 'white', 
-            borderRadius: '16px',
-            boxShadow: '0 6px 18px rgba(0, 0, 0, 0.08)',
-            padding: '4px',
-            overflow: 'hidden'
-          }}>
-            <TableContainer 
-              component={Paper} 
-              sx={{
-                borderRadius: "12px",
-                boxShadow: "none",
-                overflow: "hidden",
-                backgroundColor: "#ffffff"
-              }}
-            >
-              <Table>
+            <TableContainer component={Paper} sx={{ mt: 3, overflowX: "auto" }}>
+              <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#e2eaf4" }}>
-                    <TableCell sx={{ fontWeight: "600", color: "#1e4d87", fontSize: "14px", padding: '16px' }}>User</TableCell>
-                    <TableCell sx={{ fontWeight: "600", color: "#1e4d87", fontSize: "14px" }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: "600", color: "#1e4d87", fontSize: "14px" }}>Role</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: "600", color: "#1e4d87", fontSize: "14px", width: '100px' }}>Details</TableCell>
+                    <TableCell sx={{ fontWeight: "600", color: "#1e4d87" }}>User</TableCell>
+                    <TableCell sx={{ fontWeight: "600", color: "#1e4d87", display: { xs: "none", md: "table-cell" } }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: "600", color: "#1e4d87" }}>Role</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "600", color: "#1e4d87", width: '50px' }}>Details</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -484,7 +408,7 @@ const UserManagement: React.FC = () => {
                     </TableRow>
                   ) : filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} align="center" sx={{ py: 8, color: "#5a6b7d" }}>
+                      <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                           <Search size={36} color="#c4cdd5" />
                           <Typography>No users found matching your criteria.</Typography>
@@ -512,44 +436,55 @@ const UserManagement: React.FC = () => {
                           }}
                         >
                           <TableCell sx={{ 
-                            padding: '16px',
                             borderBottom: expandedUser === user.id ? 'none' : '1px solid rgba(224, 224, 224, 1)'
                           }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Avatar 
                                 src={userProfiles[user.id] || ''} 
                                 sx={{ 
                                   bgcolor: user.id === session?.user?.id ? '#1e4d87' : '#5a92c9',
-                                  width: 40, 
-                                  height: 40,
+                                  width: 32, 
+                                  height: 32,
                                   fontWeight: 500,
-                                  fontSize: '16px'
+                                  fontSize: '14px'
                                 }}
                               >
                                 {getInitials(user.name || 'User')}
                               </Avatar>
-                              <Typography sx={{ fontWeight: "500" }}>
-                                {user.name || "No name found!"}
+                              <Box>
+                                <Typography sx={{ fontWeight: "500", fontSize: { xs: "14px", sm: "16px" } }}>
+                                  {user.name || "No name found!"}
+                                </Typography>
+                                <Typography 
+                                  sx={{ 
+                                    display: { xs: "block", md: "none" }, 
+                                    fontSize: "12px",
+                                    color: "#5a6b7d"
+                                  }}
+                                >
+                                  {user.email}
+                                </Typography>
                                 {user.id === session?.user?.id && (
                                   <Typography 
                                     component="span" 
                                     sx={{ 
-                                      fontSize: '12px', 
+                                      fontSize: '11px', 
                                       backgroundColor: '#e2eaf4', 
                                       color: '#1e4d87',
-                                      padding: '2px 6px',
+                                      padding: '2px 4px',
                                       borderRadius: '4px',
-                                      marginLeft: '8px'
+                                      marginLeft: '4px'
                                     }}
                                   >
                                     You
                                   </Typography>
                                 )}
-                              </Typography>
+                              </Box>
                             </Box>
                           </TableCell>
                           <TableCell sx={{ 
                             color: "#5a6b7d",
+                            display: { xs: "none", md: "table-cell" },
                             borderBottom: expandedUser === user.id ? 'none' : '1px solid rgba(224, 224, 224, 1)'
                           }}>
                             {user.email}
@@ -564,35 +499,13 @@ const UserManagement: React.FC = () => {
                                 size="small" 
                                 fullWidth 
                                 onClick={(e) => e.stopPropagation()}
-                                sx={{
-                                  '& .MuiOutlinedInput-root': {
-                                    borderRadius: "6px",
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: "#1e4d87",
-                                    }
-                                  }
-                                }}
                               >
                                 <Select
                                   value={(user.role || 'User')}
                                   onChange={(e) => handleRoleChange(user.id, user.name || "Unknown User", e.target.value)}
                                   sx={{
-                                    height: "36px",
-                                    fontSize: "14px",
-                                    '&.MuiOutlinedInput-root': {
-                                      '& fieldset': {
-                                        borderColor: 'rgba(0, 0, 0, 0.15)',
-                                      },
-                                    }
-                                  }}
-                                  MenuProps={{
-                                    PaperProps: {
-                                      style: {
-                                        width: 140,
-                                        borderRadius: 8,
-                                        marginTop: 4
-                                      },
-                                    },
+                                    height: { xs: "32px", sm: "36px" },
+                                    fontSize: { xs: "12px", sm: "14px" }
                                   }}
                                 >
                                   <MenuItem value="Admin">Admin</MenuItem>
@@ -607,8 +520,8 @@ const UserManagement: React.FC = () => {
                                   backgroundColor: getRoleBadgeStyle(user.role).bgcolor,
                                   color: getRoleBadgeStyle(user.role).color,
                                   borderRadius: "6px",
-                                  padding: "6px 12px",
-                                  fontSize: "13px",
+                                  padding: "4px 8px",
+                                  fontSize: "12px",
                                   fontWeight: "500"
                                 }}
                               >
@@ -617,18 +530,20 @@ const UserManagement: React.FC = () => {
                             )}
                           </TableCell>
                           <TableCell align="center" sx={{ 
-                            borderBottom: expandedUser === user.id ? 'none' : '1px solid rgba(224, 224, 224, 1)'
+                            borderBottom: expandedUser === user.id ? 'none' : '1px solid rgba(224, 224, 224, 1)',
+                            width: '50px'
                           }}>
                             <IconButton 
                               sx={{ 
                                 color: "#1e4d87",
                                 backgroundColor: expandedUser === user.id ? 'rgba(30, 77, 135, 0.08)' : 'transparent',
+                                padding: { xs: 0.5, sm: 1 },
                                 '&:hover': {
                                   backgroundColor: "rgba(30, 77, 135, 0.12)",
                                 }
                               }}
                             >
-                              {expandedUser === user.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                              {expandedUser === user.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </IconButton>
                           </TableCell>
                         </TableRow>
@@ -638,7 +553,7 @@ const UserManagement: React.FC = () => {
                           <TableCell colSpan={4} sx={{ padding: 0, borderBottom: expandedUser === user.id ? '1px solid rgba(224, 224, 224, 1)' : 'none' }}>
                             <Collapse in={expandedUser === user.id} timeout="auto" unmountOnExit>
                               <Box sx={{ 
-                                padding: 3, 
+                                padding: { xs: 2, sm: 3 }, 
                                 backgroundColor: "rgba(30, 77, 135, 0.03)",
                                 borderTop: '1px dashed rgba(30, 77, 135, 0.15)'
                               }}>
@@ -660,8 +575,8 @@ const UserManagement: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
-        </Box>
+          </div>
+        </div>
       </div>
 
       <Snackbar 
@@ -669,12 +584,6 @@ const UserManagement: React.FC = () => {
         autoHideDuration={5000} 
         onClose={handleSnackbarClose} 
         message={snackbarMessage}
-        ContentProps={{
-          sx: {
-            backgroundColor: snackbarMessage.includes("✅") ? "#2e7d32" : "#d32f2f",
-            borderRadius: "8px"
-          }
-        }}
         sx={{ bottom: 24 }}
       />
       
@@ -682,13 +591,6 @@ const UserManagement: React.FC = () => {
         open={logsOpen} 
         onClose={() => setLogsOpen(false)} 
         context="user" 
-      />
-      
-      <AddUserDialog
-        open={addUserDialogOpen}
-        onClose={() => setAddUserDialogOpen(false)}
-        onUserAdded={handleUserAdded}
-        currentUserId={session?.user?.id}
       />
     </>
   );

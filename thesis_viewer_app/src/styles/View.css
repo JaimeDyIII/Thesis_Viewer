@@ -1,4 +1,33 @@
 /* Search and Filter Section */
+.search-control-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .MuiInputBase-root .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(30, 77, 135, 0.3);
+  }
+  
+  .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(30, 77, 135, 0.5);
+  }
+  
+  .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #1e4d87;
+  }
+  @media (max-width: 600px) {
+  .search-control-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-control-bar > * {
+    width: 400%;
+  }
+}
+  
 .search-controls {
     display: flex;
     justify-content: space-between;
@@ -12,7 +41,7 @@
     align-items: center;
     gap: 1rem;
     flex: 1;
-    min-width: 250px; /* Minimum width before wrapping */
+    min-width: 450px; 
 }
 
 .search-box {
@@ -20,7 +49,7 @@
     align-items: center;
     background: var(--white);
     border-radius: 50px;
-    padding: 8px 16px; /* slightly smaller */
+    padding:10x 20;
     box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
     max-width: 400px;
     border: none;
@@ -41,13 +70,13 @@
     outline: none;
     font-size: 1rem;
     padding-right: 40px;
-    width: 100%; /* Ensure full width */
+    width: 100%; 
 }
 
 .search-icon {
     position: absolute;
     right: 12px;
-    color: var(--button-hover-blue) !important; /* Light blue color */
+    color: var(--button-hover-blue) !important;
     cursor: pointer;
 }
 
@@ -77,11 +106,11 @@
     font-size: 0.95rem !important;
     border-radius: 12px !important;
     padding: 0 !important;
-    color: var(--light-text) !important; /* Muted text */
+    color: var(--light-text) !important;
   }
   
   .filter-select .MuiSelect-select {
-    padding: 6px 35px 6px 14px !important; /* Extra right-padding to prevent arrow overlap */
+    padding: 6px 35px 6px 14px !important;
     display: flex !important;
     align-items: center !important;
     min-height: 36px !important;

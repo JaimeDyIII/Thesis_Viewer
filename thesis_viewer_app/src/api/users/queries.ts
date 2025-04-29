@@ -1,10 +1,5 @@
-import { supabase } from '../lib/supabase';
-import { UserRoleStats } from '../context/AnalyticsContext';
-
-interface User {
-  id: string;
-  role?: string;
-}
+import { supabase } from '../../lib/supabase';
+import { UserRoleStats } from '../../context/AnalyticsContext';
 
 export const getTotalUsersCount = async (): Promise<number> => {
   const { count } = await supabase

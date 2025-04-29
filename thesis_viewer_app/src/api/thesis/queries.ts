@@ -27,7 +27,7 @@ export const getThesisById = async (id: number): Promise<Thesis> => {
   return data as Thesis;
 };
 
-export const getAllTheses = async (filters?: ThesisFilters): Promise<Thesis[]> => {
+export const getAllThesesWithFilters = async (filters?: ThesisFilters): Promise<Thesis[]> => {
   let query = supabase
     .from('Thesis')
     .select(THESIS_SELECT);

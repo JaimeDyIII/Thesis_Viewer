@@ -1,24 +1,16 @@
 import { useState, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
-import { Header } from "../components/Global/Header";
-import "../styles/View.css";
-import { supabase } from "../lib/supabase";
-import { useCategories } from "../hooks/useCategories";
-import { useView } from '../hooks/useView';
-import ThesisFilters from "../components/ThesisRepository/ViewThesis/ThesisFilters";
-import ThesisGrid from "../components/ThesisRepository/ViewThesis/ThesisGrid";
+import { Header } from "../../components/Global/Header";
+import "../../styles/View.css";
+import { supabase } from "../../lib/supabase";
+import { useCategories } from "../../hooks/useCategories";
+import { useView } from '../../hooks/useView';
+import ThesisFilters from "../../components/ThesisRepository/ViewThesis/ThesisFilters";
+import ThesisGrid from "../../components/ThesisRepository/ViewThesis/ThesisGrid";
+import { getAllThesesWithFilters } from "../../api/thesis/queries";
+import { Thesis } from "../../api/thesis/types";
 
-type Thesis = {
-  id: number;
-  title: string;
-  description: string | null;
-  pdf_url: string | null;
-  category: string | null;
-  author: string;
-  publishing_year: number;
-};
-
-export default function Bookmarks() {
+export default function ViewThesis() {
   const [searchQuery, setSearchQuery] = useState("");
   const [thesisList, setThesisList] = useState<Thesis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,57 +25,31 @@ export default function Bookmarks() {
   const [viewedStatus, setViewedStatus] = useState<Record<number, boolean>>({});
   const { getViewCount, hasUserViewed } = useView();
 
-  // Fetch only bookmarked theses based on filters
+  // Fetch all theses based on filters      
   useEffect(() => {
-    const fetchBookmarkedTheses = async () => {
+    const fetchThesis = async () => {
       setIsLoading(true);
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        const filters = {
+          category: selectedCategory || undefined,
+          isActive: true,
+          year: selectedYear ? 
+            selectedYear === "older" ? undefined : parseInt(selectedYear) 
+            : undefined,
+        };
 
-        // First get all bookmarks for this user
-        const { data: bookmarks, error: bookmarkError } = await supabase
-          .from("bookmarks")
-          .select("thesis_id")
-          .eq("user_id", user.id);
-
-        if (bookmarkError) throw bookmarkError;
-        
-        const bookmarkIds = bookmarks.map(b => b.thesis_id);
-        setBookmarkedThesisIds(bookmarkIds);
-
-        // Then get thesis data for these bookmarks
-        let query = supabase
-          .from("Thesis")
-          .select("id, title, description, pdf_url, category, author, publishing_year, isActive")
-          .eq("isActive", true)
-          .in("id", bookmarkIds);
-
-        if (selectedCategory) query = query.eq("category", selectedCategory);
-        
-        if (selectedYear) {
-          if (selectedYear === "older") {
-            query = query.lt("publishing_year", 2010);
-          } else {
-            query = query.eq("publishing_year", parseInt(selectedYear));
-          }
-        }
-
-        const { data: theses, error: thesisError } = await query;
-        if (thesisError) throw thesisError;
-
-        setThesisList(theses || []);
+        const data = await getAllThesesWithFilters(filters);
+        setThesisList(data || []);
       } catch (err) {
-        console.error("Failed to fetch bookmarked theses:", err);
+        console.error("Failed to fetch thesis data:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchBookmarkedTheses();
+    fetchThesis();
   }, [selectedCategory, selectedYear]);
-
+  
   const handleSortToggle = () => {
     setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
@@ -94,7 +60,6 @@ export default function Bookmarks() {
       : b.title.localeCompare(a.title);
   });
 
-  // Filter theses based on search
   const filteredThesis = sortedThesis.filter((thesis) => {
     return thesis.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
            thesis.author.toLowerCase().includes(searchQuery.toLowerCase());
@@ -107,13 +72,13 @@ export default function Bookmarks() {
 
   const fetchBookmarks = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
 
       const { data, error } = await supabase
         .from("bookmarks")
         .select("thesis_id")
-        .eq("user_id", user.id);
+        .eq("user_id", userData.user.id);
 
       if (error) throw error;
       setBookmarkedThesisIds(data?.map(item => item.thesis_id) || []);
@@ -123,14 +88,10 @@ export default function Bookmarks() {
     }
   };
 
-  // Refresh bookmarks when sidebar closes
   useEffect(() => {
-    if (sidebarOpen === false) {
-      fetchBookmarks();
-    }
+    fetchBookmarks();
   }, [sidebarOpen]);
 
-  // Fetch view data for bookmarked theses
   useEffect(() => {
     const fetchViewData = async () => {
       const counts: Record<number, number> = {};
@@ -166,7 +127,7 @@ export default function Bookmarks() {
       <Header />
       <Box className="content-container">
         <Typography variant="h5" fontWeight="bold" gutterBottom>
-          My Bookmarked Theses
+          View Thesis
         </Typography>
 
         <ThesisFilters
@@ -194,8 +155,8 @@ export default function Bookmarks() {
           fetchBookmarks={fetchBookmarks}
           emptyMessage={
             thesisList.length === 0 
-              ? "You haven't bookmarked any theses yet." 
-              : "No bookmarks match your search."
+              ? "No available thesis." 
+              : "No thesis found matching your search."
           }
         />
       </Box>

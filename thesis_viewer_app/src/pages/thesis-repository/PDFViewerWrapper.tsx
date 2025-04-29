@@ -1,7 +1,7 @@
 import { useParams } from "react-router";
-import PDFViewer from "../components/ThesisRepository/ViewThesis/PDFViewer";
+import PDFViewer from "../../components/ThesisRepository/ViewThesis/PDFViewer";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const PDFViewerWrapper = () => {
     const { title } = useParams<{ title: string }>();

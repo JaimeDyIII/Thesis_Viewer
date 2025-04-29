@@ -7,6 +7,7 @@ import { checkUserExists } from '../api/auth/queries';
 import { insertUserAfterAcceptingTermsAndCondition } from '../api/auth/mutation';
 import { useAuth } from '../context/AuthContext';
 import LoadingOverlay from '../components/Global/LoadingOverlay';
+import { usePermissions } from '../context/PermissionsContext';
 
 export default function Terms() {
   const [initialLoading, setInitialLoading] = useState(true);
@@ -14,8 +15,9 @@ export default function Terms() {
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const hasCheckedRef = useRef(false);
-  const { setUserProfile, profile } = useAuth();
-
+  const { setUserProfile, profile, refreshUserProfile } = useAuth();
+  const { refreshPermissions } = usePermissions();
+  
   useEffect(() => {
     const getSession = async () => {
         try {
@@ -68,6 +70,9 @@ export default function Terms() {
       navigate('/dashboard');
     } catch (error) {
       console.error('Error creating user after terms acceptance:', error);
+    } finally {
+      refreshUserProfile();
+      refreshPermissions();
     }
   };
 

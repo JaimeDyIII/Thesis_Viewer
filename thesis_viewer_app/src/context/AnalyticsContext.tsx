@@ -1,8 +1,8 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { getThesisStats, getAllTheses } from '../api/ThesisAPI';
-import { getTotalUsersCount, getUserRoleStats } from '../api/UsersAPI';
-import { getAllThesisViewCounts } from '../api/ViewsAPI';
-import { getAllThesisBookmarkCounts } from '../api/BookmarksAPI';
+import { getTotalUsersCount, getUserRoleStats } from '../api/users/queries';
+import { getAllThesisViewCounts } from '../api/views/queries';
+import { getAllThesisBookmarkCounts } from '../api/bookmarks/queries';
 
 export interface Thesis {
   id: number;

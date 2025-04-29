@@ -14,6 +14,7 @@ type AuthContextType = {
   handleSignOut: () => Promise<void>;
   setShowError: (show: boolean) => void;
   setUserProfile: (profile: any) => void;
+  refreshUserProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const isRedirecting = useRef(false);
+  const profileFetchingInProgress = useRef(false);
+  const [profileError, setProfileError] = useState(false);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -122,6 +125,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(profile);
   }
 
+  
+  const refreshUserProfile = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      profileFetchingInProgress.current = true;
+      setProfileError(false);
+      
+      const profileData = await fetchUserProfile(session.user.id);
+      
+      if (profileData) {
+        setProfile(profileData);
+        return profileData;
+      } else {
+        setProfileError(true);
+        setProfile(null);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+      setProfileError(true);
+      setProfile(null);
+      return null;
+    } finally {
+      profileFetchingInProgress.current = false;
+    }
+  };
+
   const value = {
     session,
     profile,
@@ -131,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleSignOut,
     setShowError,
     setUserProfile,
+    refreshUserProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import TermsAndConditionsOverlay from '../components/Terms/TermsAndConditionsOverlay';
-import { checkUserExists } from '../api/auth/queries';
-import { insertUserAfterAcceptingTermsAndCondition } from '../api/auth/mutation';
-import { useAuth } from '../context/AuthContext';
-import LoadingOverlay from '../components/Global/LoadingOverlay';
-import { usePermissions } from '../context/PermissionsContext';
+import { supabase } from '../../lib/supabase';
+import TermsAndConditionsOverlay from '../../components/Terms/TermsAndConditionsOverlay';
+import { checkUserExists } from '../../api/auth/queries';
+import { insertUserAfterAcceptingTermsAndCondition } from '../../api/auth/mutation';
+import { useAuth } from '../../context/AuthContext';
+import LoadingOverlay from '../../components/Global/LoadingOverlay';
+import { usePermissions } from '../../context/PermissionsContext';
 
 export default function Terms() {
   const [initialLoading, setInitialLoading] = useState(true);

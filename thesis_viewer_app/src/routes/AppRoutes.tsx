@@ -6,21 +6,20 @@ import { PermissionsProvider } from '../context/PermissionsContext';
 import { ViewProvider } from '../context/ViewContext';
 import { BookmarkProvider } from '../context/BookmarkContext';
 import { AnalyticsProvider } from '../context/AnalyticsContext';
-import Login from '../pages/Login';
-import Dashboard from "../pages/Dashboard";
-import NoPage from '../pages/NoPage';
+import Login from '../pages/auth/Login';
+import Dashboard from "../pages/global/Dashboard";
+import NoPage from '../pages/global/NoPage';
 import ViewThesis from "../pages/thesis-repository/ViewThesis";
 import Bookmarks from "../pages/thesis-repository/Bookmarks";
-import ThesisRepository from '../pages/ThesisRepository';
 import ManageThesis from '../pages/thesis-repository/ManageThesis';
-import UserManagement from '../pages/UserManagement';
-import ThessaAI from '../pages/ThessaAI';
+import UserManagement from '../pages/admin/UserManagement';
+import ThessaAI from '../pages/global/ThessaAI';
 import PDFViewerWrapper from '../pages/thesis-repository/PDFViewerWrapper';
-import Analytics from '../pages/Analytics';
-import HomePage from '../pages/HomePage';
+import Analytics from '../pages/admin/Analytics';
+import HomePage from '../pages/global/HomePage';
 import { PublicRoute } from './PubilcRoute';
 import PrivacyPolicy from '../components/Global/privacypolicy';
-import Terms from '../pages/Terms';
+import Terms from '../pages/auth/Terms';
 
 const AppRoutes: React.FC = () => (
     <BrowserRouter>
@@ -44,13 +43,7 @@ const AppRoutes: React.FC = () => (
                                 <Route path="/thessaAI" element={ <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']}><ThessaAI /></ProtectedRoute> } />
 
 
-                                {/* Protected Routes - Thesis Repository */}
-                                <Route path="/thesis-repository" element={ 
-                                    <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} 
-                                                    requiredPermissions={['ThesisRepository_view', 'ThesisRepository_add', 'ThesisRepository_edit', 'ThesisRepository_delete']}>
-                                        <ThesisRepository />
-                                    </ProtectedRoute> } />
-                                
+                                {/* Protected Routes - Thesis Repository */}         
                                 <Route path="/view-thesis" element={ 
                                     <ProtectedRoute allowedRoles={['User', 'Librarian', 'Admin', 'SuperAdmin']} 
                                                     requiredPermissions={['ThesisRepository_view']}>

@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/HomePage.css';
+import '../../styles/HomePage.css';
 import { ShieldCheck, Glasses, ChartNoAxesCombined } from 'lucide-react';
 import GoogleIcon from "@mui/icons-material/Google";
-import { Footer } from "../components/Global/Footer";
+import { Footer } from "../../components/Global/Footer";
 import { motion } from "framer-motion";
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();

@@ -1,13 +1,13 @@
 import { Container, Grid, Box, Typography, Button, useMediaQuery } from "@mui/material";
-import { Header } from "../components/Global/Header";
-import ThesisAnalyticsChart from "../components/Analytics/ThesisAnalyticsChart";
-import CategoryChart from "../components/Analytics/CategoryChart";
+import { Header } from "../../components/Global/Header";
+import ThesisAnalyticsChart from "../../components/Analytics/ThesisAnalyticsChart";
+import CategoryChart from "../../components/Analytics/CategoryChart";
 import { useState, useEffect } from 'react';
-import "../styles/View.css";
+import "../../styles/View.css";
 import { Card, CardContent, CardHeader } from '@mui/material';
 import { Users, FileText } from 'lucide-react';
-import { supabase } from "../lib/supabase";
-import AnalyticsPDFExport from "../components/Analytics/AnalyticsPDFExport";
+import { supabase } from "../../lib/supabase";
+import AnalyticsPDFExport from "../../components/Analytics/AnalyticsPDFExport";
 import { useTheme } from '@mui/material/styles';
 
 export default function Analytics() {

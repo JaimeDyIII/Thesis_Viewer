@@ -2,14 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Box, TextField, IconButton, Typography, Drawer, List, ListItem, Divider } from '@mui/material';
 import { Send, Glasses, History, ChevronLeft, Menu, ChevronRight } from 'lucide-react';
 import pdfToText from 'react-pdftotext';
-import { Header } from "../components/Global/Header";
+import { Header } from "../../components/Global/Header";
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { useAuth } from "../context/AuthContext";
-import "../styles/ThessaAI.css";
-import { supabase } from "../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import "../../styles/ThessaAI.css";
+import { supabase } from "../../lib/supabase";
 import { motion } from "framer-motion";
-import { useThesis } from "../context/ThesisContext";
+import { useThesis } from "../../context/ThesisContext";
 
 interface Message {
   id: number;

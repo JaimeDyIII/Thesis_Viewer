@@ -1,13 +1,12 @@
 import { Box, Paper, Container, useMediaQuery, useTheme } from "@mui/material";
-import { usePermissions } from "../context/PermissionsContext";
-import { Header } from "../components/Global/Header";
-import HeroSection from "../components/Dashboard/HeroSection";
-import FeaturedThesis from "../components/Dashboard/FeaturedThesis";
-import LatestUploads from "../components/Dashboard/LatestUploads";
-import RecentlyRead from "../components/Dashboard/RecentlyRead";
-import AIAssistant from "../components/Dashboard/AIAssistant";
-import '../styles/Dashboard.css';
-import { supabase } from "../lib/supabase";
+import { usePermissions } from "../../context/PermissionsContext";
+import { Header } from "../../components/Global/Header";
+import HeroSection from "../../components/Dashboard/HeroSection";
+import FeaturedThesis from "../../components/Dashboard/FeaturedThesis";
+import LatestUploads from "../../components/Dashboard/LatestUploads";
+import RecentlyRead from "../../components/Dashboard/RecentlyRead";
+import AIAssistant from "../../components/Dashboard/AIAssistant";
+import '../../styles/Dashboard.css';
 
 export default function Dashboard() {
   const { permissions } = usePermissions();

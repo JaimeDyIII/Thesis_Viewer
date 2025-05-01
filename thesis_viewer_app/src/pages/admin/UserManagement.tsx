@@ -22,13 +22,13 @@ import {
   Avatar,
 } from "@mui/material";
 import { Search, ChevronDown, ChevronUp, FileText } from "lucide-react";
-import { supabase } from "../lib/supabase";
-import { Header } from "../components/Global/Header";
-import CheckLogs from "../components/Global/CheckLogs";
-import UserPermissions from "../components/UserManagement/UserPermissions";
-import { useAuth } from "../context/AuthContext";
-import { addLogEntry, Subsystem, ActionType } from "../components/Global/CheckLogs";
-import "../styles/Manage.css";
+import { supabase } from "../../lib/supabase";
+import { Header } from "../../components/Global/Header";
+import CheckLogs from "../../components/Global/CheckLogs";
+import UserPermissions from "../../components/UserManagement/UserPermissions";
+import { useAuth } from "../../context/AuthContext";
+import { addLogEntry, Subsystem, ActionType } from "../../components/Global/CheckLogs";
+import "../../styles/Manage.css";
 
 interface User {
   id: string;

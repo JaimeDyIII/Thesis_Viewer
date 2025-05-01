@@ -2,9 +2,9 @@ import { Button, Card } from "@mui/material";
 import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import EmailErrorPopup from "../components/Authentication/EmailErrorPopup";
-import { useAuth } from "../context/AuthContext";
-import "../styles/Login.css";
+import EmailErrorPopup from "../../components/Authentication/EmailErrorPopup";
+import { useAuth } from "../../context/AuthContext";
+import "../../styles/Login.css";
 
 const Login: React.FC = () => {
   const { handleGoogleLogin, showError, setShowError } = useAuth();

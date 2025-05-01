@@ -17,8 +17,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Table,
 } from '@mui/material';
-import { Edit, Trash2, Plus, Table } from 'lucide-react';
+import { Edit, Trash2, Plus } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import { addLogEntry, Subsystem, ActionType } from '../../Global/CheckLogs';
@@ -41,13 +42,19 @@ const ManageCategories: React.FC<{
 
   const fetchCategories = async () => {
     try {
+      console.log('Fetching categories...');
       const { data, error } = await supabase
         .from('category')
         .select('id, name, created_at')
         .eq('is_active', true)
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Fetched categories:', data);
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -56,6 +63,7 @@ const ManageCategories: React.FC<{
   };
 
   useEffect(() => {
+    console.log('Dialog opened:', open);
     if (open) {
       fetchCategories();
     }
@@ -197,75 +205,81 @@ const ManageCategories: React.FC<{
           </Button>
         </div>
 
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category.id}>
-                  {editCategory?.id === category.id ? (
-                    <>
-                      <TableCell>{category.id}</TableCell>
-                      <TableCell>
-                        <TextField
-                          value={editCategory.name}
-                          onChange={(e) => setEditCategory({ ...editCategory, name: e.target.value })}
-                          fullWidth
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          onClick={handleUpdateCategory} 
-                          color="primary" 
-                          variant="contained"
-                          disabled={!editCategory.name.trim()}
-                        >
-                          Save
-                        </Button>
-                        <Button 
-                          onClick={() => setEditCategory(null)} 
-                          color="secondary"
-                          variant="outlined"
-                          sx={{ ml: 1 }}
-                        >
-                          Cancel
-                        </Button>
-                      </TableCell>
-                    </>
-                  ) : (
-                    <>
-                      <TableCell>{category.id}</TableCell>
-                      <TableCell>{category.name}</TableCell>
-                      <TableCell>
-                        <IconButton 
-                          onClick={() => setEditCategory(category)}
-                          color="primary"
-                          title="Edit Category"
-                        >
-                          <Edit size={20} />
-                        </IconButton>
-                        <IconButton 
-                          onClick={() => handleDeleteCategory(category.id, category.name)}
-                          color="error"
-                          title="Delete Category"
-                        >
-                          <Trash2 size={20} />
-                        </IconButton>
-                      </TableCell>
-                    </>
-                  )}
+        {categories.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 2 }}>
+            <Typography>No categories found. Add a new category to get started.</Typography>
+          </Box>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {categories.map((category) => (
+                  <TableRow key={category.id}>
+                    {editCategory?.id === category.id ? (
+                      <>
+                        <TableCell>{category.id}</TableCell>
+                        <TableCell>
+                          <TextField
+                            value={editCategory.name}
+                            onChange={(e) => setEditCategory({ ...editCategory, name: e.target.value })}
+                            fullWidth
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            onClick={handleUpdateCategory} 
+                            color="primary" 
+                            variant="contained"
+                            disabled={!editCategory.name.trim()}
+                          >
+                            Save
+                          </Button>
+                          <Button 
+                            onClick={() => setEditCategory(null)} 
+                            color="secondary"
+                            variant="outlined"
+                            sx={{ ml: 1 }}
+                          >
+                            Cancel
+                          </Button>
+                        </TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell>{category.id}</TableCell>
+                        <TableCell>{category.name}</TableCell>
+                        <TableCell>
+                          <IconButton 
+                            onClick={() => setEditCategory(category)}
+                            color="primary"
+                            title="Edit Category"
+                          >
+                            <Edit size={20} />
+                          </IconButton>
+                          <IconButton 
+                            onClick={() => handleDeleteCategory(category.id, category.name)}
+                            color="error"
+                            title="Delete Category"
+                          >
+                            <Trash2 size={20} />
+                          </IconButton>
+                        </TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary" variant="contained">

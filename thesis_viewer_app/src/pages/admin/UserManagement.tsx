@@ -29,6 +29,7 @@ import UserPermissions from "../../components/UserManagement/UserPermissions";
 import { useAuth } from "../../context/AuthContext";
 import { addLogEntry, Subsystem, ActionType } from "../../components/Global/CheckLogs";
 import "../../styles/Manage.css";
+import { usePermissions } from "../../context/PermissionsContext";
 
 interface User {
   id: string;
@@ -49,6 +50,7 @@ const UserManagement: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const { session, profile } = useAuth();
   const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
+  const { permissions: userPermissions } = usePermissions(); 
 
   useEffect(() => {
     fetchUsers();
@@ -426,7 +428,7 @@ const UserManagement: React.FC = () => {
                     filteredUsers.map((user, index) => (
                       <React.Fragment key={user.id}>
                         <TableRow 
-                          onClick={() => handleRowClick(user.id)} 
+                          onClick={userPermissions?.UserManagement_edit ? (() => handleRowClick(user.id)) : undefined} 
                           sx={{ 
                             cursor: "pointer",
                             backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafd",

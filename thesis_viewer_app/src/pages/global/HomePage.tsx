@@ -9,7 +9,6 @@ import { useAuth } from '../../context/AuthContext';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { handleSignOut } = useAuth();
 
   const cardVariants = {
     hidden: { opacity: 0, rotateY: -90 },

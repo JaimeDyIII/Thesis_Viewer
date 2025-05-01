@@ -8,27 +8,8 @@ import {
 } from "@mui/material";
 import { supabase } from "../../lib/supabase";
 import { addLogEntry, Subsystem, ActionType } from "../Global/CheckLogs";
-
-interface Permission {
-  subsystem: string;
-  permission_type: string;
-  permitted: boolean;
-}
-
-// Track permission changes
-interface PermissionChange {
-  subsystem: string;
-  permission_type: string;
-  oldValue: boolean;
-  newValue: boolean;
-}
-
-interface UserPermissionsProps {
-  userId: string;
-  userName: string;
-  currentUserId: string | undefined;
-  onPermissionUpdate: (message: string) => void;
-}
+import { usePermissions } from "../../context/PermissionsContext";
+import { Permission, PermissionChange, UserPermissionsProps } from "../../api/permissions/types";
 
 const UserPermissions: React.FC<UserPermissionsProps> = ({
   userId,
@@ -39,6 +20,7 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
   const [loading, setLoading] = useState(true);
   const [pendingChanges, setPendingChanges] = useState<PermissionChange[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
+  const {permissions: userPermissions} = usePermissions();
 
   const fetchPermissions = React.useCallback(async () => {
     setLoading(true);
@@ -249,11 +231,11 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
                     >
                       <Checkbox
                         checked={perm.permitted}
-                        onChange={() => handlePermissionChange(
+                        onChange={userPermissions?.UserManagement_edit ? (() => handlePermissionChange(
                           subsystem,
                           perm.permission_type,
                           perm.permitted
-                        )}
+                        )) : undefined}
                       />
                       {perm.permission_type.charAt(0).toUpperCase() + perm.permission_type.slice(1)}
                       {pending && (
@@ -272,26 +254,32 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
           ))}
           
           {/* Save/Cancel buttons in the bottom right */}
-          {pendingChanges.length > 0 && (
-            <Box display="flex" justifyContent="flex-end" mt={2}>
-              <Button
-                onClick={cancelChanges}
-                variant="outlined"
-                color="error"
-                disabled={saveLoading}
-                sx={{ mr: 2 }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={saveChanges}
-                variant="contained"
-                color="success"
-                disabled={saveLoading}
-              >
-                {saveLoading ? <CircularProgress size={24} /> : "Save Changes"}
-              </Button>
-            </Box>
+          {userPermissions?.UserManagement_edit ? (
+            pendingChanges.length > 0 ? (
+              <Box display="flex" justifyContent="flex-end" mt={2}>
+                <Button
+                  onClick={cancelChanges}
+                  variant="outlined"
+                  color="error"
+                  disabled={saveLoading}
+                  sx={{ mr: 2 }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveChanges}
+                  variant="contained"
+                  color="success"
+                  disabled={saveLoading}
+                >
+                  {saveLoading ? <CircularProgress size={24} /> : "Save Changes"}
+                </Button>
+              </Box>
+            ) : null
+          ) : (
+            <Typography color="error" mt={2}>
+              You do not have permission to edit user management settings.
+            </Typography>
           )}
         </>
       )}

@@ -5,9 +5,18 @@ import React from "react";
 interface FileUploadProps {
   selectedFile: File | null;
   onFileChange: (file: File | null) => void;
+  required?: boolean;
+  error?: boolean;
+  helperText?: string;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({ selectedFile, onFileChange }) => {
+export const FileUpload: React.FC<FileUploadProps> = ({ 
+  selectedFile, 
+  onFileChange, 
+  required = false,
+  error = false,
+  helperText
+}) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -29,9 +38,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({ selectedFile, onFileChan
         hidden
       />
       <label htmlFor="upload-button">
-        <Button variant="contained" component="span" className="upload-btn">
+        <Button 
+          variant="contained" 
+          component="span" 
+          className="upload-btn"
+          sx={{
+            border: error ? '1px solid #d32f2f' : 'none',
+            '&:hover': {
+              border: error ? '1px solid #d32f2f' : 'none',
+            }
+          }}
+        >
           <Upload size={18} />
-          Upload PDF
+          {required ? "Upload PDF *" : "Upload PDF"}
         </Button>
       </label>
       {selectedFile && (
@@ -41,6 +60,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({ selectedFile, onFileChan
             <X size={18} />
           </IconButton>
         </Box>
+      )}
+      {error && helperText && (
+        <Typography color="error" variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+          {helperText}
+        </Typography>
       )}
     </Box>
   );

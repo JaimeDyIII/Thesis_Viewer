@@ -18,6 +18,7 @@ import { styled } from "@mui/system";
 import { supabase } from "../../../lib/supabase";
 import { addLogEntry, ActionType, Subsystem } from "../../Global/CheckLogs";
 import { useAuth } from "../../../context/AuthContext";
+import { FileUpload } from "./FileUpload";
 
 interface Thesis {
   id: number;
@@ -34,6 +35,15 @@ interface Category {
   id: number;
   name: string;
   is_active?: boolean;
+}
+
+interface FormErrors {
+  title?: string;
+  description?: string;
+  author?: string;
+  category?: string;
+  publishing_year?: string;
+  file?: string;
 }
 
 interface EditThesisFormProps {
@@ -81,6 +91,7 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -109,13 +120,59 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
     if (thesis) setFormData({ ...thesis });
   }, [thesis]);
 
-  const handleChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
-    setFormData({ ...formData, [e.target.name as string]: e.target.value });
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+    let isValid = true;
+
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
+      isValid = false;
+    }
+
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+      isValid = false;
+    }
+
+    if (!formData.author.trim()) {
+      errors.author = "Author is required";
+      isValid = false;
+    }
+
+    if (!formData.category) {
+      errors.category = "Category is required";
+      isValid = false;
+    }
+
+    if (!formData.publishing_year) {
+      errors.publishing_year = "Publishing year is required";
+      isValid = false;
+    } else if (formData.publishing_year < 1900 || formData.publishing_year > new Date().getFullYear()) {
+      errors.publishing_year = `Publishing year must be between 1900 and ${new Date().getFullYear()}`;
+      isValid = false;
+    }
+
+    // Only require file if there's no existing PDF
+    if (!formData.pdf_url && !file) {
+      errors.file = "PDF file is required";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      const selectedFile = e.target.files[0];
+  const handleChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name as string]: value });
+    // Clear error when user starts typing
+    if (formErrors[name as keyof FormErrors]) {
+      setFormErrors(prev => ({ ...prev, [name as string]: undefined }));
+    }
+  };
+
+  const handleFileChange = (selectedFile: File | null) => {
+    if (selectedFile) {
       if (selectedFile.size > 50 * 1024 * 1024) {
         setUploadError("File is too large. Maximum size is 50MB.");
         return;
@@ -126,6 +183,12 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
       }
       setFile(selectedFile);
       setUploadError(null);
+      // Clear file error when a valid file is selected
+      if (formErrors.file) {
+        setFormErrors(prev => ({ ...prev, file: undefined }));
+      }
+    } else {
+      setFile(null);
     }
   };
 
@@ -147,14 +210,16 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
       return;
     }
 
+    if (!validateForm()) {
+      return;
+    }
+
     let pdfUrl = formData.pdf_url;
     
     if (file) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${thesis.id}_${Date.now()}.${fileExt}`;
       const filePath = `theses/${fileName}`;
-      
-      console.log("Uploading file:", filePath);
       
       try {
         const { data, error } = await supabase.storage
@@ -164,10 +229,6 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
             cacheControl: '3600'
           });
 
-        if (data) {
-          console.log("Upload successful:", data);
-        }
-          
         if (error) {
           console.error("Upload error details:", error);
           setUploadError(`Error uploading file: ${error.message}`);
@@ -184,7 +245,6 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
           .getPublicUrl(filePath);
           
         pdfUrl = urlData?.publicUrl || null;
-        console.log("Generated PDF URL:", pdfUrl);
       } catch (uploadErr) {
         console.error("Unexpected upload error:", uploadErr);
         setUploadError("An unexpected error occurred during upload");
@@ -289,9 +349,32 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
           </Typography>
         </DialogTitle>
         <DialogContent className="white-container">
-          <TextField label="Title" name="title" value={formData.title} onChange={handleChange} fullWidth margin="dense" />
-          <TextField label="Description" name="description" value={formData.description} onChange={handleChange} fullWidth margin="dense" />
+          <TextField 
+            required
+            label="Title" 
+            name="title" 
+            value={formData.title} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="dense"
+            error={!!formErrors.title}
+            helperText={formErrors.title}
+          />
+          <TextField 
+            required
+            label="Description" 
+            name="description" 
+            value={formData.description} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="dense"
+            multiline
+            rows={3}
+            error={!!formErrors.description}
+            helperText={formErrors.description}
+          />
           <TextField
+            required
             select
             label="Category"
             name="category"
@@ -299,6 +382,8 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
             onChange={handleChange}
             fullWidth
             margin="dense"
+            error={!!formErrors.category}
+            helperText={formErrors.category}
           >
             {categories.map((category) => (
               <StyledMenuItem key={category.id} value={category.name}>
@@ -306,8 +391,19 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
               </StyledMenuItem>
             ))}
           </TextField>
-          <TextField label="Author" name="author" value={formData.author} onChange={handleChange} fullWidth margin="dense" />
+          <TextField 
+            required
+            label="Author" 
+            name="author" 
+            value={formData.author} 
+            onChange={handleChange} 
+            fullWidth 
+            margin="dense"
+            error={!!formErrors.author}
+            helperText={formErrors.author}
+          />
           <TextField
+            required
             label="Publishing Year"
             name="publishing_year"
             value={formData.publishing_year || ''}
@@ -315,23 +411,19 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
             fullWidth
             margin="dense"
             type="number"
+            error={!!formErrors.publishing_year}
+            helperText={formErrors.publishing_year}
             inputProps={{ min: 1900, max: new Date().getFullYear() }}
           />
-          <Box display="flex" flexDirection="column" mt={2}>
-            <Box display="flex" alignItems="center">
-              <input type="file" id="upload-pdf" accept="application/pdf" hidden onChange={handleFileChange} />
-              <UploadButton htmlFor="upload-pdf">UPLOAD PDF</UploadButton>
-              {file && (
-                <Typography variant="body2" color="textSecondary" ml={2}>
-                  {file.name}
-                </Typography>
-              )}
-            </Box>
-            {uploadError && (
-              <Typography variant="body2" color="error" mt={1}>
-                {uploadError}
-              </Typography>
-            )}
+          
+          <Box mt={2}>
+            <FileUpload
+              selectedFile={file}
+              onFileChange={handleFileChange}
+              required={!formData.pdf_url}
+              error={!!formErrors.file}
+              helperText={formErrors.file}
+            />
             {formData.pdf_url && !file && (
               <Typography variant="body2" color="textSecondary" mt={1}>
                 Current PDF: {formData.pdf_url.split('/').pop()}
@@ -365,9 +457,14 @@ const EditThesisForm: React.FC<EditThesisFormProps> = ({
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+        <DialogActions>
           <Button onClick={handleClose} className="button-text">CANCEL</Button>
-          <Button onClick={handleSave} className="button-primary" variant="contained" disabled={!!uploadError}>
+          <Button 
+            onClick={handleSave} 
+            className="button-primary" 
+            variant="contained" 
+            disabled={!!uploadError}
+          >
             SUBMIT
           </Button>
         </DialogActions>

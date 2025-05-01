@@ -26,9 +26,9 @@ export interface ThesisFilters {
 
 export interface ThesisCreateInput {
     title: string;
-    description?: string;
+    description: string;
     author: string;
-    category?: string;
+    category: string;
     pdf_url?: string;
     publishing_year?: number;
     isActive: boolean;

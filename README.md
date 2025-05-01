@@ -1,45 +1,44 @@
-# Thesis_Viewer
-## `Project Structure`
-## `src/`
-This directory contains all of the source code.
+# 🎓 Thesis Viewer
 
-- ### `components/`
-    - Reusable UI Elements
-    - Example: buttons, forms, etc.
-    
-- ### `context/`
-    - Where the shared state are passed through the components using React Context
-    - Example: AuthContext, PermissionsContext, etc.
-      
-- ### `lib/`
-    - Api functions
-    - Examples: Supabase and Hugging face interactions.
+A web application for a centralized thesis repository built for viewing and managing academic theses documents.
 
-- ### `pages/`
-    - Indivudual pages for the app.
-    - Example: AdminDashboard, UserDashboard, Login, etc.
+Built with [React](https://reactjs.org/), [Supabase](https://supabase.com/), and [Node.js](https://nodejs.org/).
 
-- ### `routes/`
-    - Routes for the app where pages are rendered
-    - Examples:  AppRoutes and ProtectedRoutes.
+## 📌 Features
 
-- ### `styles/`
-    - All CSS styling
+- 🔍 Search and browse thesis documents
+- 📄 View theses with a PDF viewer
+- 📚 Bookmark, track views, and analyze reading behavior
+- 🧠 AI-powered Q&A chatbot for thesis content (optional)
+- 🔐 User authentication and role-based access
+- 📊 Analytics dashboard for admins
 
-- ### `App.tsx/`
-    - Where
+## 🏗️ Tech Stack
+- **Frontend**: React, TailwindCSS, TypeScript, @react-pdf-viewer
+- **Backend**: Supabase (Database + Auth + Storage)
+- **AI Integration**: OpenRouter API
 
-- ### `index.tsx/`
-    - Entry point of the app. This is where react renders the app.
-
-## `public/`
-- contains static assets like HTML, images, and fonts.
-
-## `package.json/`
-- Describes the project, its dependencies, and scripts to run app.
-
-## `tsconfig.json/`
-- Configures the TypeScript compiler, defining rules for how the TypeScript files are handled.
-
-## `.gitignore/`
-- Specifies files or directories excluded from Git Version Control e.g. node_modules, env, etc.
+## 🗂️ `Project Structure`
+```
+thesis_viewer_app/
+├── public/                   # Static public assets (favicon, index.html, etc.)
+├── src/                      # Main source code
+│   ├── api/                  # API request functions (e.g. Supabase, OpenAI)
+│   ├── components/           # Custom Reusable UI components
+│   ├── context/              # React Context providers (e.g. auth, permissions)
+│   ├── hooks/                # Custom React hooks
+│   ├── lib/                  # Utility functions
+│   ├── pages/                # Route-specific page components
+│   ├── routes/               # Route definitions
+│   ├── services/             # Supabase or API integration services
+│   ├── styles/               # CSS styling files
+│   ├── App.tsx               # Main React App component
+│   ├── index.css             # Global styles
+│   ├── index.tsx             # App entry point
+│   └── theme.ts              # Theme configuration (e.g. MUI, Tailwind tokens)
+├── .gitignore                # Git ignored files
+├── package-lock.json         # NPM dependency lock
+├── package.json              # Project metadata and scripts
+├── tsconfig.json             # TypeScript configuration
+└── README.md                 # Project documentation
+```

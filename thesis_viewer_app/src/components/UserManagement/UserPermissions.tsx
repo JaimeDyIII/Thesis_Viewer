@@ -28,7 +28,8 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
       const { data, error } = await supabase
         .from("user_permissions")
         .select("subsystem, permission_type, permitted")
-        .eq("userid", userId);
+        .eq("userid", userId)
+        .or("subsystem.neq.UserManagement,permission_type.neq.add");
       
       if (error) {
         console.error("Error fetching permissions:", error);

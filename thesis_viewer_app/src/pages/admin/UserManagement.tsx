@@ -30,17 +30,10 @@ import { useAuth } from "../../context/AuthContext";
 import { addLogEntry, Subsystem, ActionType } from "../../components/Global/CheckLogs";
 import "../../styles/Manage.css";
 import { usePermissions } from "../../context/PermissionsContext";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string | null;
-  avatar_url?: string;
-}
+import { UserManagementUserType } from "../../api/users/types";
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserManagementUserType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);

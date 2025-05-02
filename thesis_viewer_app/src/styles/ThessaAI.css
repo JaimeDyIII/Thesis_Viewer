@@ -54,6 +54,7 @@
   transition: width 0.3s ease !important;
   overflow: hidden !important;
   position: relative !important;
+  z-index: 1200 !important;
 }
 
 .bot-sidebar-expanded {
@@ -91,6 +92,8 @@
 
 .bot-sidebar-toggle {
   color: #7a1b86 !important;
+  z-index: 1200 !important;
+  position: relative; /* or fixed/absolute as needed */
 }
 
 .bot-new-chat {
@@ -176,6 +179,8 @@
   left: 10px !important;
   z-index: 10 !important;
   background-color: rgba(211, 99, 255, 0.1) !important;
+  z-index: 1200 !important;
+  position: relative; /* or fixed/absolute as needed */
 }
 
 .bot-desktop-toggle:hover {

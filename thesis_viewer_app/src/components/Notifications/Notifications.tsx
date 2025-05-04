@@ -40,19 +40,19 @@ const Notifications: React.FC<NotificationsProps> = () => {
   const navigate = useNavigate();
   const notificationCount = notifications.filter(n => !n.is_read).length;
 
-  useEffect(() => {
-    const fetchUserAndNotifications = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          setUserId(session.user.id);
-          fetchNotifications(session.user.id);
-        }
-      } catch (error) {
-        console.error("Error fetching user session:", error);
+  const fetchUserAndNotifications = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        fetchNotifications(session.user.id);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching user session:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchUserAndNotifications();
 
     return () => {
@@ -143,6 +143,8 @@ const Notifications: React.FC<NotificationsProps> = () => {
         .eq("id", id);
       
       if (error) throw error;
+
+      await fetchUserAndNotifications();
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -157,6 +159,8 @@ const Notifications: React.FC<NotificationsProps> = () => {
         .eq("user_id", userId);
       
       if (error) throw error;
+      
+      await fetchUserAndNotifications();
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
     }
@@ -185,8 +189,8 @@ const Notifications: React.FC<NotificationsProps> = () => {
         .eq("user_id", userId);
       
       if (error) throw error;
-  
-      setNotifications([]);
+      
+      await fetchUserAndNotifications();
     } catch (error) {
       console.error("Error clearing all notifications:", error);
     }
@@ -389,7 +393,7 @@ const Notifications: React.FC<NotificationsProps> = () => {
                           },
                         }}
                       >
-                        <Check size={18} />
+                        <Check size={18} onClick={() => {handleContainerClick(notification)}} />
                       </IconButton>
                     )}
                   </ListItem>

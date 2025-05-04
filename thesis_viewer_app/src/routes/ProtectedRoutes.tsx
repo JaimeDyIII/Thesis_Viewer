@@ -22,32 +22,38 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
   const [isActive, setIsActive] = useState<boolean | null>(null);
   const userCheckRef = useRef(false);
 
-  
   useEffect(() => {
     const checkUser = async () => {
       if (session?.user && !userCheckRef.current) {
         userCheckRef.current = true;
-        const exists = await checkUserExists(session.user.id);
-        setUserExists(exists);
-
-        // Check if user is active
-        if (exists) {
-          const { data, error } = await supabase
-            .from("users")
-            .select("is_active")
-            .eq("id", session.user.id)
-            .single();
-
-          if (error) {
-            console.error("Error checking user status:", error);
-            setIsActive(true); // Default to true if there's an error
+        try {
+          const exists = await checkUserExists(session.user.id);
+          setUserExists(exists);
+  
+          if (exists) {
+            const { data, error } = await supabase
+              .from("users")
+              .select("is_active")
+              .eq("id", session.user.id)
+              .single();
+  
+            if (error) {
+              console.error("Error checking user status:", error);
+              setIsActive(true);
+            } else {
+              setIsActive(data.is_active);
+            }
           } else {
-            setIsActive(data.is_active);
+            setIsActive(true);
           }
+        } catch (error) {
+          console.error("Error in user checks:", error);
+          setUserExists(false);
+          setIsActive(true);
         }
       }
     };
-
+  
     if (session?.user) {
       checkUser();
     } else {
@@ -79,9 +85,9 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
   }
 
   // Handle unauthenticated users
-  if (!session) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+    if (!session) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
 
   // Handle terms acceptance
   if (!userExists || (profile && profile.terms_and_condition === false)) {
@@ -89,8 +95,8 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
   }
 
   // Handle missing profile
-  if (!profile) {
-    return <LoadingOverlay />;
+  if (!profile) {     
+    return <Navigate to="/terms" />;
   }
 
   // Check role permissions

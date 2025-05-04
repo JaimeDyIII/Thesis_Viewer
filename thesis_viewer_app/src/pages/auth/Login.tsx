@@ -1,13 +1,23 @@
-import { Button, Card } from "@mui/material";
+import { Button, Card, Alert, Snackbar } from "@mui/material";
 import { motion } from "framer-motion";
 import GoogleIcon from "@mui/icons-material/Google";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import EmailErrorPopup from "../../components/Authentication/EmailErrorPopup";
 import { useAuth } from "../../context/AuthContext";
+import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "../../styles/Login.css";
 
 const Login: React.FC = () => {
   const { handleGoogleLogin, showError, setShowError } = useAuth();
+  const location = useLocation();
+  const [banMessage, setBanMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (location.hash === '#banned') {
+      setBanMessage('You have been banned from accessing the system.');
+    }
+  }, [location]);
 
   return (
     <div
@@ -77,8 +87,22 @@ const Login: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Alert */}
+      {/* Alerts */}
       <EmailErrorPopup open={showError} onClose={() => setShowError(false)} />
+      <Snackbar
+        open={!!banMessage}
+        autoHideDuration={6000}
+        onClose={() => setBanMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          severity="error" 
+          onClose={() => setBanMessage(null)}
+          sx={{ width: '100%' }}
+        >
+          {banMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

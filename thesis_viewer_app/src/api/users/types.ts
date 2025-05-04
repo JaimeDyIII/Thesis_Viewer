@@ -9,4 +9,5 @@ export type UserManagementUserType = {
     email: string;
     role: string | null;
     avatar_url?: string;      
+    is_active: boolean;
 }

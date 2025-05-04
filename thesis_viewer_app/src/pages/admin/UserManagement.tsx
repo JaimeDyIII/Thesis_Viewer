@@ -20,8 +20,13 @@ import {
   SelectChangeEvent,
   Typography,
   Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
 } from "@mui/material";
-import { Search, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, FileText, Ban, CheckCircle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Header } from "../../components/Global/Header";
 import CheckLogs from "../../components/Global/CheckLogs";
@@ -41,6 +46,8 @@ const UserManagement: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState<string>("Changes saved successfully ✅");
   const [logsOpen, setLogsOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [banDialogOpen, setBanDialogOpen] = useState<boolean>(false);
+  const [userToToggle, setUserToToggle] = useState<UserManagementUserType | null>(null);
   const { session, profile } = useAuth();
   const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
   const { permissions: userPermissions } = usePermissions(); 
@@ -93,10 +100,10 @@ const UserManagement: React.FC = () => {
 
       if(userRole === 'Admin'){
         query = supabase.from("users")
-          .select("id, name, email, role")
-          .or(`role.eq.User, id.eq.${profile.id}`);
+          .select("id, name, email, role, is_active")
+          .or(`role.eq.User, role.eq.Librarian, id.eq.${profile.id}`);
       } else if (userRole === 'SuperAdmin') { 
-        query = supabase.from("users").select("id, name, email, role");
+        query = supabase.from("users").select("id, name, email, role, is_active");
       } else {
         return console.error('User is not permitted to fetch and manage users');
       }
@@ -241,6 +248,71 @@ const UserManagement: React.FC = () => {
       console.error("Error in handleRoleChange:", error);
       handlePermissionUpdate("Failed to update user role. Please try again.");
     }
+  };
+
+  const handleToggleUserStatus = (user: UserManagementUserType): void => {
+    setUserToToggle(user);
+    setBanDialogOpen(true);
+  };
+
+  const handleToggleConfirm = async (): Promise<void> => {
+    if (!userToToggle) return;
+
+    try {
+      const newStatus = !userToToggle.is_active;
+      const { error } = await supabase
+        .from("users")
+        .update({ is_active: newStatus })
+        .eq("id", userToToggle.id);
+
+      if (error) {
+        console.error("Error updating user status:", error);
+        handlePermissionUpdate(`Failed to ${newStatus ? 'activate' : 'ban'} user. Please try again.`);
+        return;
+      }
+
+      // Create notification for the user
+      await supabase
+        .from("notification")
+        .insert({
+          user_id: userToToggle.id,
+          content: `Your account has been ${newStatus ? 'activated' : 'banned'} by an admin`,
+          is_read: false
+      });
+
+      // Log the action
+      await addLogEntry(
+        Subsystem.USER_MANAGEMENT,
+        newStatus ? ActionType.ACTIVATE_USER : ActionType.BAN_USER,
+        session?.user?.id as string,
+        null,
+        userToToggle.id,
+        null,
+        {
+          user_name: userToToggle.name,
+          user_email: userToToggle.email,
+          previous_status: !newStatus,
+          new_status: newStatus
+        }
+      );
+
+      // Update local state
+      setUsers(prev => 
+        prev.map(u => 
+          u.id === userToToggle.id ? { ...u, is_active: newStatus } : u
+        )
+      );
+
+      handlePermissionUpdate(`User ${newStatus ? 'activated' : 'banned'} successfully ✅`);
+      setBanDialogOpen(false);
+    } catch (error) {
+      console.error("Error in handleToggleConfirm:", error);
+      handlePermissionUpdate("Failed to update user status. Please try again.");
+    }
+  };
+
+  const handleToggleCancel = (): void => {
+    setBanDialogOpen(false);
   };
 
   const filteredUsers = users.filter(
@@ -474,6 +546,19 @@ const UserManagement: React.FC = () => {
                                     You
                                   </Typography>
                                 )}
+                                {!user.is_active && (
+                                  <Chip
+                                    size="small"
+                                    label="Banned"
+                                    sx={{
+                                      backgroundColor: '#dc3545',
+                                      color: 'white',
+                                      fontSize: '11px',
+                                      height: '20px',
+                                      marginLeft: '4px'
+                                    }}
+                                  />
+                                )}
                               </Box>
                             </Box>
                           </TableCell>
@@ -503,7 +588,7 @@ const UserManagement: React.FC = () => {
                                     fontSize: { xs: "12px", sm: "14px" }
                                   }}
                                 >
-                                  <MenuItem value="Admin">Admin</MenuItem>
+                                  {profile.role?.toLowerCase() === "superadmin" && <MenuItem value="Admin">Admin</MenuItem>}
                                   <MenuItem value="Librarian">Librarian</MenuItem>
                                   <MenuItem value="User">User</MenuItem>
                                 </Select>
@@ -528,18 +613,37 @@ const UserManagement: React.FC = () => {
                             borderBottom: expandedUser === user.id ? 'none' : '1px solid rgba(224, 224, 224, 1)',
                             width: '50px'
                           }}>
-                            <IconButton 
-                              sx={{ 
-                                color: "#1e4d87",
-                                backgroundColor: expandedUser === user.id ? 'rgba(30, 77, 135, 0.08)' : 'transparent',
-                                padding: { xs: 0.5, sm: 1 },
-                                '&:hover': {
-                                  backgroundColor: "rgba(30, 77, 135, 0.12)",
-                                }
-                              }}
-                            >
-                              {expandedUser === user.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                            </IconButton>
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                              <IconButton 
+                                sx={{ 
+                                  color: "#1e4d87",
+                                  backgroundColor: expandedUser === user.id ? 'rgba(30, 77, 135, 0.08)' : 'transparent',
+                                  padding: { xs: 0.5, sm: 1 },
+                                  '&:hover': {
+                                    backgroundColor: "rgba(30, 77, 135, 0.12)",
+                                  }
+                                }}
+                              >
+                                {expandedUser === user.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                              </IconButton>
+                              {userPermissions?.UserManagement_delete && session?.user?.id !== user.id && (
+                                <IconButton
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleUserStatus(user);
+                                  }}
+                                  sx={{
+                                    color: user.is_active ? "#dc3545" : "#28a745",
+                                    padding: { xs: 0.5, sm: 1 },
+                                    '&:hover': {
+                                      backgroundColor: user.is_active ? "rgba(220, 53, 69, 0.08)" : "rgba(40, 167, 69, 0.08)",
+                                    }
+                                  }}
+                                >
+                                  {user.is_active ? <Ban size={18} /> : <CheckCircle size={18} />}
+                                </IconButton>
+                              )}
+                            </Box>
                           </TableCell>
                         </TableRow>
                         <TableRow sx={{ 
@@ -587,6 +691,33 @@ const UserManagement: React.FC = () => {
         onClose={() => setLogsOpen(false)} 
         context="user" 
       />
+
+      <Dialog
+        open={banDialogOpen}
+        onClose={handleToggleCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {userToToggle?.is_active ? "Ban User" : "Activate User"}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to {userToToggle?.is_active ? 'ban' : 'activate'} {userToToggle?.name}?
+            {userToToggle?.is_active ? ' This will prevent them from accessing the system.' : ' This will restore their access to the system.'}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleToggleCancel}>Cancel</Button>
+          <Button 
+            onClick={handleToggleConfirm} 
+            color={userToToggle?.is_active ? "error" : "success"}
+            variant="contained"
+          >
+            {userToToggle?.is_active ? 'Ban User' : 'Activate User'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

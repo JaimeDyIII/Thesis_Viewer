@@ -6,6 +6,7 @@ import { checkUserExists } from "../api/auth/queries";
 import { Footer } from "../components/Global/Footer";
 import { Box } from "@mui/material";
 import LoadingOverlay from '../components/Global/LoadingOverlay';
+import { supabase } from "../lib/supabase";
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -18,14 +19,32 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
   const { permissions, permissionLoading } = usePermissions();
   const location = useLocation();
   const [userExists, setUserExists] = useState<boolean | null>(null);
+  const [isActive, setIsActive] = useState<boolean | null>(null);
   const userCheckRef = useRef(false);
 
+  
   useEffect(() => {
     const checkUser = async () => {
       if (session?.user && !userCheckRef.current) {
         userCheckRef.current = true;
         const exists = await checkUserExists(session.user.id);
         setUserExists(exists);
+
+        // Check if user is active
+        if (exists) {
+          const { data, error } = await supabase
+            .from("users")
+            .select("is_active")
+            .eq("id", session.user.id)
+            .single();
+
+          if (error) {
+            console.error("Error checking user status:", error);
+            setIsActive(true); // Default to true if there's an error
+          } else {
+            setIsActive(data.is_active);
+          }
+        }
       }
     };
 
@@ -34,17 +53,29 @@ export function ProtectedRoute({ allowedRoles = [], requiredPermissions = [], ch
     } else {
       userCheckRef.current = false;
       setUserExists(null);
+      setIsActive(null);
     }
   }, [session]);
 
   // Handle loading states first
-  if (loading || permissionLoading || (session && userExists === null)) {
+  if (loading || permissionLoading || (session && (userExists === null || isActive === null))) {
     return <LoadingOverlay />;
   }
 
   // Handle public routes that don't need authentication
   if (location.pathname === "/" || location.pathname === '/homepage') {
     return <>{children || <Outlet />}</>;
+  }
+
+  // Handle banned users first (even if they have a session)
+  if (session && isActive === false) {
+    // Sign out the user and wait for it to complete
+    const signOutAndRedirect = async () => {
+      await supabase.auth.signOut();
+      window.location.href = '/login#banned';
+    };
+    signOutAndRedirect();
+    return <LoadingOverlay />;
   }
 
   // Handle unauthenticated users

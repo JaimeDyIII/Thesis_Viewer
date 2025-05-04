@@ -36,7 +36,9 @@ export enum ActionType {
   DELETE_THESIS = "delete_thesis",
   ADD_USER = "add_user",
   CHANGE_USER_ROLE = "change_user_role",
-  CHANGE_USER_PERMISSION = "change_user_permission"
+  CHANGE_USER_PERMISSION = "change_user_permission",
+  BAN_USER = "ban_user",
+  ACTIVATE_USER = "activate_user"
 }
 
 export interface LogEntry {
@@ -134,12 +136,14 @@ const getActionColor = (action: ActionType) => {
   switch (action) {
     case ActionType.ADD_THESIS:
     case ActionType.ADD_USER:
+    case ActionType.ACTIVATE_USER:
       return "success";
     case ActionType.EDIT_THESIS:
       return "info";
     case ActionType.EDIT_CATEGORIES:
       return "warning";
     case ActionType.DELETE_THESIS:
+    case ActionType.BAN_USER:
       return "error";
     case ActionType.CHANGE_USER_ROLE:
       return "secondary";

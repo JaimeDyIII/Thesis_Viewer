@@ -158,7 +158,7 @@ const UserPermissions: React.FC<UserPermissionsProps> = ({
       // Log the changes as a single entry
       await addLogEntry(
         Subsystem.USER_MANAGEMENT,
-        ActionType.ADD_USER,
+        ActionType.CHANGE_USER_PERMISSION,
         currentUserId,
         null,
         userId,

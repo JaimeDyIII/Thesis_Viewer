@@ -31,7 +31,7 @@ export const signInWithGoogle = async () => {
                     prompt: 'consent',
                     hd: 'neu.edu.ph',
                 },
-                redirectTo: window.location.origin + '/auth/callback',
+                redirectTo: window.location.origin + '/dashboard',
             }
         });
     

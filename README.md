@@ -14,7 +14,7 @@ Built with [React](https://reactjs.org/), [Supabase](https://supabase.com/), and
 - ⚙️ User Management for Admins and Superadmins to manage user permissions to system features
 
 ## 🏗️ Tech Stack
-- **Frontend**: React, TailwindCSS, TypeScript, @react-pdf-viewer
+- **Frontend**: React, TypeScript, MUI React, @react-pdf-viewer
 - **Backend**: Supabase (Database + Auth + Storage)
 - **AI Integration**: OpenRouter API
 

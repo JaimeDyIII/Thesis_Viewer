@@ -207,7 +207,6 @@ const UserManagement: React.FC = () => {
         }
       }
       
-      console.log("Attempting to create notification for user", userId);
       const { data: notificationData, error: notificationError } = await supabase
         .from("notification")
         .insert({
@@ -215,7 +214,6 @@ const UserManagement: React.FC = () => {
           content: `Your role has been updated to ${newRole} by an admin`,
           is_read: false
         });
-      console.log("Notification creation result:", { data: notificationData, error: notificationError });
 
       await addLogEntry(
         Subsystem.USER_MANAGEMENT,

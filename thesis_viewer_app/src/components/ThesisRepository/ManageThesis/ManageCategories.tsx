@@ -42,7 +42,6 @@ const ManageCategories: React.FC<{
 
   const fetchCategories = async () => {
     try {
-      console.log('Fetching categories...');
       const { data, error } = await supabase
         .from('category')
         .select('id, name, created_at')
@@ -54,7 +53,6 @@ const ManageCategories: React.FC<{
         throw error;
       }
       
-      console.log('Fetched categories:', data);
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -63,7 +61,6 @@ const ManageCategories: React.FC<{
   };
 
   useEffect(() => {
-    console.log('Dialog opened:', open);
     if (open) {
       fetchCategories();
     }

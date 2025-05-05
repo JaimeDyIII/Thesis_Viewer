@@ -34,9 +34,7 @@ export const ThesisNotificationService = {
       );
       
       // Execute all notification creations
-      await Promise.all(notificationPromises);
-      
-      console.log(`Sent thesis upload notifications to ${staffUsers.length} staff members`);
+      await Promise.all(notificationPromises);      
     } catch (error) {
       console.error("Error in notifyThesisUpload:", error);
     }

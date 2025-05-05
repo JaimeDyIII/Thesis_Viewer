@@ -1,4 +1,4 @@
-import { Box, Paper, Container, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Paper, useMediaQuery, useTheme } from "@mui/material";
 import { usePermissions } from "../../context/PermissionsContext";
 import { Header } from "../../components/Global/Header";
 import HeroSection from "../../components/Dashboard/HeroSection";

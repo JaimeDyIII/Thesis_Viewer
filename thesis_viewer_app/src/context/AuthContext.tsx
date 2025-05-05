@@ -77,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state changed:", session?.user?.id);
       setSession(session);
       setLoading(false);
     });
@@ -109,11 +108,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     try {
+      if (isRedirecting.current) return;
+      
       isRedirecting.current = true;
+      setLoading(true);
+      setProfile(null);
+      
       await signOutUser();
+      
+      setSession(null);
+      
       navigate("/login", { replace: true });
     } catch (e) {
       console.error("Error signing out:", e);
+      setLoading(false);
     } finally {
       setTimeout(() => {
         isRedirecting.current = false;
